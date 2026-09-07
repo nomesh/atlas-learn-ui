@@ -24,7 +24,7 @@ export const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <StudentProvider>
-        <BrowserRouter>
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
           <Routes>
             <Route path="/" element={<AppShell />}>
               <Route index element={<StudentHomePage />} />
