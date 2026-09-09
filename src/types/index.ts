@@ -37,7 +37,9 @@ export interface SourceCitation {
   distance?: number | null;
   // Excerpt is strictly optional - NEVER fabricated. Only displayed when genuine API supplies it.
   excerpt?: string | null;
+  supporting?: boolean | null;
 }
+
 
 // Exact wire answer structure from ATLAS backend
 export interface RAGResponse {
