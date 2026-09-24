@@ -1,6 +1,15 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Grade, Language, LearningContext, TutorState } from '../types';
+import {
+  getSession,
+  getProfile,
+  updateProfile,
+  logout as apiLogout,
+  redirectToLogin,
+  type LearnSessionData,
+  type LearnerProfile,
+} from '../api/authApi';
 
 interface StudentContextValue {
   studentName: string;
@@ -15,17 +24,35 @@ interface StudentContextValue {
   accuracyPercent: number;
   isOnboardingOpen: boolean;
   setIsOnboardingOpen: (open: boolean) => void;
+  isDeviceModalOpen: boolean;
+  setIsDeviceModalOpen: (open: boolean) => void;
   conversationId: string;
   learningContext: LearningContext;
   setCurriculumSubject: (subjectId: string, topicId?: string, lessonId?: string) => void;
   tutorState: TutorState;
   setTutorState: (state: TutorState) => void;
+
+  // Real Authentication & Session fields
+  session: LearnSessionData | null;
+  isAuthenticated: boolean;
+  currentUser: { id: string; email: string; displayName: string } | null;
+  accountType: 'GUARDIAN' | 'INDEPENDENT_STUDENT' | null;
+  learners: LearnerProfile[];
+  activeLearner: LearnerProfile | null;
+  login: () => void;
+  logout: () => Promise<void>;
+  refreshSession: () => Promise<void>;
+  saveProfileToServer: (name: string, grade: Grade, language: Language) => Promise<void>;
 }
 
 const StudentContext = createContext<StudentContextValue | undefined>(undefined);
 
 export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { i18n } = useTranslation();
+
+  const [session, setSession] = useState<LearnSessionData | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isDeviceModalOpen, setIsDeviceModalOpen] = useState<boolean>(false);
 
   const [studentName, setStudentNameState] = useState<string>(() => {
     return localStorage.getItem('atlas_student_name') || 'Nimali';
@@ -56,25 +83,106 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [activeLessonId, setActiveLessonId] = useState<string | undefined>('sci-8-photo-1');
   const [tutorState, setTutorState] = useState<TutorState>('idle');
 
-  const [streakDays] = useState<number>(5);
-  const [topicsMastered] = useState<number>(14);
-  const [questionsAnswered] = useState<number>(52);
-  const [accuracyPercent] = useState<number>(94);
+  const [streakDays, setStreakDays] = useState<number>(0);
+  const [topicsMastered, setTopicsMastered] = useState<number>(0);
+  const [questionsAnswered, setQuestionsAnswered] = useState<number>(0);
+  const [accuracyPercent, setAccuracyPercent] = useState<number>(0);
+
+  // Load session from BFF on initial mount
+  const refreshSession = useCallback(async () => {
+    try {
+      const data = await getSession();
+      setSession(data);
+      setIsAuthenticated(data.authenticated);
+
+      if (data.authenticated) {
+        if (data.activeLearner) {
+          setStudentNameState(data.activeLearner.displayName);
+          localStorage.setItem('atlas_student_name', data.activeLearner.displayName);
+          if (data.activeLearner.grade) {
+            setGradeState(data.activeLearner.grade as Grade);
+            localStorage.setItem('atlas_student_grade', data.activeLearner.grade);
+          }
+          if (data.activeLearner.preferredLanguage) {
+            setLanguageState(data.activeLearner.preferredLanguage as Language);
+            localStorage.setItem('atlas_learn_lang', data.activeLearner.preferredLanguage);
+            i18n.changeLanguage(data.activeLearner.preferredLanguage);
+          }
+        }
+
+        // Also fetch metrics from durable profile
+        try {
+          const profile = await getProfile();
+          if (profile.name) {
+            setStudentNameState(profile.name);
+          }
+          if (profile.grade) {
+            setGradeState(profile.grade as Grade);
+          }
+          if (profile.language) {
+            setLanguageState(profile.language as Language);
+            i18n.changeLanguage(profile.language);
+          }
+          setStreakDays(profile.streakDays);
+          setTopicsMastered(profile.topicsMastered);
+          setQuestionsAnswered(profile.questionsAnswered);
+          setAccuracyPercent(profile.accuracyPercent);
+        } catch (pErr) {
+          console.warn('[studentContext] Could not load extended profile:', pErr);
+        }
+      }
+    } catch (err) {
+      console.warn('[studentContext] Could not fetch session:', err);
+      setIsAuthenticated(false);
+      setSession(null);
+    }
+  }, [i18n]);
+
+  useEffect(() => {
+    refreshSession();
+  }, [refreshSession]);
+
+  const saveProfileToServer = async (name: string, newGrade: Grade, newLang: Language) => {
+    setStudentNameState(name);
+    setGradeState(newGrade);
+    setLanguageState(newLang);
+    localStorage.setItem('atlas_student_name', name);
+    localStorage.setItem('atlas_student_grade', newGrade);
+    localStorage.setItem('atlas_learn_lang', newLang);
+    i18n.changeLanguage(newLang);
+
+    if (isAuthenticated) {
+      try {
+        await updateProfile({ name, grade: newGrade, language: newLang });
+      } catch (err) {
+        console.error('[studentContext] Failed to persist profile to PostgreSQL:', err);
+      }
+    }
+  };
 
   const setStudentName = (name: string) => {
     setStudentNameState(name);
     localStorage.setItem('atlas_student_name', name);
+    if (isAuthenticated) {
+      updateProfile({ name }).catch((e) => console.warn(e));
+    }
   };
 
   const setGrade = (newGrade: Grade) => {
     setGradeState(newGrade);
     localStorage.setItem('atlas_student_grade', newGrade);
+    if (isAuthenticated) {
+      updateProfile({ grade: newGrade }).catch((e) => console.warn(e));
+    }
   };
 
   const setLanguage = (newLang: Language) => {
     setLanguageState(newLang);
     localStorage.setItem('atlas_learn_lang', newLang);
     i18n.changeLanguage(newLang);
+    if (isAuthenticated) {
+      updateProfile({ language: newLang }).catch((e) => console.warn(e));
+    }
   };
 
   const setCurriculumSubject = (newSubjectId: string, newTopicId?: string, newLessonId?: string) => {
@@ -82,6 +190,37 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setTopicId(newTopicId);
     setActiveLessonId(newLessonId);
   };
+
+  const login = () => {
+    redirectToLogin(window.location.pathname);
+  };
+
+  const logout = async () => {
+    try {
+      const logoutUrl = await apiLogout();
+      setIsAuthenticated(false);
+      setSession(null);
+      localStorage.removeItem('atlas_student_name');
+      localStorage.removeItem('atlas_student_grade');
+      localStorage.removeItem('atlas_learn_lang');
+      sessionStorage.removeItem('atlas_tutor_lease_token');
+      if (logoutUrl) {
+        window.location.href = logoutUrl;
+        return;
+      }
+    } catch (err) {
+      console.warn('[studentContext] Logout error:', err);
+    } finally {
+      setIsAuthenticated(false);
+      setSession(null);
+      localStorage.removeItem('atlas_student_name');
+      localStorage.removeItem('atlas_student_grade');
+      localStorage.removeItem('atlas_learn_lang');
+      sessionStorage.removeItem('atlas_tutor_lease_token');
+      window.location.href = '/';
+    }
+  };
+
 
   useEffect(() => {
     if (i18n.language !== language) {
@@ -97,6 +236,12 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     language,
     conversationId,
   };
+
+  const currentUser = session && session.authenticated && session.userId ? {
+    id: session.userId,
+    email: session.email || '',
+    displayName: session.displayName || studentName,
+  } : null;
 
   return (
     <StudentContext.Provider
@@ -118,11 +263,24 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
             localStorage.setItem('atlas_onboarding_completed', 'true');
           }
         },
+        isDeviceModalOpen,
+        setIsDeviceModalOpen,
         conversationId,
         learningContext,
         setCurriculumSubject,
         tutorState,
         setTutorState,
+
+        session,
+        isAuthenticated,
+        currentUser,
+        accountType: session?.accountType || null,
+        learners: session?.learners || [],
+        activeLearner: session?.activeLearner || null,
+        login,
+        logout,
+        refreshSession,
+        saveProfileToServer,
       }}
     >
       {children}

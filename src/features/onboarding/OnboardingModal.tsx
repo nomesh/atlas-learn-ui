@@ -16,6 +16,7 @@ export const OnboardingModal: React.FC = () => {
     setLanguage,
     isOnboardingOpen,
     setIsOnboardingOpen,
+    saveProfileToServer,
   } = useStudent();
 
   const [localName, setLocalName] = useState(studentName);
@@ -41,12 +42,9 @@ export const OnboardingModal: React.FC = () => {
     { id: 'grade-13', label: 'Grade 13', sub: 'G.C.E. A/L' },
   ];
 
-  const handleComplete = () => {
-    if (localName.trim()) {
-      setStudentName(localName.trim());
-    }
-    setLanguage(selectedLang);
-    setGrade(selectedGrade);
+  const handleComplete = async () => {
+    const finalName = localName.trim() || studentName;
+    await saveProfileToServer(finalName, selectedGrade, selectedLang);
     setIsOnboardingOpen(false);
   };
 

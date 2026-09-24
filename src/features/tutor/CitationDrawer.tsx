@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, ChevronDown, ChevronUp, FileText, ExternalLink, ShieldCheck } from 'lucide-react';
+import { BookOpen, ChevronDown, ChevronUp, FileText, ExternalLink, ShieldCheck, Eye } from 'lucide-react';
 import type { SourceCitation } from '../../types';
+import { SourcePagePreviewModal } from './SourcePagePreviewModal';
 
 interface CitationDrawerProps {
   citations: SourceCitation[];
@@ -10,6 +11,11 @@ interface CitationDrawerProps {
 export const CitationDrawer: React.FC<CitationDrawerProps> = ({ citations }) => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedPreview, setSelectedPreview] = useState<{
+    documentId: string;
+    documentName: string;
+    pageNumber: number;
+  } | null>(null);
 
   if (!citations || citations.length === 0) return null;
 
@@ -83,10 +89,36 @@ export const CitationDrawer: React.FC<CitationDrawerProps> = ({ citations }) => 
                     "{cite.excerpt}"
                   </p>
                 )}
+
+                {/* Cited Textbook Page Preview Button */}
+                {cite.documentId && cite.pageNumber != null && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPreview({
+                      documentId: cite.documentId!,
+                      documentName: cite.source,
+                      pageNumber: cite.pageNumber!,
+                    })}
+                    className="mt-1 self-start inline-flex items-center gap-1.5 px-2.5 py-1 bg-white hover:bg-sky-50 text-atlas-blue text-[11px] font-bold rounded-lg border border-sky-200/80 shadow-xs hover:border-sky-300 transition-all"
+                  >
+                    <Eye className="w-3.5 h-3.5 text-atlas-cyan" />
+                    <span>View Page {cite.pageNumber} Preview</span>
+                  </button>
+                )}
               </div>
             ))}
           </div>
         </div>
+      )}
+
+      {selectedPreview && (
+        <SourcePagePreviewModal
+          isOpen={true}
+          onClose={() => setSelectedPreview(null)}
+          documentId={selectedPreview.documentId}
+          documentName={selectedPreview.documentName}
+          pageNumber={selectedPreview.pageNumber}
+        />
       )}
     </div>
   );

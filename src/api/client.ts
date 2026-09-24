@@ -50,16 +50,44 @@ export function getTenantId(): string | null {
   );
 }
 
+function getCsrfToken(): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+let activeLeaseToken: string | null = null;
+
+export function setTutorLeaseToken(token: string | null): void {
+  activeLeaseToken = token;
+  if (typeof sessionStorage !== 'undefined') {
+    if (token) {
+      sessionStorage.setItem('atlas_tutor_lease_token', token);
+    } else {
+      sessionStorage.removeItem('atlas_tutor_lease_token');
+    }
+  }
+}
+
+export function getTutorLeaseToken(): string | null {
+  if (activeLeaseToken) return activeLeaseToken;
+  if (typeof sessionStorage !== 'undefined') {
+    return sessionStorage.getItem('atlas_tutor_lease_token');
+  }
+  return null;
+}
+
 export const apiClient = axios.create({
   baseURL,
   timeout: 30000,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
 });
 
-// Request interceptor: dynamically attaches Bearer token & tenant header
+// Request interceptor: dynamically attaches Bearer token, tenant header, and CSRF token
 apiClient.interceptors.request.use(
   (config) => {
     const token = getAuthToken();
@@ -79,6 +107,29 @@ apiClient.interceptors.request.use(
       } else {
         config.headers = config.headers || {};
         config.headers['X-Atlas-Tenant-Id'] = currentTenant;
+      }
+    }
+
+    const leaseToken = getTutorLeaseToken();
+    if (leaseToken) {
+      if (config.headers && typeof config.headers.set === 'function') {
+        config.headers.set('X-Atlas-Lease-Token', leaseToken);
+      } else {
+        config.headers = config.headers || {};
+        config.headers['X-Atlas-Lease-Token'] = leaseToken;
+      }
+    }
+
+    const method = (config.method || 'get').toUpperCase();
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+      const csrf = getCsrfToken();
+      if (csrf) {
+        if (config.headers && typeof config.headers.set === 'function') {
+          config.headers.set('X-XSRF-TOKEN', csrf);
+        } else {
+          config.headers = config.headers || {};
+          config.headers['X-XSRF-TOKEN'] = csrf;
+        }
       }
     }
 

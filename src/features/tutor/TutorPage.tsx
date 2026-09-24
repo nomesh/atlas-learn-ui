@@ -12,13 +12,23 @@ import {
   BookOpen, 
   Info,
   CheckCircle,
-  HelpCircle
+  HelpCircle,
+  AlertTriangle
 } from 'lucide-react';
 import { useStudent } from '../../state/studentContext';
 import { TutorAvatar } from '../avatar/TutorAvatar';
 import { CitationDrawer } from './CitationDrawer';
 import { RichContentRenderer } from './RichContentRenderer';
 import { tutorService } from '../../api/tutorApi';
+import { setTutorLeaseToken } from '../../api/client';
+import {
+  acquireTutorLease,
+  sendTutorHeartbeat,
+  releaseTutorLease,
+  getOrCreateDeviceId,
+  getDeviceFriendlyName,
+  type TutorLeaseResponse,
+} from '../../api/authApi';
 import type { ChatMessage, SourceCitation, TutorAction } from '../../types';
 
 export const TutorPage: React.FC = () => {
@@ -30,7 +40,9 @@ export const TutorPage: React.FC = () => {
     language, 
     learningContext, 
     tutorState, 
-    setTutorState 
+    setTutorState,
+    isAuthenticated,
+    login,
   } = useStudent();
 
   const [inputMessage, setInputMessage] = useState('');
@@ -40,6 +52,13 @@ export const TutorPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Lease concurrency state
+  const [leaseToken, setLeaseToken] = useState<string | null>(null);
+  const [conflictData, setConflictData] = useState<TutorLeaseResponse | null>(null);
+  const [isSuperseded, setIsSuperseded] = useState(false);
+  const leaseTokenRef = useRef<string | null>(null);
+  leaseTokenRef.current = leaseToken;
+
   // Guards against React StrictMode double-invocation and in-flight race conditions
   const processedQueryRef = useRef<string | null>(null);
   const isSendingRef = useRef<boolean>(false);
@@ -47,7 +66,7 @@ export const TutorPage: React.FC = () => {
 
   const generateMsgId = (role: string) => {
     messageCounterRef.current += 1;
-    return `msg-${Date.now()}-${messageCounterRef.current}-${role}`;
+    return `msg-${Date.now()}-${messageCounterRef.current}-${Math.random().toString(36).substring(2, 7)}-${role}`;
   };
 
   const starterTopicPills: TutorAction[] = language === 'si' ? [
@@ -115,7 +134,69 @@ What topic would you like to explore together today?`,
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, tutorState]);
 
+  const tryAcquireLease = async (forceTakeover: boolean = false) => {
+    if (!isAuthenticated) return;
+    try {
+      const devId = getOrCreateDeviceId();
+      const devName = getDeviceFriendlyName();
+      const res = await acquireTutorLease({
+        deviceId: devId,
+        deviceName: devName,
+        forceTakeover,
+      });
+
+      if (res.status === 'GRANTED' && res.leaseToken) {
+        setLeaseToken(res.leaseToken);
+        setTutorLeaseToken(res.leaseToken);
+        setConflictData(null);
+        setIsSuperseded(false);
+      } else if (res.status === 'CONFLICT') {
+        setConflictData(res);
+        setTutorLeaseToken(null);
+      }
+    } catch (err: unknown) {
+      const axErr = err as { response?: { data?: TutorLeaseResponse; status?: number } };
+      if (axErr.response?.data?.status === 'CONFLICT') {
+        setConflictData(axErr.response.data);
+        setTutorLeaseToken(null);
+      }
+    }
+  };
+
+  // Lease acquisition and periodic heartbeat
+  useEffect(() => {
+    tryAcquireLease(false);
+
+    const interval = setInterval(async () => {
+      const currentToken = leaseTokenRef.current;
+      if (currentToken) {
+        const ok = await sendTutorHeartbeat(currentToken);
+        if (!ok) {
+          setIsSuperseded(true);
+          setLeaseToken(null);
+          setTutorLeaseToken(null);
+        }
+      }
+    }, 10000);
+
+    return () => {
+      clearInterval(interval);
+      const currentToken = leaseTokenRef.current;
+      if (currentToken) {
+        releaseTutorLease(currentToken);
+        setTutorLeaseToken(null);
+      }
+    };
+  }, [isAuthenticated]);
+
+
   const handleSendMessage = async (textToSend?: string) => {
+    // Intercept sign-in action
+    if (textToSend === '__SIGN_IN__') {
+      login();
+      return;
+    }
+
     // Intercept switch-to-mock action
     if (textToSend === '__SWITCH_TO_MOCK__') {
       tutorService.setMockMode(true);
@@ -125,6 +206,10 @@ What topic would you like to explore together today?`,
       // Remove previous error message if present to give a clean retry experience
       setMessages((prev) => prev.filter((m) => !m.id.includes('-err')));
       handleSendMessage(questionToRetry);
+      return;
+    }
+
+    if (isSuperseded) {
       return;
     }
 
@@ -164,7 +249,7 @@ What topic would you like to explore together today?`,
         actionPills = response.suggestedFollowUps.map((item, idx) => {
           if (typeof item === 'string') {
             return {
-              id: `followup-${idx}-${Date.now()}`,
+              id: `followup-${idx}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
               label: item,
               prompt: item,
             };
@@ -199,11 +284,23 @@ What topic would you like to explore together today?`,
         ? 'மன்னிக்கவும், இணைப்புப் பிழை ஏற்பட்டது. சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.'
         : 'I encountered a brief connection issue. Let us try that again in a moment.';
 
-      const axiosErr = err as { response?: { status?: number } };
+      const axiosErr = err as { response?: { status?: number; data?: { error?: string; message?: string } } };
       const status = axiosErr?.response?.status;
       let errorActions: TutorAction[] | undefined = undefined;
 
-      if (status === 401) {
+      if (status === 409) {
+        const errorData = axiosErr?.response?.data;
+        setIsSuperseded(true);
+        setLeaseToken(null);
+        setTutorLeaseToken(null);
+        tryAcquireLease(false);
+
+        errorText = language === 'si'
+          ? 'තවත් උපකරණයක මෙම ඉගෙනුම් සැසිය ක්‍රියාත්මකයි (409 Conflict). මෙම උපකරණයට සැසිය මාරු කිරීමට කරුණාකර තහවුරු කරන්න.'
+          : language === 'ta'
+          ? 'வேறொரு சாதனத்தில் இந்த அமர்வு செயலில் உள்ளது (409 Conflict). இந்த சாதனத்திற்கு மாற்ற உறுதிப்படுத்தவும்.'
+          : (errorData?.message || 'Another device is currently using this tutor session (409 Conflict). Please take over the session to continue.');
+      } else if (status === 401) {
         errorText = language === 'si'
           ? 'සත්‍යාපනය අවශ්‍යයි (401 Unauthorized). සේවාදායකයට වලංගු Bearer Token එකක් හෝ සක්‍රිය Session එකක් අවශ්‍යයි.'
           : language === 'ta'
@@ -212,7 +309,12 @@ What topic would you like to explore together today?`,
 
         errorActions = [
           {
-            id: 'switch-to-mock',
+            id: `sign-in-${Date.now()}`,
+            label: '🔑 Sign In with Student Account',
+            prompt: '__SIGN_IN__',
+          },
+          {
+            id: `switch-to-mock-${Date.now()}`,
             label: language === 'si'
               ? '⚡ නිරූපණ මාදිලියට මාරුවන්න (Demo Mode)'
               : language === 'ta'
@@ -221,7 +323,7 @@ What topic would you like to explore together today?`,
             prompt: '__SWITCH_TO_MOCK__',
           },
           {
-            id: 'retry-401',
+            id: `retry-401-${Date.now()}`,
             label: language === 'si'
               ? 'නැවත උත්සාහ කරන්න'
               : language === 'ta'
@@ -524,6 +626,7 @@ What topic would you like to explore together today?`,
             ref={inputRef}
             rows={1}
             value={inputMessage}
+            disabled={isSuperseded}
             onChange={(e) => {
               setInputMessage(e.target.value);
               if (e.target.value.trim() && tutorState === 'idle') {
@@ -538,21 +641,31 @@ What topic would you like to explore together today?`,
                 handleSendMessage();
               }
             }}
-            placeholder={t('tutor.inputPlaceholder')}
-            className="flex-1 bg-transparent py-2.5 px-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none resize-none max-h-32"
+            placeholder={
+              isSuperseded
+                ? (language === 'si'
+                    ? 'මෙම සැසිය වෙනත් උපකරණයකට මාරු කර ඇත. නැවත සම්බන්ධ වීමට Reconnect ක්ලික් කරන්න.'
+                    : language === 'ta'
+                    ? 'அமர்வு வேறொரு சாதனத்திற்கு மாற்றப்பட்டுள்ளது. மீண்டும் இணைய Reconnect என்பதை கிளிக் செய்யவும்.'
+                    : 'Session active on another device. Click Reconnect to resume.')
+                : t('tutor.inputPlaceholder')
+            }
+            className={`flex-1 bg-transparent py-2.5 px-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none resize-none max-h-32 ${
+              isSuperseded ? 'cursor-not-allowed opacity-60' : ''
+            }`}
           />
 
           {/* Submit Button */}
           <button
             type="button"
-            disabled={!inputMessage.trim()}
+            disabled={isSuperseded || !inputMessage.trim()}
             onClick={() => handleSendMessage()}
             className={`p-3 rounded-xl flex items-center justify-center transition-all ${
-              inputMessage.trim()
+              !isSuperseded && inputMessage.trim()
                 ? 'bg-gradient-to-r from-atlas-deep to-atlas-blue text-white shadow-md hover:from-slate-900 hover:to-atlas-deep'
                 : 'bg-slate-200 text-slate-400 cursor-not-allowed'
             }`}
-            title={t('tutor.send')}
+            title={isSuperseded ? 'Session transferred to another device' : t('tutor.send')}
           >
             <Send className="w-4 h-4" />
           </button>
@@ -564,6 +677,61 @@ What topic would you like to explore together today?`,
           </span>
         </div>
       </div>
+
+      {/* Concurrency Takeover Modal */}
+      {conflictData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 text-center space-y-4 animate-in fade-in zoom-in-95">
+            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900">Active Tutor Session</h3>
+              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                Another device (<strong>{conflictData.activeDeviceName || 'Registered Device'}</strong>) is currently running an active tutoring session.
+                ATLAS Learn allows 1 active tutor session per learner.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => { window.location.href = '/'; }}
+                className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+              >
+                Return Home
+              </button>
+              <button
+                type="button"
+                onClick={() => tryAcquireLease(true)}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-md transition-all"
+              >
+                Take Over Session
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Session Transferred / Superseded Toast */}
+      {isSuperseded && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
+          <div className="bg-slate-900 text-white p-4 rounded-2xl shadow-2xl border border-amber-500/40 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0" />
+              <p className="text-xs text-slate-200 truncate">
+                Tutor session transferred to another device or expired.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => tryAcquireLease(true)}
+              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold rounded-xl transition-colors flex-shrink-0"
+            >
+              Reconnect
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
