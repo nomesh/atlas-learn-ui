@@ -60,6 +60,54 @@ export const SubjectDetailPage: React.FC = () => {
         </button>
       </div>
 
+      {/* Ingested Textbook Indicator Banner */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 border border-emerald-200/80 shadow-soft flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-3.5">
+          <div className="w-10 h-10 rounded-2xl bg-emerald-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm mt-0.5 sm:mt-0">
+            <BookOpen className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-emerald-950 uppercase tracking-wide">
+                Official Ministry Textbook Grounded
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-200/70 text-emerald-800 text-[10px] font-extrabold">
+                {subject.id === 'ict'
+                  ? '105 Chunks Active'
+                  : subject.id === 'science'
+                  ? '232 Chunks Active'
+                  : subject.id === 'maths'
+                  ? '183 Chunks Active'
+                  : 'Syllabus Grounded'}
+              </span>
+            </div>
+            <p className="text-xs text-emerald-800/80 mt-1 font-medium leading-relaxed">
+              {subject.id === 'ict'
+                ? 'ICT Grade 8 English Medium (2024 Edition) is fully indexed and ready for AI Tutor question answering.'
+                : subject.id === 'science'
+                ? 'Science Grade 10 English Medium (2024 Edition) is fully indexed and ready for AI Tutor question answering.'
+                : `${subject.name[language]} syllabus materials are indexed in PGVector and eligible for AI Tutor semantic search.`}
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            setCurriculumSubject(subject.id);
+            const q =
+              subject.id === 'ict'
+                ? 'Explain computer hardware and components from the Grade 8 ICT textbook'
+                : `What are the core concepts of ${subject.name.en}?`;
+            navigate(`/tutor?q=${encodeURIComponent(q)}`);
+          }}
+          className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition-all flex-shrink-0 self-stretch sm:self-auto justify-center"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-emerald-200" />
+          <span>Ask Questions from Book</span>
+        </button>
+      </div>
+
       {/* Topics List */}
       <div>
         <h2 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">

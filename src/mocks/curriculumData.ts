@@ -201,6 +201,78 @@ export const MOCK_TOPICS: Topic[] = [
     },
     lessonsCount: 4,
     completedPercentage: 90,
+  },
+  {
+    id: 'computer-systems-hardware',
+    subjectId: 'ict',
+    chapterNumber: 1,
+    grade: 'grade-8',
+    title: {
+      en: 'Computer Systems & Hardware Architecture',
+      si: 'පරිගණක පද්ධති සහ දෘඪාංග ව්‍යුහය',
+      ta: 'கணினி அமைப்புகளும் வன்பொருள் கட்டமைப்பும்',
+    },
+    description: {
+      en: 'Input, processing, output, and secondary storage devices. Understanding system components and specifications.',
+      si: 'ආදාන, සැකසුම්, ප්‍රතිදාන සහ ද්විතීයික ආචයන උපාංග. පද්ධති උපාංග සහ තාක්ෂණික පිරිවිතර.',
+      ta: 'உள்ளீட்டு, செயலாக்க, வெளியீட்டு மற்றும் சேமிப்பக சாதனங்கள். அமைப்புக் கூறுகளைப் புரிந்துகொள்ளுதல்.',
+    },
+    lessonsCount: 4,
+    completedPercentage: 0,
+  },
+  {
+    id: 'algorithms-flowcharts',
+    subjectId: 'ict',
+    chapterNumber: 2,
+    grade: 'grade-8',
+    title: {
+      en: 'Algorithms, Flowcharts & Problem Solving',
+      si: 'ඇල්ගොරිතම, ගැලීම් සටහන් සහ ගැටලු විසඳීම',
+      ta: 'படிமுறைகள், பாய்வுப்படங்கள் மற்றும் சிக்கல் தீர்த்தல்',
+    },
+    description: {
+      en: 'Step-by-step instructions, standard flowchart symbols, sequence, selection, and simple loops.',
+      si: 'පියවරෙන් පියවර උපදෙස්, සම්මත ගැලීම් සටහන් සංකේත, අනුක්‍රම, තේරීම් සහ සරල පුනරාවර්තන.',
+      ta: 'படிமுறை அறிவுறுத்தல்கள், பாய்வுப்படக் குறியீடுகள், வரிசைமுறை மற்றும் எளிய சுழற்சிகள்.',
+    },
+    lessonsCount: 4,
+    completedPercentage: 0,
+  },
+  {
+    id: 'productivity-word-spreadsheets',
+    subjectId: 'ict',
+    chapterNumber: 3,
+    grade: 'grade-8',
+    title: {
+      en: 'Productivity Tools: Word Processing & Spreadsheets',
+      si: 'කාර්යාලීය මෘදුකාංග: ලේඛන සැකසුම් සහ පැතුරුම්පත්',
+      ta: 'பயன்பாட்டு மென்பொருள்: சொல் செயலாக்கம் மற்றும் விரிதாள்கள்',
+    },
+    description: {
+      en: 'Document formatting, tables, spreadsheet grid, basic formulas (SUM, AVERAGE), and data charts.',
+      si: 'ලේඛන හැඩසවි ගැන්වීම, වගු, පැතුරුම්පත් ජාලකය, සරල සූත්‍ර (SUM, AVERAGE) සහ දත්ත ප්‍රස්ථාර.',
+      ta: 'ஆவண வடிவமைப்பு, அட்டவணைகள், விரிதாள் கட்டமைப்பு, எளிய சூத்திரங்கள் மற்றும் தரவு வரைபடங்கள்.',
+    },
+    lessonsCount: 3,
+    completedPercentage: 0,
+  },
+  {
+    id: 'internet-cybersecurity',
+    subjectId: 'ict',
+    chapterNumber: 4,
+    grade: 'grade-8',
+    title: {
+      en: 'Internet, Digital Literacy & Cybersecurity',
+      si: 'අන්තර්ජාලය, ඩිජිටල් සාක්ෂරතාව සහ සයිබර් ආරක්ෂාව',
+      ta: 'இணையம், டிஜிட்டல் அறிவு மற்றும் இணையப் பாதுகாப்பு',
+    },
+    description: {
+      en: 'Web searching techniques, email communication, safe browsing, protecting passwords, and cyber hygiene.',
+      si: 'වෙබ් සෙවුම් ක්‍රම, විද්‍යුත් තැපෑල, ආරක්ෂිත අන්තර්ජාල භාවිතය, මුරපද සුරැකීම සහ සයිබර් ආචාරධර්ම.',
+      ta: 'இணைய தேடல் முறைகள், மின்னஞ்சல் தொடர்பு, பாதுகாப்பான இணையப் பயன்பாடு மற்றும் கடவுச்சொல் பாதுகாப்பு.',
+    },
+    lessonsCount: 3,
+    completedPercentage: 0,
   }
 ];
 
