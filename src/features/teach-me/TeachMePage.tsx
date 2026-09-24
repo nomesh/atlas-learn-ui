@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
   ArrowLeft, 
@@ -15,21 +15,33 @@ import {
 } from 'lucide-react';
 import { useStudent } from '../../state/studentContext';
 import { TutorAvatar } from '../avatar/TutorAvatar';
-import { TEACH_ME_PHOTOSYNTHESIS_STEPS } from '../../mocks/curriculumData';
+import { getLessonStepsForTopic, MOCK_TOPICS } from '../../mocks/curriculumData';
 
 export const TeachMePage: React.FC = () => {
+  const { topicId } = useParams<{ topicId: string }>();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { language, setTutorState, tutorState } = useStudent();
+  const { language, setTutorState, tutorState, setCurriculumSubject } = useStudent();
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [isAnswerSubmitted, setIsAnswerSubmitted] = useState(false);
   const [isLessonFinished, setIsLessonFinished] = useState(false);
 
-  const steps = TEACH_ME_PHOTOSYNTHESIS_STEPS;
-  const currentStep = steps[currentStepIndex];
-  const question = currentStep.checkQuestion;
+  const steps = getLessonStepsForTopic(topicId);
+  const currentStep = steps[currentStepIndex] || steps[0];
+  const question = currentStep?.checkQuestion;
+  const currentTopic = MOCK_TOPICS.find((t) => t.id === topicId);
+
+  useEffect(() => {
+    if (currentTopic) {
+      setCurriculumSubject(currentTopic.subjectId, currentTopic.id);
+    }
+    setCurrentStepIndex(0);
+    setSelectedOptionId(null);
+    setIsAnswerSubmitted(false);
+    setIsLessonFinished(false);
+  }, [topicId]);
 
   const handleSelectOption = (optionId: string) => {
     if (isAnswerSubmitted) return;
