@@ -50,6 +50,7 @@ export const TutorPage: React.FC = () => {
   const [isListeningMic, setIsListeningMic] = useState(false);
   const [isMockMode, setIsMockMode] = useState(() => tutorService.isMockMode());
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Lease concurrency state
@@ -129,9 +130,19 @@ What topic would you like to explore together today?`,
     }
   }, [searchParams, setSearchParams]);
 
-  // Auto-scroll to bottom of conversation
+  // Ensure window stays at top on mount
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    window.scrollTo(0, 0);
+  }, []);
+
+  // Auto-scroll strictly inside conversation thread container (prevents window jumping)
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
   }, [messages, tutorState]);
 
   const tryAcquireLease = async (forceTakeover: boolean = false) => {
@@ -401,7 +412,7 @@ What topic would you like to explore together today?`,
   };
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-11rem)] md:h-[calc(100vh-8.5rem)] max-w-4xl mx-auto bg-white rounded-3xl border border-slate-200 shadow-soft overflow-hidden">
+    <div className="flex flex-col flex-1 h-full min-h-0 max-w-4xl w-full mx-auto bg-white rounded-3xl border border-slate-200 shadow-soft overflow-hidden">
       {/* 1. Tutor Header Bar */}
       <div className="px-3.5 sm:px-6 py-3 sm:py-3.5 bg-gradient-to-r from-slate-900 via-atlas-navy to-atlas-deep text-white flex items-center justify-between flex-shrink-0 gap-2 min-h-[58px]">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -477,7 +488,10 @@ What topic would you like to explore together today?`,
       </div>
 
       {/* 2. Multi-Turn Conversation Thread */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5 bg-[#F8FAFC]">
+      <div
+        ref={chatContainerRef}
+        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5 bg-[#F8FAFC]"
+      >
         {messages.map((msg) => {
           const isStudent = msg.role === 'student';
 
