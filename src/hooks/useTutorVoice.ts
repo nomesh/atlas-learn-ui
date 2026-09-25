@@ -169,9 +169,13 @@ export function useTutorVoice(
       wordTimerRef.current = null;
     }
     if (audioRef.current) {
+      audioRef.current.onended = null;
+      audioRef.current.onerror = null;
+      audioRef.current.onplay = null;
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
-      audioRef.current = null;
+      audioRef.current.removeAttribute('src');
+      audioRef.current.load();
     }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
@@ -186,7 +190,15 @@ export function useTutorVoice(
   const fallbackSpeechSynthesis = useCallback(
     (options: VoiceNarrationOptions, lang: Language) => {
       if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+      const voices = window.speechSynthesis.getVoices();
+      const ladyVoice = findLadyVoice(voices, lang);
+      // Strictly avoid English robot voices reading Sinhala or Tamil text
+      if ((lang === 'si' || lang === 'ta') && !ladyVoice) {
+        console.warn(`[useTutorVoice] No native lady voice for ${lang}, skipping robot fallback.`);
+        return;
+      }
       const utterance = new SpeechSynthesisUtterance(options.text);
+      if (ladyVoice) utterance.voice = ladyVoice;
       utterance.lang = lang === 'si' ? 'si-LK' : lang === 'ta' ? 'ta-LK' : 'en-US';
       utterance.pitch = 1.18;
       utterance.rate = 0.94;
@@ -224,9 +236,9 @@ export function useTutorVoice(
         : (typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis.getVoices() : []);
       const ladyVoice = findLadyVoice(voicesList, lang);
 
-      // When Sinhala or Tamil is requested and browser has NO native Sinhala/Tamil TTS voice:
-      // Play authentic native Google TTS audio! (Avoids English robot voices skipping Sinhala text)
-      if ((lang === 'si' || lang === 'ta') && !ladyVoice) {
+      // When Sinhala or Tamil is requested (or English without a lady voice):
+      // Play authentic native Google TTS audio via Vite proxy! (Provides natural Sinhala lady voice)
+      if (lang === 'si' || lang === 'ta' || !ladyVoice) {
         const clauses = splitIntoClauses(options.text);
         chunksListRef.current = clauses;
         chunkIndexRef.current = 0;
@@ -245,9 +257,15 @@ export function useTutorVoice(
 
           chunkIndexRef.current = index;
           const currentClause = chunksListRef.current[index];
-          const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${lang}&client=tw-ob&q=${encodeURIComponent(currentClause)}`;
-          const audio = new Audio(ttsUrl);
-          audioRef.current = audio;
+          // Use Vite proxy route with Google Referer headers
+          const primaryUrl = `/api/tts?ie=UTF-8&tl=${lang}&client=tw-ob&q=${encodeURIComponent(currentClause)}`;
+          const fallbackUrl = `/api/learn/tts?lang=${lang}&text=${encodeURIComponent(currentClause)}`;
+
+          if (!audioRef.current) {
+            audioRef.current = new Audio();
+          }
+          const audio = audioRef.current;
+          audio.src = primaryUrl;
 
           // Word pulses for the animated speech bubble
           const words = currentClause.trim().split(/\s+/);
@@ -270,14 +288,28 @@ export function useTutorVoice(
             playChunkAt(index + 1);
           };
 
+          let hasTriedFallback = false;
           audio.onerror = (e) => {
-            console.warn('[useTutorVoice] Google TTS chunk playback error, trying next chunk:', e);
-            playChunkAt(index + 1);
+            if (!hasTriedFallback) {
+              hasTriedFallback = true;
+              console.warn('[useTutorVoice] Primary TTS failed, trying fallback backend URL...');
+              audio.src = fallbackUrl;
+              audio.play().catch(() => playChunkAt(index + 1));
+            } else {
+              console.warn('[useTutorVoice] TTS chunk error, proceeding to next chunk:', e);
+              playChunkAt(index + 1);
+            }
           };
 
           audio.play().catch((err) => {
             console.warn('[useTutorVoice] audio play failed:', err);
-            fallbackSpeechSynthesis(options, lang);
+            if (!hasTriedFallback) {
+              hasTriedFallback = true;
+              audio.src = fallbackUrl;
+              audio.play().catch(() => playChunkAt(index + 1));
+            } else {
+              playChunkAt(index + 1);
+            }
           });
         };
 
@@ -293,7 +325,7 @@ export function useTutorVoice(
         if (ladyVoice) {
           utterance.voice = ladyVoice;
         }
-        utterance.lang = lang === 'si' ? 'si-LK' : lang === 'ta' ? 'ta-LK' : 'en-US';
+        utterance.lang = 'en-US';
         utterance.pitch = 1.18;
         utterance.rate = 0.94;
 
