@@ -65,19 +65,56 @@ export class MockTutorAdapter implements TutorAdapter {
 
     // 2. Response generation based on Sri Lankan curriculum topics & student intent
 
+    // ICT Chapter 3: Word Processing
+    if (
+      context.topicId === 'word-processing' ||
+      lowerQ.includes('word process') ||
+      lowerQ.includes('word art') ||
+      lowerQ.includes('clip art') ||
+      lowerQ.includes('justify') ||
+      lowerQ.includes('font') ||
+      lowerQ.includes('paragraph') ||
+      lowerQ.includes('alignment') ||
+      lowerQ.includes('subscript') ||
+      lowerQ.includes('superscript') ||
+      lowerQ.includes('table') ||
+      lowerQ.includes('save as') ||
+      lowerQ.includes('spell check') ||
+      lowerQ.includes('orientation') ||
+      lowerQ.includes('landscape') ||
+      lowerQ.includes('portrait') ||
+      lowerQ.includes('co2') ||
+      lowerQ.includes('2^3') ||
+      lowerQ.includes('වදන් සැකසුම') ||
+      lowerQ.includes('සමපාත') ||
+      lowerQ.includes('උපලකුණු') ||
+      lowerQ.includes('උඩුලකුණු') ||
+      lowerQ.includes('අකුරු') ||
+      lowerQ.includes('ඡේද') ||
+      lowerQ.includes('වගු') ||
+      lowerQ.includes('சொல் செயலாக்கம்') ||
+      lowerQ.includes('சீரமைப்பு')
+    ) {
+      if (lowerQ.includes('clarify') || lowerQ.includes('break this down') || lowerQ.includes('more detail') || lowerQ.includes('තවදුරටත්') || lowerQ.includes('விளக்குங்கள்')) {
+        return this.handleWordProcessingClarify(lang);
+      }
+      if (lowerQ.includes('easier') || lowerQ.includes('simpler') || lowerQ.includes('සරල') || lowerQ.includes('எளிதாக')) {
+        return this.handleWordProcessingSimpler(lang);
+      }
+      if (lowerQ.includes('example') || lowerQ.includes('උදාහරණ') || lowerQ.includes('உதாரணம்')) {
+        return this.handleWordProcessingExample(lang);
+      }
+      return this.handleWordProcessing(lang);
+    }
+
     // ICT Chapter 1: Number Systems
     if (lowerQ.includes('number system') || lowerQ.includes('binary') || lowerQ.includes('decimal') || lowerQ.includes('switch') || lowerQ.includes('transistor') || lowerQ.includes('base 2') || lowerQ.includes('base 10') || lowerQ.includes('ද්විමය') || lowerQ.includes('දශමය') || lowerQ.includes('සංඛ්‍යා පද්ධති') || lowerQ.includes('இரும') || lowerQ.includes('எண் முறை')) {
       return this.handleNumberSystems(lang);
     }
 
     // ICT Chapter 2: Configuring & Formatting a Computer (Desktop customization, resolution, keyboard, formatting)
-    if (lowerQ.includes('desktop') || lowerQ.includes('customiz') || lowerQ.includes('display') || lowerQ.includes('resolution') || lowerQ.includes('format') || lowerQ.includes('keyboard') || lowerQ.includes('screen') || lowerQ.includes('වින්‍යාස') || lowerQ.includes('හැඩසවි') || lowerQ.includes('විභේදනය') || lowerQ.includes('யතුරුපුවරු') || lowerQ.includes('உள்ளமை') || lowerQ.includes('தெளிவுத்திறன்')) {
+    if (lowerQ.includes('desktop') || lowerQ.includes('customiz') || lowerQ.includes('display') || lowerQ.includes('resolution') || lowerQ.includes('disk format') || lowerQ.includes('keyboard') || lowerQ.includes('screen') || lowerQ.includes('වින්‍යාස') || lowerQ.includes('හැඩසවි') || lowerQ.includes('විභේදනය') || lowerQ.includes('යතුරුපුවරු') || lowerQ.includes('உள்ளமை') || lowerQ.includes('தெளிவுத்திறன்')) {
       return this.handleConfiguringComputer(lang);
-    }
-
-    // ICT Chapter 3: Word Processing
-    if (lowerQ.includes('word process') || lowerQ.includes('justify') || lowerQ.includes('font') || lowerQ.includes('paragraph') || lowerQ.includes('alignment') || lowerQ.includes('orientation') || lowerQ.includes('landscape') || lowerQ.includes('portrait') || lowerQ.includes('වදන් සැකසුම') || lowerQ.includes('සමපාත') || lowerQ.includes('சொல் செயலாக்கம்')) {
-      return this.handleWordProcessing(lang);
     }
 
     // ICT Chapter 4: Programming (Scratch)
@@ -350,7 +387,10 @@ Would you like to try calculating a hypotenuse together?`,
     };
   }
 
-    private handleClarifyExplanation(lang: 'en' | 'si' | 'ta', context: LearningContext): RAGResponse {
+  private handleClarifyExplanation(lang: 'en' | 'si' | 'ta', context: LearningContext): RAGResponse {
+    if (context.topicId === 'word-processing') {
+      return this.handleWordProcessingClarify(lang);
+    }
     const isIct = context.subjectId === 'ict';
     const isHistory = context.subjectId === 'history';
 
@@ -443,6 +483,9 @@ Would you like to try converting another decimal number or test it in the intera
   }
 
   private handleSimplerExplanation(lang: 'en' | 'si' | 'ta', context?: LearningContext): RAGResponse {
+    if (context?.topicId === 'word-processing') {
+      return this.handleWordProcessingSimpler(lang);
+    }
     const isIct = context?.subjectId === 'ict';
     const isHistory = context?.subjectId === 'history';
 
@@ -504,6 +547,9 @@ Without this simple plant magic, living creatures wouldn't have oxygen to breath
   }
 
   private handleExample(lang: 'en' | 'si' | 'ta', context?: LearningContext): RAGResponse {
+    if (context?.topicId === 'word-processing') {
+      return this.handleWordProcessingExample(lang);
+    }
     const isIct = context?.subjectId === 'ict';
     const isHistory = context?.subjectId === 'history';
 
@@ -979,49 +1025,254 @@ Setting up your desktop environment, regional languages, and storage volumes cor
     const sources: SourceCitation[] = [
       {
         documentId: 'moe-lk-ict-gr8-ict-gr8-en',
-        source: 'Grade 8 ICT Textbook — Chapter 3: Word Processing (Educational Publications Department Sri Lanka)',
+        source: 'Grade 8 ICT Textbook — Chapter 3: Word Processing (Educational Publications Department Sri Lanka, Pages 34–38)',
         fileType: 'PDF',
-        pageNumber: 35,
+        pageNumber: 34,
+        chunkNumber: 80,
+        distance: 0.08,
+        excerpt: 'Chapter 3: Word Processing. We can create documents like letters, question papers, newspapers, application forms, invitations, greeting cards, and magazines using word processing software.',
+      },
+      {
+        documentId: 'moe-lk-ict-gr8-ict-gr8-en',
+        source: 'Grade 8 ICT Textbook — Chapter 3: Common Tools & Character Formatting (Pages 35–36)',
+        fileType: 'PDF',
+        pageNumber: 36,
         chunkNumber: 82,
-        distance: 0.13,
-        excerpt: null,
+        distance: 0.09,
+        excerpt: 'Common Tools: New, Open, Save, Save As, Print Preview, Print. Text formatting: Font type, Font size, Font color, Bold, Italic, Underline, Subscript and Superscript.',
+      },
+      {
+        documentId: 'moe-lk-ict-gr8-ict-gr8-en',
+        source: 'Grade 8 ICT Textbook — Chapter 3: Paragraph Formatting & Objects (Pages 37–38)',
+        fileType: 'PDF',
+        pageNumber: 37,
+        chunkNumber: 84,
+        distance: 0.10,
+        excerpt: 'Paragraph alignment: Align Left, Center, Align Right, Justify. Inserting Pictures, Clip Art, Shapes, Word Art, Text boxes, and Tables.',
       }
     ];
 
-    const enAnswer = `**Word Processing — Grade 8 ICT (Chapter 3)**
+    const enAnswer = `**Grade 8 ICT — Chapter 3: Word Processing (Textbook Pages 34–38)**
 
-Word processing software allows creating, editing, formatting, and printing standardized electronic documents:
+Word processing software is designed to create, edit, format, store, and print documents electronically. As introduced in the textbook dialogue (p. 34), manual handwriting often leads to uneven letter size, messy erasures, and difficulty producing multiple copies for school events. Word processing solves all these problems with precision tools.
 
-### 1. Text Formatting & Alignment:
-- **Left Align (Ctrl+L):** Standard for informal English reading left-to-right.
-- **Center Align (Ctrl+E):** Used for titles, certificates, and poem stanzas.
-- **Right Align (Ctrl+R):** Used for date lines and sender addresses.
-- **Justify (Ctrl+J):** Aligns text evenly along **both** left and right margins with uniform spacing. Used in official textbooks and newspapers!
+---
 
-### 2. Document Setup:
-- **Page Orientation:** Portrait (vertical) vs Landscape (horizontal).
-- **Margins:** Top, Bottom, Left, and Right whitespace borders.
-- **Headers & Footers:** Automatic page numbering, document titles, or dates displayed consistently across all pages.`;
+### 1. The 7 Common Document Types (Figure 3.1, p. 35)
+Word processing software is used in schools and offices to produce:
+1. **Letters** (formal official letters, permission slips)
+2. **Question Papers** (school term examinations with formulas)
+3. **Newspapers** (multi-column journalism)
+4. **Application Forms** (structured admission or club sign-up sheets)
+5. **Invitations** (English Day, Prize Giving, Sports Meet invitations)
+6. **Greeting Cards** (artistic cards with illustrations)
+7. **Magazines** (school annual publications with justified articles)
 
-    const siAnswer = `**වදන් සැකසුම (Word Processing) — 3 වන පරිච්ඡේදය**
+---
 
-### 1. ඡේද පෙළගැස්වීම් (Paragraph Alignments):
-- **වමට පෙළගැස්වීම (Ctrl+L):** සාමාන්‍ය ලේඛන සඳහා.
-- **මධ්‍යගත කිරීම (Ctrl+E):** ප්‍රධාන මාතෘකා සහ සහතිකපත් සඳහා.
-- **දකුණට පෙළගැස්වීම (Ctrl+R):** ලිපින සහ දිනයන් සඳහා.
-- **සමපාත කිරීම (Justify - Ctrl+J):** වම් සහ දකුණු දෙපසම පිළිවෙළට සමානව තැබීම. පුවත්පත් සහ පෙළපොත් වල භාවිත වේ!
+### 2. Common Document Management Tools (p. 35)
+- **New (Ctrl+N):** Opens a blank new document.
+- **Open (Ctrl+O):** Opens an existing file saved on storage.
+- **Save (Ctrl+S):** Updates changes to the current document under its existing name.
+- **Save As:** Saves a new copy under a *new filename*, location, or format (e.g. PDF).
+- **Print Preview:** Displays on screen exactly how the document will appear on paper before printing.
+- **Print (Ctrl+P):** Transmits the document to a printer.
 
-### 2. පිටු සැකසුම (Page Setup):
-- **දිශානතිය (Orientation):** සිරස් (Portrait) සහ තිරස් (Landscape).
-- **ශීර්ෂක සහ පාදක (Header & Footer):** සෑම පිටුවකම ඉහළ සහ පහළින් පිටු අංක හෝ මාතෘකා යෙදීම.`;
+---
 
-    const taAnswer = `**சொல் செயலாக்கம் (Word Processing) — அத்தியாயம் 3**
+### 3. Edit & Clipboard Tools (p. 36)
+- **Undo (Ctrl+Z):** Reverses the last action or accidental erasure.
+- **Redo (Ctrl+Y):** Re-applies an action that was undone.
+- **Cut (Ctrl+X):** Removes selected text or objects and places them on the Clipboard.
+- **Copy (Ctrl+C):** Duplicates selected text without deleting the original.
+- **Paste (Ctrl+V):** Inserts copied or cut content at the cursor position.
+- **Spell Check (F7):** Automatically detects spelling mistakes (red wavy underline) and grammatical issues (green or blue wavy underline).
 
-### 1. உரை சீரமைப்பு (Text Alignment):
-- **இடது சீரமைப்பு (Ctrl+L)**
-- **மையச் சீரமைப்பு (Ctrl+E)**
-- **வலது சீரமைப்பு (Ctrl+R)**
-- **நேர்த்தி செய்தல் (Justify - Ctrl+J):** இருபுறமும் சீராக அமையச்செய்தல்.`;
+---
+
+### 4. Character & Font Formatting (p. 36)
+- **Font Face:** Times New Roman, Cambria, Arial for English; Nirmala UI (Unicode) or FMAbhaya for Sinhala; Latha or Nirmala UI for Tamil.
+- **Font Size:** Standard headings use 14–18 pt+, while body paragraphs use 12 pt.
+- **Styles & Emphasis:** **Bold (Ctrl+B)**, *Italic (Ctrl+I)*, <u>Underline (Ctrl+U)</u>, Font Color, and Highlight Color.
+- **Subscript & Superscript (Activities 3.4 & 3.5):**
+  - **Subscript ($x_2$):** Lowers characters below the baseline. Essential for chemical formulas (e.g. $CO_2$, $H_2O$).
+  - **Superscript ($x^2$):** Raises characters above the baseline. Essential for mathematical powers ($2^2, 2^3, 5^2$) and ordinal rankings ($1^{st}, 2^{nd}$).
+
+---
+
+### 5. Paragraph Formatting & Alignment (p. 37)
+- **Align Left (Ctrl+L):** Flushes text against the left margin; standard default for paragraphs.
+- **Center (Ctrl+E):** Centers text between margins; ideal for headings, titles, and certificates.
+- **Align Right (Ctrl+R):** Flushes text against the right margin; used for dates, reference numbers, and signatures.
+- **Justify (Ctrl+J):** Dynamically adjusts spacing between words so text aligns squarely against **both left and right margins** simultaneously (standard for textbooks, newspapers, and magazines).
+- **Line & Paragraph Spacing:** Adjusts vertical breathing room between sentences.
+- **Bullets & Numbering:** Organizes lists cleanly into bullet points or numbered sequences.
+
+---
+
+### 6. Inserting Objects, Tables & Layout (p. 37–38)
+- **Pictures:** Insert digital photos or school logos from storage.
+- **Clip Art & Shapes:** Insert geometric shapes (rectangles, arrows, banners) for diagrams.
+- **Word Art:** Decorative, curved artistic text for event banners and souvenir covers.
+- **Text Boxes:** Floating movable frames for quotations and sidebar callouts.
+- **Tables:** Grids of **Rows**, **Columns**, and **Cells** used for class timetables and grade marksheets.
+- **Page Orientation:** **Portrait** (tall/vertical for letters) vs. **Landscape** (wide/horizontal for wide timetables).
+
+---
+
+### 7. Official Chapter Summary (Textbook p. 38)
+1. Word processing software provides electronic tools to type, edit, and format documents cleanly.
+2. Common file tools (New, Open, Save, Print) ensure systematic document management.
+3. Character tools give precise control over fonts, sizes, emphasis, and scientific notation (Subscript/Superscript).
+4. Paragraph alignments (Left, Center, Right, Justify) produce neat, professional layouts.
+5. Inserting graphics, shapes, and tables makes documents engaging and visually informative.`;
+
+    const siAnswer = `**8 ශ්‍රේණිය තොරතුරු හා සන්නිවේදන තාක්ෂණය — 3 වන පරිච්ඡේදය: වදන් සැකසුම (පෙළපොත පිටු 34–38)**
+
+වදන් සැකසුම් මෘදුකාංග (Word Processing Software) යනු ලේඛන විද්‍යුත් ආකාරයෙන් නිර්මාණය කිරීමට, සංස්කරණය කිරීමට, හැඩසවි ගැන්වීමට, පරිගණකයේ සුරැකීමට සහ මුද්‍රණය කිරීමට භාවිත කරන මෘදුකාංග වේ. පෙළපොතේ 34 වන පිටුවේ දැක්වෙන පරිදි අතින් ලිවීමේදී සිදුවන මැකීම්, අකුරු ප්‍රමාණ අසමාන වීම් සහ පිටපත් කිහිපයක් එක හා සමානව ලබාගැනීමට ඇති අපහසුතා වදන් සැකසුම් මෘදුකාංග මඟින් සම්පූර්ණයෙන්ම මඟහරවා ගත හැක.
+
+---
+
+### 1. වදන් සැකසුම මඟින් සකසන ප්‍රධාන ලේඛන වර්ග 7 (රූපය 3.1, පිටුව 35)
+පෙළපොතේ රූපය 3.1 හි දැක්වෙන පරිදි:
+1. **ලිපි (Letters)** — නිල සහ පෞද්ගලික ලිපි
+2. **ප්‍රශ්න පත්‍ර (Question papers)** — පාසල් වාර විභාග ප්‍රශ්න පත්‍ර
+3. **පුවත්පත් (Newspapers)** — තීරු සහිත ප්‍රවෘත්ති පත්‍ර
+4. **අයදුම්පත් (Application forms)** — සමිති සහ පාසල් ඇතුළත් වීමේ පෝරම
+5. **ආරාධනා පත්‍ර (Invitations)** — ඉංග්‍රීසි දින, ත්‍යාග ප්‍රදානෝත්සව ආරාධනා
+6. **සුබපැතුම් පත් (Greeting cards)** — අලංකාර නිදර්ශන සහිත කාඩ්පත්
+7. **සඟරා (Magazines)** — පාසල් වාර්ෂික සඟරා සහ ලිපි
+
+---
+
+### 2. පොදු ලේඛන මෙවලම් (Common Tools, පිටුව 35)
+- **New (Ctrl+N):** නව හිස් ලේඛනයක් ආරම්භ කිරීම.
+- **Open (Ctrl+O):** පරිගණකයේ දැනටමත් සුරකින ලද ලේඛනයක් විවෘත කිරීම.
+- **Save (Ctrl+S):** පවතින නමින්ම ලේඛනයට කළ වෙනස්කම් ගොනුවේ සුරැකීම.
+- **Save As:** ලේඛනය නව නමකින්, වෙනත් ස්ථානයක හෝ නව ගොනු වර්ගයකින් (උදා: PDF) සුරැකීම.
+- **Print Preview:** මුද්‍රණයට පෙර ලේඛනය කඩදාසියේ දිස්වන ආකාරය තිරය මත පරීක්ෂා කිරීම.
+- **Print (Ctrl+P):** ලේඛනය මුද්‍රණ යන්ත්‍රය වෙත යවා මුද්‍රිත පිටපතක් ලබා ගැනීම.
+
+---
+
+### 3. සංස්කරණ මෙවලම් (Edit & Clipboard Tools, පිටුව 36)
+- **Undo (Ctrl+Z):** අවසන් වරට කළ ක්‍රියාව අහෝසි කිරීම.
+- **Redo (Ctrl+Y):** අහෝසි කළ ක්‍රියාව නැවත සිදුකිරීම.
+- **Cut (Ctrl+X):** තෝරාගත් පෙළ හෝ රූපය ඉවත් කර Clipboard මත තැබීම.
+- **Copy (Ctrl+C):** තෝරාගත් පෙළ මුල් තැනින් ඉවත් නොකර අමතර පිටපතක් Clipboard වෙත ගැනීම.
+- **Paste (Ctrl+V):** පිටපත් කළ හෝ කපාගත් දෑ කර්සරය ඇති තැනට ඇතුළත් කිරීම.
+- **Spell Check (F7):** අක්ෂර වින්‍යාස (රතු රැලි සහිත ඉරි) සහ ව්‍යාකරණ (කොළ/නිල් රැලි සහිත ඉරි) පරීක්ෂාව.
+
+---
+
+### 4. අකුරු හැඩසවි ගැන්වීම (Font Formatting, පිටුව 36)
+- **අකුරු වර්ගය (Font Face):** ඉංග්‍රීසි සඳහා Times New Roman, Cambria; සිංහල යුනිකෝඩ් සඳහා Nirmala UI හෝ FMAbhaya; දෙමළ සඳහා Latha.
+- **අකුරු ප්‍රමාණය (Font Size):** මාතෘකා 14–18 pt+, සාමාන්‍ය ඡේද සඳහා 12 pt.
+- **විලාස:** **Bold (Ctrl+B - තද අකුරු)**, *Italic (Ctrl+I - ඇල අකුරු)*, <u>Underline (Ctrl+U - යටි ඉරි)</u>, අකුරු වර්ණ සහ Highlight.
+- **Subscript සහ Superscript (ක්‍රියාකාරකම් 3.4 සහ 3.5):**
+  - **Subscript ($x_2$ - උපලකුණ):** අකුරු සාමාන්‍ය මට්ටමට වඩා පහළින් යෙදීම. රසායනික සූත්‍ර සඳහා අත්‍යවශ්‍ය වේ (උදා: $CO_2, H_2O$).
+  - **Superscript ($x^2$ - උඩුලකුණ):** අකුරු සාමාන්‍ය මට්ටමට වඩා ඉහළින් යෙදීම. ගණිතමය බල ($2^2, 2^3, 5^2$) සහ අනුක්‍රමික අංක ($1^{st}, 2^{nd}$) සඳහා යොදාගනී.
+
+---
+
+### 5. ඡේද පෙළගැස්වීම් (Paragraph Alignments, පිටුව 37)
+- **වම් පෙළගැස්ම (Align Left, Ctrl+L):** පෙළ වම් දාරයට පෙළගස්වයි; සාමාන්‍ය ඡේද සඳහා පෙරනිමියයි.
+- **මධ්‍යගත කිරීම (Center, Ctrl+E):** දෙපස දාරවලට මැදිව පෙළගස්වයි; ප්‍රධාන මාතෘකා, සහතිකපත් සඳහා.
+- **දකුණු පෙළගැස්ම (Align Right, Ctrl+R):** දකුණු දාරයට පෙළගස්වයි; දිනයන් සහ අත්සන් සඳහා.
+- **දෙපස සමපාත කිරීම (Justify, Ctrl+J):** වචන අතර පරතරය සකසමින් වම් සහ දකුණු දාර දෙකටම එකවර සෘජුව සමපාත කරයි (පෙළපොත් සහ පුවත්පත් සඳහා සම්මතයයි).
+- **පේළි පරතරය සහ බුලට්/අංකනය:** පේළි අතර ඉඩ සකස් කිරීම සහ කරුණු ලැයිස්තුගත කිරීම.
+
+---
+
+### 6. වස්තු, වගු සහ පිටු සැකසුම (Objects, Tables & Layout, පිටු 37–38)
+- **පින්තූර (Pictures):** පාසල් ලාංඡනය හෝ ඡායාරූප ගොනු මඟින් ඇතුළත් කිරීම.
+- **හැඩතල (Shapes & Clip Art):** ඊතල, බැනර්, කොටු මඟින් සටහන් ඇඳීම.
+- **Word Art:** ආකර්ෂණීය අලංකාර අකුරු කලාව මඟින් ප්‍රධාන බැනර් මාතෘකා සකස් කිරීම.
+- **පෙළ කොටු (Text Boxes):** පිටුවේ කැමති තැනකට ගෙන යා හැකි නිදහස් පෙළ කොටු.
+- **වගු (Tables):** පේළි (Rows) සහ තීරු (Columns) මඟින් සෑදෙන කොටු (Cells) තුළ කාලසටහන් හෝ ලකුණු ලැයිස්තු පිළිවෙළට දැක්වීම.
+- **පිටු දිශානතිය (Page Orientation):** සිරස් (Portrait) සහ තිරස් (Landscape).
+
+---
+
+### 7. නිල පාඩම් සාරාංශය (පෙළපොත පිටුව 38)
+1. වදන් සැකසුම් මෘදුකාංග මඟින් ලේඛන පහසුවෙන් සකස් කිරීමට හා සංස්කරණයට ඉඩ සලසයි.
+2. New, Open, Save, Print වැනි පොදු මෙවලම් මඟින් ලේඛන මනා ලෙස කළමනාකරණය කළ හැක.
+3. අකුරු හැඩසවි මෙවලම් මඟින් අකුරු වර්ග, ප්‍රමාණ, විලාස සහ Subscript/Superscript පාලනය කළ හැක.
+4. ඡේද පෙළගැස්වීම් (Left, Center, Right, Justify) මඟින් ලේඛනය පිළිවෙළකට සකස් කරයි.
+5. වගු, හැඩතල සහ රූප ඇතුළත් කිරීමෙන් ලේඛනය වඩාත් ආකර්ෂණීය හා සන්නිවේදනශීලී වේ.`;
+
+    const taAnswer = `**தரம் 8 தகவல் தொடர்பாடல் தொழில்நுட்பம் — அத்தியாயம் 3: சொல் செயலாக்கம் (பாடநூல் பக். 34–38)**
+
+சொல் செயலாக்க மென்பொருள் (Word Processing Software) என்பது ஆவணங்களை இலத்திரனியல் முறையில் உருவாக்க, திருத்த, வடிவமைக்க, கணினியில் சேமிக்க மற்றும் அச்சிடப் பயன்படும் மென்பொருளாகும். கையால் எழுதும் போது ஏற்படும் தவறுகள், அழித்தல்கள் மற்றும் பல பிரதிகளை எடுப்பதில் உள்ள சிரமங்களை சொல் செயலாக்கம் இலகுவாக்குகிறது.
+
+---
+
+### 1. சொல் செயலாக்கம் மூலம் உருவாக்கப்படும் 7 ஆவண வகைகள் (படம் 3.1, பக். 35)
+1. **கடிதங்கள் (Letters)** — உத்தியோகபூர்வ மற்றும் தனிப்பட்ட கடிதங்கள்
+2. **வினாத்தாள்கள் (Question papers)** — பள்ளி தவணைப் பரீட்சை வினாத்தாள்கள்
+3. **பத்திரிகைகள் (Newspapers)** — பல நிரல்களைக் கொண்ட பத்திரிகைகள்
+4. **விண்ணப்பப் படிவங்கள் (Application forms)** — அனுமதிப் படிவங்கள்
+5. **அழைப்பிதழ்கள் (Invitations)** — ஆங்கில தின, பரிசளிப்பு விழா அழைப்பிதழ்கள்
+6. **வாழ்த்து அட்டைகள் (Greeting cards)** — வண்ணமயமான வாழ்த்து அட்டைகள்
+7. **சஞ்சிகைகள் (Magazines)** — பள்ளி ஆண்டு மலர்கள் மற்றும் சஞ்சிகைகள்
+
+---
+
+### 2. பொது ஆவணக் கருவிகள் (Common Tools, பக். 35)
+- **New (Ctrl+N):** புதிய வெற்று ஆவணத்தைத் தொடங்குதல்.
+- **Open (Ctrl+O):** ஏற்கனவே சேமிக்கப்பட்ட ஆவணத்தைத் திறத்தல்.
+- **Save (Ctrl+S):** தற்போதைய ஆவணத்தில் மாற்றங்களைச் சேமித்தல்.
+- **Save As:** புதிய பெயரில் அல்லது புதிய கோப்பு வடிவத்தில் (PDF) சேமித்தல்.
+- **Print Preview:** அச்சிடுவதற்கு முன் காகிதத்தில் தோன்றும் விதத்தை திரையில் பார்த்தல்.
+- **Print (Ctrl+P):** ஆவணத்தை அச்சுப்பொறிக்கு அனுப்பி அச்சிடுதல்.
+
+---
+
+### 3. திருத்தல் கருவிகள் (Edit & Clipboard Tools, பக். 36)
+- **Undo (Ctrl+Z):** கடைசியாகச் செய்த செயலைத் தவிர்த்தல் (மீளப்பெறுதல்).
+- **Redo (Ctrl+Y):** தவிர்த்த செயலை மீண்டும் செய்தல்.
+- **Cut (Ctrl+X):** தெரிவுசெய்த பகுதியை நீக்கி Clipboard இற்கு மாற்றுதல்.
+- **Copy (Ctrl+C):** மூலத்தை அழிக்காமல் பிரதி எடுத்தல்.
+- **Paste (Ctrl+V):** பிரதி அல்லது வெட்டிய பகுதியை ஒட்டுதல்.
+- **Spell Check (F7):** எழுத்துப்பிழை (சிவப்பு அலைக்கோடு) மற்றும் இலக்கணப் பிழைகளைச் (நீல/பச்சை அலைக்கோடு) சரிபார்த்தல்.
+
+---
+
+### 4. எழுத்துரு வடிவமைப்பு (Font Formatting, பக். 36)
+- **எழுத்துரு வகை:** ஆங்கிலத்திற்கு Times New Roman, Cambria; தமிழுக்கு Latha, Nirmala UI.
+- **எழுத்து அளவு:** தலைப்புகளுக்கு 14–18 pt+, பந்திகளுக்கு 12 pt.
+- **பாணிகள்:** **Bold (Ctrl+B - தடித்த எழுத்து)**, *Italic (Ctrl+I - சாய்வெழுத்து)*, <u>Underline (Ctrl+U - அடிக்கோடு)</u>, நிறங்கள்.
+- **Subscript & Superscript (செயற்பாடுகள் 3.4 & 3.5):**
+  - **Subscript ($x_2$ - கீழ் ஒட்டு):** எழுத்தை வரிக் கோட்டிற்கு கீழே அமைத்தல். இரசாயன சூத்திரங்களுக்கு (உதா: $CO_2, H_2O$).
+  - **Superscript ($x^2$ - மேல் ஒட்டு):** எழுத்தை வரிக் கோட்டிற்கு மேலே அமைத்தல். கணித அடுக்குகளுக்கு ($2^2, 2^3, 5^2$) மற்றும் வரிசை எண்களுக்கு ($1^{st}, 2^{nd}$).
+
+---
+
+### 5. பந்தி சீரமைப்புகள் (Paragraph Alignments, பக். 37)
+- **இடது சீரமைப்பு (Align Left, Ctrl+L):** இடது ஓரம் நேராக அமையும்; சாதாரண பந்திகளுக்குப் பயன்படும்.
+- **மையச் சீரமைப்பு (Center, Ctrl+E):** இரு ஓரங்களுக்கும் நடுவில் அமையும்; தலைப்புகளுக்கு உகந்தது.
+- **வலது சீரமைப்பு (Align Right, Ctrl+R):** வலது ஓரம் நேராக அமையும்; திகதி, கையொப்பங்களுக்கு உகந்தது.
+- **இருபுற சீரமைப்பு (Justify, Ctrl+J):** சொற்களுக்கு இடையில் இடைவெளியைச் சரிசெய்து இடது மற்றும் வலது இரு ஓரங்களையும் சமப்படுத்தும் (பாடநூல்கள், பத்திரிகைகளில் வழமையானது).
+- **வரி இடைவெளி மற்றும் பட்டியல்கள் (Bullets & Numbering).**
+
+---
+
+### 6. உருப்படிகள், அட்டவணைகள் மற்றும் பக்க அமைப்பு (பக். 37–38)
+- **படங்கள் (Pictures):** புகைப்படங்கள் அல்லது பள்ளி இலச்சினைகளை சேர்த்தல்.
+- **வடிவங்கள் (Shapes & Clip Art):** அம்புக்குறிகள் மற்றும் வடிவங்கள் வரைதல்.
+- **Word Art:** கவர்ச்சிகரமான அலங்கார எழுத்துக்கள் மூலம் தலைப்புகளை உருவாக்குதல்.
+- **உரைப்பெட்டி (Text Boxes):** நகர்த்தக்கூடிய உரைப்பெட்டிகள்.
+- **அட்டவணைகள் (Tables):** வரிசைகள் (Rows) மற்றும் நிரல்களால் (Columns) ஆன சிற்றறைகளில் (Cells) நேர அட்டவணைகளை அமைத்தல்.
+- **பக்க அமைவு (Orientation):** செங்குத்து (Portrait) மற்றும் கிடைமட்டம் (Landscape).
+
+---
+
+### 7. உத்தியோகபூர்வ சுருக்கம் (பாடநூல் பக். 38)
+1. ஆவணங்களை இலகுவாக உருவாக்கவும் திருத்தவும் சொல் செயலாக்க மென்பொருள் உதவுகிறது.
+2. பொதுக் கருவிகள் மூலம் ஆவணங்களை முறையாக நிர்வகிக்கலாம்.
+3. எழுத்துரு கருவிகள் மூலம் வடிவமைப்பு மற்றும் அறிவியல் குறியீடுகளை (Subscript/Superscript) இடலாம்.
+4. பந்தி சீரமைப்புகள் நேர்த்தியான பக்க அமைப்பைத் தருகின்றன.
+5. அட்டவணைகள் மற்றும் படங்கள் ஆவணங்களை கவர்ச்சிகரமாகவும் தெளிவானதாகவும் மாற்றுகின்றன.`;
 
     return {
       answer: lang === 'si' ? siAnswer : lang === 'ta' ? taAnswer : enAnswer,
@@ -1032,24 +1283,278 @@ Word processing software allows creating, editing, formatting, and printing stan
         ta: taAnswer,
       },
       keyPoints: [
-        'Justify Alignment (Ctrl+J)',
-        'Portrait vs Landscape Orientation',
-        'Header & Footer (Page numbers)',
-        'Table Insertion & Formatting',
-        'Font Typography & Styles'
+        'Figure 3.1: 7 Document Types (Letters, Question papers, Newspapers, Application forms, Invitations, Greeting cards, Magazines)',
+        'Common Tools: New, Open, Save, Save As, Print Preview, Print',
+        'Edit & Clipboard: Undo (Ctrl+Z), Redo (Ctrl+Y), Cut, Copy, Paste, Spell Check (F7)',
+        'Font Formatting: Times New Roman, Nirmala UI, FMAbhaya, Bold, Italic, Underline',
+        'Subscript (x₂ for CO₂) vs Superscript (x² for 2³, 5²)',
+        'Paragraph Alignments: Left (Ctrl+L), Center (Ctrl+E), Right (Ctrl+R), Justify (Ctrl+J)',
+        'Inserting Objects: Pictures, Clip Art, Shapes, Word Art, Text Boxes, Tables (Rows & Columns)',
+        'Page Setup: Margins & Orientation (Portrait vs Landscape)'
       ],
       memoryTrick: {
-        concept: 'Word Processing Shortcuts & Justify',
-        trick: 'L=Left, R=Right, E=cEnter, and J=Justify for perfect textbook margins!',
-        rhyme: 'Left, Center, Right, or Justify line,\nCtrl+J makes publications shine!\nPortrait stands tall, Landscape lies flat,\nHeaders on top keep page numbers pat!',
-        audioText: 'Here is your memory trick for word processing! Remember: L is Left, R is Right, E is Center, and J is Justify! Ctrl plus J aligns both left and right margins straight like your school textbook!'
+        concept: 'Grade 8 ICT Word Processing Mastery (Textbook p. 34–38)',
+        trick: 'Save As for New Copies, Justify (Ctrl+J) for Clean Margins, Subscript (x₂) Below for CO₂, Superscript (x²) Above for 2³!',
+        rhyme: 'New and Save to keep your file,\nCut and Paste to change your style,\nSubscript drops for CO₂ in line,\nSuperscript raises 2³ so fine!\nAlign Left, Center, Right in view,\nCtrl+J makes book margins true!',
+        audioText: 'Here is your official Grade 8 ICT memory trick for Word Processing! Remember: L is Left, R is Right, E is Center, and J is Justify for textbook borders! Subscript places the two down low for C O 2, while Superscript raises the power three high for two cubed! Save updates your document, and Save As makes a fresh copy!'
       },
       suggestedFollowUps: [
-        'Clarify more: Can you break this down step-by-step with more details?',
-        'Explain simpler: Why do books use Justify alignment?',
-        'Sri Lankan Example: How to format an official school permission letter',
-        'How to insert and customize tables in Word',
+        'Clarify more: Can you explain the 7 document types in Figure 3.1 with textbook examples?',
+        'Subscript vs Superscript: How do I write chemical formulas and powers?',
+        'Why does Justify (Ctrl+J) look better than Left Align in school magazines?',
+        'How do I create a school class timetable using Tables?',
       ],
+    };
+  }
+
+  private handleWordProcessingClarify(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    const sources: SourceCitation[] = [
+      {
+        documentId: 'moe-lk-ict-gr8-ict-gr8-en',
+        source: 'Grade 8 ICT Textbook — Chapter 3: Word Processing Detailed Breakdown (Pages 34–38)',
+        fileType: 'PDF',
+        pageNumber: 36,
+        chunkNumber: 83,
+        distance: 0.07,
+        excerpt: null,
+      }
+    ];
+
+    const enAnswer = `### Detailed Step-by-Step Breakdown: Word Processing (Textbook Pages 34–38)
+
+Here is a step-by-step educational guide on how word processing works in Grade 8 ICT:
+
+1. **Step 1: Why Use Word Processing Instead of Handwriting? (p. 34)**
+   - When writing handwritten documents (like the English Day invitation cards Sithum and his friends made), mistakes require messy whiteout or crossing out.
+   - Word processing allows typing without errors, checking spelling with **F7**, and printing 200 identical crisp copies effortlessly.
+
+2. **Step 2: Understanding Figure 3.1 (7 Document Types, p. 35)**
+   - The textbook identifies seven everyday products of word processors:
+     * Letters (official correspondence)
+     * Question papers (exams with formulas and diagrams)
+     * Newspapers (articles arranged in columns)
+     * Application forms (blank lines and check boxes)
+     * Invitations (decorative fonts and borders)
+     * Greeting cards (pictures and colorful verses)
+     * Magazines (multi-page illustrated publications)
+
+3. **Step 3: Mastering File Tools — Save vs. Save As (p. 35)**
+   - **Save (Ctrl+S):** Writes updates directly into the file you are already working on.
+   - **Save As:** Lets you choose a new name, location, or format (e.g. converting a draft to a PDF or creating "Invitation_Final_v2.docx").
+
+4. **Step 4: Character Formatting & Scientific Notation (p. 36)**
+   - **Subscript ($x_2$):** Lowers characters below the baseline (e.g. $CO_2, H_2O$ in science test questions).
+   - **Superscript ($x^2$):** Elevates characters above the baseline (e.g. $2^3 = 8, x^2 + y^2$ in math test questions).
+
+5. **Step 5: Paragraph Alignments & Justify (p. 37)**
+   - **Align Left (Ctrl+L):** Left edge straight, right edge ragged (everyday essays).
+   - **Center (Ctrl+E):** Balances text equally between margins (headings and titles).
+   - **Align Right (Ctrl+R):** Right edge straight (dates and signatures).
+   - **Justify (Ctrl+J):** Inserts micro-spaces between words so that text touches **both left and right margins** squarely, giving printed books and newspapers a neat, rectangular block appearance.
+
+6. **Step 6: Adding Tables and Graphic Objects (p. 37–38)**
+   - Tables organize schedules into intersecting Rows and Columns.
+   - Insertable objects include Pictures, Clip Art, Shapes, Word Art (for stylized banners), and Text Boxes.`;
+
+    const siAnswer = `### පියවරෙන් පියවර පැහැදිලි කිරීම: වදන් සැකසුම (පෙළපොත පිටු 34–38)
+
+1. **පියවර 1: අතින් ලිවීමට වඩා වදන් සැකසුම භාවිත කිරීමේ වාසි (පිටුව 34)**
+   - අතින් ලියන විට අකුරු වැරදුණු විට කැතට මැකීමට සිදුවේ. පිටපත් රාශියක් එක හා සමානව ගැනීම දුෂ්කරය.
+   - පරිගණක වදන් සැකසුම මඟින් අකුරු වැරදීම් රහිතව, **F7** අක්ෂර වින්‍යාස පරීක්ෂාව යොදාගෙන, එක හා සමාන ආරාධනා පත්‍ර සිය ගණනක් මුද්‍රණය කරගත හැක.
+
+2. **පියවර 2: රූපය 3.1 ලේඛන වර්ග 7 (පිටුව 35)**
+   - ලිපි, ප්‍රශ්න පත්‍ර, පුවත්පත්, අයදුම්පත්, ආරාධනා පත්‍ර, සුබපැතුම් පත්, සඟරා.
+
+3. **පියවර 3: Save සහ Save As වෙනස (පිටුව 35)**
+   - **Save (Ctrl+S):** දැනට පවතින ගොනුවටම වෙනස්කම් සුරකියි.
+   - **Save As:** නව නමකින් හෝ නව ගොනු වර්ගයකින් (PDF වැනි) නව පිටපතක් සාදයි.
+
+4. **පියවර 4: Subscript (උපලකුණ) සහ Superscript (උඩුලකුණ) (පිටුව 36)**
+   - **Subscript ($x_2$):** රසායනික සූත්‍ර සඳහා (උදා: $CO_2, H_2O$).
+   - **Superscript ($x^2$):** ගණිතමය බල සහ දර්ශක සඳහා (උදා: $2^3, 5^2$).
+
+5. **පියවර 5: ඡේද පෙළගැස්වීම් සහ Justify (පිටුව 37)**
+   - **Justify (Ctrl+J):** වම් සහ දකුණු දෙපසම දාරවලට සෘජුව එක හා සමානව පෙළගස්වයි. පෙළපොත් සහ පුවත්පත්වල භාවිත වන්නේ මෙයයි.
+
+6. **පියවර 6: වගු (Tables) සහ වස්තු ඇතුළත් කිරීම (පිටු 37–38)**
+   - පේළි සහ තීරු මඟින් කාලසටහන් සෑදීමට වගු (Tables) ද, බැනර් මාතෘකා සඳහා Word Art ද භාවිත වේ.`;
+
+    const taAnswer = `### படிமுறை விளக்கம்: சொல் செயலாக்கம் (பாடநூல் பக். 34–38)
+
+1. **படி 1: கையால் எழுதுவதை விட சொல் செயலாக்கத்தின் பயன்கள் (பக். 34)**
+   - அழித்தல்கள் மற்றும் தவறுகள் இன்றி பல பிரதிகளை இலகுவாக அச்சிடலாம்.
+
+2. **படி 2: படம் 3.1 இன் 7 ஆவண வகைகள் (பக். 35)**
+   - கடிதங்கள், வினாத்தாள்கள், பத்திரிகைகள், விண்ணப்பங்கள், அழைப்பிதழ்கள், வாழ்த்து அட்டைகள், சஞ்சிகைகள்.
+
+3. **படி 3: Save vs Save As வேறுபாடு (பக். 35)**
+   - Save தற்போதைய ஆவணத்தை புதுப்பிக்கும்; Save As புதிய பெயரில் அல்லது PDF ஆக புதிய நகலை உருவாக்கும்.
+
+4. **படி 4: Subscript ($x_2$) மற்றும் Superscript ($x^2$) (பக். 36)**
+   - Subscript: இரசாயன சூத்திரங்கள் ($CO_2, H_2O$).
+   - Superscript: கணித அடுக்குகள் ($2^3, 5^2$).
+
+5. **படி 5: Justify இருபுற சீரமைப்பு (பக். 37)**
+   - Justify (Ctrl+J) இடது மற்றும் வலது இரு ஓரங்களையும் சமப்படுத்தி நேர்த்தியான புத்தக அமைப்பைத் தரும்.
+
+6. **படி 6: அட்டவணைகள் மற்றும் உருப்படிகள் (பக். 37–38)**
+   - நேர அட்டவணைகளுக்கு Tables உம், கவர்ச்சிகரமான தலைப்புகளுக்கு Word Art உம் பயன்படுகின்றன.`;
+
+    return {
+      answer: lang === 'si' ? siAnswer : lang === 'ta' ? taAnswer : enAnswer,
+      sources,
+      languageVersions: {
+        en: enAnswer,
+        si: siAnswer,
+        ta: taAnswer,
+      },
+      keyPoints: [
+        'Manual handwriting vs Word Processing (p. 34)',
+        '7 Document Types in Figure 3.1',
+        'Save vs Save As lifecycle',
+        'Subscript (CO₂) and Superscript (2³)',
+        'Justify alignment for book columns'
+      ],
+      suggestedFollowUps: [
+        'Explain simpler: Can you explain word processing in simpler terms for a beginner?',
+        'Sri Lankan Example: How to format an English Day invitation card',
+        'Memory trick: Rhyme for word processing shortcuts',
+        'Quiz me on word processing'
+      ]
+    };
+  }
+
+  private handleWordProcessingSimpler(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    const enAnswer = `### Super Simple Version: Word Processing Explained!
+
+Think of a word processor like a **magic digital typewriter**:
+
+1. **No Eraser Smudges!**
+   If you make a typo, you don't need correction fluid or an eraser. Just tap **Backspace** or press **Undo (Ctrl+Z)** and the mistake vanishes!
+
+2. **Why do textbooks use "Justify" (Ctrl+J)?**
+   Imagine building a neat brick wall. If the left side is straight but the right side has jagged, sticking-out bricks, it looks messy.
+   **Justify** gently stretches the spaces between words so the paragraph forms a perfectly straight brick wall on **both** the left and right sides!
+
+3. **Subscript vs. Superscript:**
+   - **Subscript ($x_2$):** Like a **Subway train** under the ground 🚇 — it drops the "2" down low for $CO_2$ (carbon dioxide).
+   - **Superscript ($x^2$):** Like **Superman** flying high in the sky 🦸 — it lifts the "3" up high for $2^3$ (two cubed = 8)!
+
+4. **Tables:**
+   A table is just a clean grid box (like a tic-tac-toe grid) where you can write your Monday-to-Friday school timetable without lines being crooked!`;
+
+    const siAnswer = `### ඉතා සරලව තේරුම් ගනිමු: වදන් සැකසුම!
+
+වදන් සැකසුම් මෘදුකාංගයක් යනු **මැජික් යතුරු ලියනයක්** වැනිය:
+
+1. **මැකීම් පැල්ලම් නැත!**
+   අතින් ලියන විට වැරදුණොත් කටු ගෑමට හෝ White-out දැමීමට සිදුවේ. නමුත් මෙහිදී **Backspace** හෝ **Undo (Ctrl+Z)** මඟින් කිසිදු සලකුණක් නොතබා වැරැද්ද ක්ෂණිකව මකා දැමිය හැක!
+
+2. **පෙළපොත් වල "Justify" (Ctrl+J) කරන්නේ ඇයි?**
+   ගඩොල් බැම්මක් බඳින විට වම් පැත්ත කෙළින් තබා දකුණු පැත්ත උස් පහත් වුවහොත් එය අපිරිසිදුය. **Justify** මඟින් වචන අතර ඉඩ මදක් සකසා වම් සහ දකුණු දෙපැත්තම එක හා සමාන කෙළින් බැම්මක් සේ සකසයි!
+
+3. **උපලකුණු (Subscript) සහ උඩුලකුණු (Superscript):**
+   - **Subscript ($x_2$):** උමං දුම්රියක් (Subway) පොළොව යටින් යනවා සේ අකුර පහළට ගනී ($CO_2$ සඳහා).
+   - **Superscript ($x^2$):** සුපර්මෑන් (Superman) අහසේ පියාසර කරනවා සේ අංකය ඉහළට ඔසවයි ($2^3$ සඳහා)!`;
+
+    const taAnswer = `### மிக எளிமையான விளக்கம்: சொல் செயலாக்கம்!
+
+சொல் செயலாக்கம் என்பது ஒரு **மந்திர தட்டச்சு இயந்திரம்** போன்றது:
+
+1. **அழித்தல் கறைகள் இல்லை!**
+   எழுதும் போது தவறு ஏற்பட்டால் Backspace அல்லது Undo (Ctrl+Z) மூலம் எந்தக் கறையும் இன்றி உடனே நீக்கலாம்!
+
+2. **Justify ஏன் பயன்படுகிறது?**
+   சுவர் கட்டும் போது இருபுறமும் நேராக இருப்பது போல், Justify பந்தியின் இடது மற்றும் வலது இரு ஓரங்களையும் நேர்த்தியாக சமப்படுத்துகிறது!
+
+3. **Subscript vs Superscript:**
+   - **Subscript ($x_2$):** பாதாள ரயில் போல எண்ணை கீழே வைக்கும் ($CO_2$).
+   - **Superscript ($x^2$):** சூப்பர்மேன் போல எண்ணை மேலே உயர்த்தும் ($2^3$)!`;
+
+    return {
+      answer: lang === 'si' ? siAnswer : lang === 'ta' ? taAnswer : enAnswer,
+      sources: [{ source: 'Grade 8 ICT Basics — Chapter 3 Simplified', pageNumber: 34 }],
+      languageVersions: {
+        en: enAnswer,
+        si: siAnswer,
+        ta: taAnswer,
+      },
+      suggestedFollowUps: [
+        'Clarify more: Can you explain the 7 document types in Figure 3.1?',
+        'Sri Lankan Example: How to format an English Day invitation card',
+        'Memory trick: Rhyme for word processing shortcuts',
+        'Quiz me on word processing'
+      ]
+    };
+  }
+
+  private handleWordProcessingExample(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    const enAnswer = `**A Real-World Sri Lankan School Example: Organizing the Grade 8 English Day Competitions (Textbook Page 34 Dialogue)**
+
+Here is how Sithum and the Grade 8 English Day Committee used word processing to organize their event:
+
+1. **The Invitation Card (Figure 3.1, Presets):**
+   - **Header:** School Crest inserted as a **Picture**, followed by *"Ananda / Visakha Vidyalaya — English Literary Association"* centered in **Cambria 16pt Bold**.
+   - **Event Title:** *"Annual Inter-House English Day Competitions"* in decorative **Word Art**.
+   - **Date & Venue:** Right-aligned (Ctrl+R): *"Date: 15th October | Venue: Main Auditorium"*.
+   - **Invitation Message:** Formatted with **Justify (Ctrl+J)** for elegant formal wording.
+
+2. **The Science & ICT Quiz Question Paper (Activities 3.4 & 3.5):**
+   - Writing Question 1: *"What is the greenhouse gas $CO_2$?"* $\\to$ The committee used **Subscript ($x_2$)** for the 2.
+   - Writing Question 2: *"Calculate the value of $2^3$."* $\\to$ They used **Superscript ($x^2$)** for the 3.
+
+3. **The Event Schedule Timetable (Textbook Page 37):**
+   - Inserted a **Table** with 4 columns: *Time | Event | Participants | Teacher-in-Charge*.
+   - Because the schedule was wide, they changed the page orientation to **Landscape** so all columns fit on one sheet!
+
+4. **Saving and Printing (Textbook Page 35):**
+   - They saved the master copy using **Save (Ctrl+S)** as \`English_Day_2026.docx\`.
+   - Then they used **Save As** to export a read-only \`English_Day_2026.pdf\` to send to the school principal for final approval before printing!`;
+
+    const siAnswer = `**ශ්‍රී ලාංකේය පාසල් ප්‍රායෝගික උදාහරණය: 8 ශ්‍රේණියේ ඉංග්‍රීසි දින තරගාවලිය (පෙළපොතේ 34 පිටුවේ සිතුම්ගේ කතාව)**
+
+1. **ආරාධනා පත්‍රය (රූපය 3.1):**
+   - පාසල් ලාංඡනය **Picture** ලෙස ඇතුළත් කර, පාසල් නම **Cambria 16pt Bold** වලින් Center කරන ලදී.
+   - ප්‍රධාන මාතෘකාව **Word Art** මඟින්ද, දිනය සහ වේලාව **Align Right (Ctrl+R)** මඟින්ද සකසන ලදී.
+   - ආරාධනා ඡේදය මනාව දෙපස සමපාත වන සේ **Justify (Ctrl+J)** කරන ලදී.
+
+2. **ප්‍රශ්න පත්‍රය සැකසීම (ක්‍රියාකාරකම් 3.4 සහ 3.5):**
+   - $CO_2$ ලිවීමට **Subscript ($x_2$)** ද, ගණිතමය $2^3$ ලිවීමට **Superscript ($x^2$)** ද භාවිත කළහ.
+
+3. **ඉසව් කාලසටහන (පිටුව 37):**
+   - පේළි සහ තීරු සහිත **වගුවක් (Table)** ඇතුළත් කර, පුළුල් ඉඩක් ලබාගැනීමට පිටුව **Landscape** දිශානතියට හරවන ලදී.
+
+4. **සුරැකීම සහ මුද්‍රණය (පිටුව 35):**
+   - මුල් ගොනුව **Save (Ctrl+S)** කර, විදුහල්පතිතුමා වෙත ඉදිරිපත් කිරීමට **Save As** මඟින් PDF පිටපතක් ලබාගත්හ!`;
+
+    const taAnswer = `**இலங்கை பாடசாலை நடைமுறை உதாரணம்: தரம் 8 ஆங்கில தின விழா (பாடநூல் பக்கம் 34)**
+
+1. **அழைப்பிதழ் உருவாக்கம் (படம் 3.1):**
+   - பாடசாலை இலச்சினை Picture ஆகவும், தலைப்பு Word Art இலும், திகதி Align Right இலும், பந்தி Justify இலும் வடிவமைக்கப்பட்டது.
+
+2. **வினாத்தாள் தயாரிப்பு (பக். 36):**
+   - இரசாயன சூத்திரம் $CO_2$ இற்கு Subscript உம், கணித அடுக்கு $2^3$ இற்கு Superscript உம் பயன்படுத்தப்பட்டது.
+
+3. **நிகழ்ச்சி நிரல் (பக். 37):**
+   - நிகழ்ச்சி நிரல் Table இல் அமைக்கப்பட்டு, அகலமான அமைப்பிற்காக Landscape தெரிவு செய்யப்பட்டது.
+
+4. **சேமித்தல் (பக். 35):**
+   - Save மூலம் சேமித்து, அதிபரின் ஒப்புதலுக்காக Save As மூலம் PDF ஆக மாற்றப்பட்டது!`;
+
+    return {
+      answer: lang === 'si' ? siAnswer : lang === 'ta' ? taAnswer : enAnswer,
+      sources: [{ source: 'Grade 8 ICT Textbook — Practical Dialogue & Activities (Pages 34–38)', pageNumber: 34 }],
+      languageVersions: {
+        en: enAnswer,
+        si: siAnswer,
+        ta: taAnswer,
+      },
+      suggestedFollowUps: [
+        'Clarify more: Can you break down the word processing tools step-by-step?',
+        'Explain simpler: Why do books use Justify alignment?',
+        'Memory trick: Rhyme for word processing shortcuts',
+        'Quiz me on word processing'
+      ]
     };
   }
 
@@ -1378,7 +1883,9 @@ Example: \`https://www.moe.gov.lk/textbooks.pdf\`
     const isIct = context.subjectId === 'ict';
     const isScience = context.subjectId === 'science';
     const isHistory = context.subjectId === 'history';
-    const isMaths = context.subjectId === 'maths';
+    if (context.topicId === 'word-processing') {
+      return this.handleWordProcessing(lang);
+    }
 
     if (isIct) {
       if (lang === 'si') {

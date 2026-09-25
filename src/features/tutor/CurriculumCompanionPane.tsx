@@ -19,6 +19,7 @@ import { ResolutionVisualizer } from '../../components/interactive/ResolutionVis
 import { ScratchBlockVisualizer } from '../../components/interactive/ScratchBlockVisualizer';
 import { MicrocontrollerVisualizer } from '../../components/interactive/MicrocontrollerVisualizer';
 import { UrlAnatomyVisualizer } from '../../components/interactive/UrlAnatomyVisualizer';
+import { WordProcessingVisualizer } from '../../components/interactive/WordProcessingVisualizer';
 
 interface CurriculumCompanionPaneProps {
   subjectId: string;
@@ -47,10 +48,10 @@ const getTopicDeepDive = (topicId: string) => {
       };
     case 'word-processing':
       return {
-        examTrap: '⚠️ Word Processing Trap: Justify (Ctrl+J) aligns BOTH left and right margins, while Center (Ctrl+E) only balances text in the middle.',
-        challenge: '🎯 Challenge: Try identifying when to use Portrait vs Landscape orientation for official school certificates!',
-        clarifyPrompt: 'Can you clarify the difference between Justify and Center alignments in Word?',
-        verifyPrompt: 'How do headers and footers work when printing two-sided exam papers?'
+        examTrap: '⚠️ O/L & Term Exam Trap: Justify (Ctrl+J) aligns BOTH left and right margins, while Center (Ctrl+E) only balances text in the middle. Subscript (x₂) lowers text for formulas like CO₂, while Superscript (x²) raises text for powers like 2³!',
+        challenge: '🎯 Interactive Studio Challenge: In the ribbon above, switch document presets between the English Day Invitation, Science Exam Paper (with CO₂ and 2³), and School Magazine!',
+        clarifyPrompt: 'Can you clarify the difference between Justify (Ctrl+J) and Align Left (Ctrl+L) with textbook examples?',
+        verifyPrompt: 'In a Science exam paper, should CO₂ use Subscript or Superscript, and how do I format 2³?'
       };
     case 'programming':
       return {
@@ -201,15 +202,7 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
           )}
 
           {activeTopic.id === 'word-processing' && (
-            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3 text-xs">
-              <div className="font-bold text-cyan-300">Word Processing Layout & Justify Guide</div>
-              <p className="text-slate-400">
-                Official publications use <strong>Justify (Ctrl+J)</strong> to align words smoothly with both left and right margins by balancing micro-spacing between letters.
-              </p>
-              <div className="p-3 rounded-xl bg-slate-900 border border-slate-700 text-justify text-slate-200 leading-relaxed font-serif">
-                "Sri Lankan educational publications require clean margins, standardized typography, and structured data tables to communicate technical knowledge clearly to all students across the island."
-              </div>
-            </div>
+            <WordProcessingVisualizer language={language} />
           )}
         </div>
 

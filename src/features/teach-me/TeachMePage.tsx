@@ -21,6 +21,7 @@ import { ResolutionVisualizer } from '../../components/interactive/ResolutionVis
 import { ScratchBlockVisualizer } from '../../components/interactive/ScratchBlockVisualizer';
 import { MicrocontrollerVisualizer } from '../../components/interactive/MicrocontrollerVisualizer';
 import { UrlAnatomyVisualizer } from '../../components/interactive/UrlAnatomyVisualizer';
+import { WordProcessingVisualizer } from '../../components/interactive/WordProcessingVisualizer';
 
 export const TeachMePage: React.FC = () => {
   const { topicId } = useParams<{ topicId: string }>();
@@ -174,6 +175,11 @@ export const TeachMePage: React.FC = () => {
           {topicId === 'internet' && (
             <div className="rounded-2xl overflow-hidden border border-slate-200">
               <UrlAnatomyVisualizer language={language} />
+            </div>
+          )}
+          {topicId === 'word-processing' && (
+            <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+              <WordProcessingVisualizer language={language} />
             </div>
           )}
 

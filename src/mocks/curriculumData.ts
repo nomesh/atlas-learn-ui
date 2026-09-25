@@ -253,7 +253,7 @@ export const MOCK_TOPICS: Topic[] = [
       si: 'ලේඛන සකස් කිරීම, අකුරු සහ ඡේද හැඩසවි ගැන්වීම, වගු සහ රූප ඇතුළත් කිරීම, ශීර්ෂ සහ පාදක, සහ පිටු සැකසුම (පෙළපොත පිටු 34–38).',
       ta: 'ஆவண உருவாக்கம், எழுத்துரு மற்றும் பந்தி வடிவமைப்பு, அட்டவணைகள் மற்றும் படங்களைச் சேர்த்தல், தலைப்புகள் மற்றும் பக்க அமைப்பு (பாடநூல் பக். 34–38).',
     },
-    lessonsCount: 3,
+    lessonsCount: 5,
     completedPercentage: 0,
   },
   {
@@ -920,25 +920,25 @@ export const TEACH_ME_WORD_PROCESSING_STEPS: LessonStep[] = [
     id: 'wp-step-1',
     stepNumber: 1,
     title: {
-      en: 'Text Formatting & Paragraph Alignment',
-      si: 'අකුරු හැඩසවි ගැන්වීම සහ ඡේද පෙළගැස්වීම',
-      ta: 'உரை வடிவமைப்பு மற்றும் பந்தி சீரமைப்பு',
+      en: 'Introduction to Word Processing & Common Documents (Fig 3.1)',
+      si: 'වදන් සැකසුම හැඳින්වීම සහ ලේඛන වර්ග (රූපය 3.1)',
+      ta: 'சொல் செயலாக்கம் அறிமுகம் மற்றும் ஆவண வகைகள் (படம் 3.1)',
     },
     concept: {
-      en: 'Word processors allow precise styling: font typeface, font size, emphasis (Bold, Italic, Underline), and paragraph alignment (Align Left, Center, Align Right, Justify). Justify alignment spaces words evenly so text aligns neatly along both left and right margins, standard in textbooks and newspapers.',
-      si: 'වදන් සැකසුම් මෘදුකාංග මඟින් අකුරු වර්ගය (Font), ප්‍රමාණය (Size), තද අකුරු (Bold), ඇල අකුරු (Italic), යටි ඉරි (Underline) සහ ඡේද පෙළගැස්වීම (Left, Center, Right, Justify) සිදුකළ හැක. Justify මඟින් දෙපස දාර එක හා සමානව පෙළගස්වයි.',
-      ta: 'சொல் செயலாக்க மென்பொருள் மூலம் எழுத்துரு வகை, அளவு, தடித்த எழுத்து (Bold), சாய்வெழுத்து (Italic) மற்றும் பந்தி சீரமைப்புகளை (Left, Center, Right, Justify) செய்யலாம்.',
+      en: 'Word processing software enables users to create, edit, format, store, and print documents electronically. As illustrated in the Grade 8 textbook dialogue (p. 34), preparing invitations and souvenirs by hand results in messy handwriting, difficult corrections, and inconsistent copies. Figure 3.1 identifies 7 common document types produced using word processing: Letters, Question papers, Newspapers, Application forms, Invitations, Greeting cards, and Magazines.',
+      si: 'වදන් සැකසුම් මෘදුකාංග මඟින් ලේඛන විද්‍යුත් ආකාරයෙන් නිර්මාණය කිරීම, සංස්කරණය, හැඩසවි ගැන්වීම, සුරැකීම සහ මුද්‍රණය සිදුකළ හැක. පෙළපොතේ 34 පිටුවේ සඳහන් පරිදි අතින් ලියන විට අකුරු වෙනස්වීම්, මැකීම් නිසා අපිරිසිදු වීම සහ පිටපත් රාශියක් ගැනීම අපහසු වේ. රූපය 3.1 හි වදන් සැකසුමෙන් සකසන ප්‍රධාන ලේඛන වර්ග 7ක් දක්වා ඇත: ලිපි, ප්‍රශ්න පත්‍ර, පුවත්පත්, අයදුම්පත්, ආරාධනා පත්‍ර, සුබපැතුම් පත් සහ සඟරා.',
+      ta: 'சொல் செயலாக்க மென்பொருள் மூலம் ஆவணங்களை இலத்திரனியல் முறையில் உருவாக்க, திருத்த, வடிவமைக்க, சேமிக்க மற்றும் அச்சிட முடியும். கையால் எழுதும் போது ஏற்படும் அழித்தல்கள், நேர விரயம் என்பவற்றை இது தவிர்க்கிறது. படம் 3.1 சொல் செயலாக்கம் மூலம் உருவாக்கப்படும் 7 ஆவண வகைகளைக் காட்டுகிறது: கடிதங்கள், வினாத்தாள்கள், பத்திரிகைகள், விண்ணப்பப் படிவங்கள், அழைப்பிதழ்கள், வாழ்த்து அட்டைகள் மற்றும் சஞ்சிகைகள்.',
     },
     visualCard: {
-      title: 'Four Paragraph Alignment Types',
+      title: 'Figure 3.1: 7 Document Types in Word Processing',
       diagramType: 'infographic',
-      content: 'Left Align (Standard) | Center (Headings) | Right Align (Dates/Signatures) | Justify (Books/Newspapers)',
-      caption: 'Justify aligns words smoothly against both the left and right margins.'
+      content: 'Letters | Question Papers | Newspapers | Application Forms | Invitations | Greeting Cards | Magazines',
+      caption: 'Authentic Sri Lankan Grade 8 ICT Textbook Figure 3.1 (Page 35)'
     },
     realWorldExample: {
-      en: 'Open your Grade 8 ICT textbook: notice how the chapter headings are centered, dates or references are right-aligned, and the body paragraphs are justified evenly on both sides!',
-      si: 'ඔබේ පෙළපොත දෙස බලන්න: මාතෘකා මැදට (Center) පෙළගස්වා ඇති අතර ප්‍රධාන ඡේද දෙපසම සමපාත වන සේ Justify කර ඇත.',
-      ta: 'பாடநூலை கவனியுங்கள்: தலைப்புகள் மையப்படுத்தப்பட்டும் (Center), பந்திகள் இருபுறமும் சீராகவும் (Justify) இருக்கும்!',
+      en: 'Sithum and his committee used a word processor to type 200 identical English Day invitation cards with the school emblem, saving hours of handwriting and eliminating ink smudges!',
+      si: 'සිතුම් සහ මිතුරන් ඉංග්‍රීසි දින තරගාවලිය සඳහා ආරාධනා පත්‍ර 200ක් පාසල් ලාංඡනයද සහිතව පරිගණක වදන් සැකසුමෙන් අලංකාරව හා එක හා සමානව නිර්මාණය කළහ.',
+      ta: 'சிதுமும் அவனது நண்பர்களும் ஆங்கில தின போட்டிக்கான 200 அழைப்பிதழ்களை பாடசாலை இலச்சினையுடன் சொல் செயலாக்க மென்பொருளைப் பயன்படுத்தி நேர்த்தியாக தயாரித்தனர்.',
     },
     checkQuestion: {
       id: 'wp-q1',
@@ -948,48 +948,48 @@ export const TEACH_ME_WORD_PROCESSING_STEPS: LessonStep[] = [
       examCategory: 'general',
       isDemonstrationSample: true,
       questionText: {
-        en: 'Which paragraph alignment option aligns text evenly along BOTH the left and right margins simultaneously?',
-        si: 'ඡේදයක පෙළ වම් සහ දකුණු දාර දෙකටම එකවර සමපාත වන සේ සකසන පෙළගැස්ම කුමක්ද?',
-        ta: 'ஒரு பந்தியின் உரையை இடது மற்றும் வலது இரு ஓரங்களிலும் சமமாக சீரமைக்கும் தெரிவு எது?',
+        en: 'According to Figure 3.1 in the Grade 8 ICT textbook, which of the following lists the 7 common document types created using word processing?',
+        si: '8 ශ්‍රේණියේ තොරතුරු තාක්ෂණ පෙළපොතේ රූපය 3.1 අනුව වදන් සැකසුම් මෘදුකාංග මඟින් නිර්මාණය කරන ලේඛන වර්ග 7 වන්නේ මොනවාද?',
+        ta: 'தரம் 8 தகவல் தொடர்பாடல் தொழில்நுட்ப பாடநூலின் படம் 3.1 இன் படி சொல் செயலாக்கம் மூலம் உருவாக்கப்படும் 7 ஆவண வகைகள் யாவை?',
       },
       options: [
-        { id: 'opt-1', text: { en: 'Justify', si: 'Justify (දෙපස සමපාත කිරීම)', ta: 'Justify (இருபுற சீரமைப்பு)' } },
-        { id: 'opt-2', text: { en: 'Align Left', si: 'Align Left (වම් පෙළගැස්ම)', ta: 'Align Left (இடது சீரமைப்பு)' } },
-        { id: 'opt-3', text: { en: 'Align Right', si: 'Align Right (දකුණු පෙළගැස්ම)', ta: 'Align Right (வலது சீரமைப்பு)' } },
-        { id: 'opt-4', text: { en: 'Center', si: 'Center (මැදට පෙළගැස්ම)', ta: 'Center (மைய சீரமைப்பு)' } },
+        { id: 'opt-1', text: { en: 'Letters, Question papers, Newspapers, Application forms, Invitations, Greeting cards, Magazines', si: 'ලිපි, ප්‍රශ්න පත්‍ර, පුවත්පත්, අයදුම්පත්, ආරාධනා පත්‍ර, සුබපැතුම් පත්, සඟරා', ta: 'கடிதங்கள், வினாத்தாள்கள், பத்திரிகைகள், விண்ணப்பப் படிவங்கள், அழைப்பிதழ்கள், வாழ்த்து அட்டைகள், சஞ்சிகைகள்' } },
+        { id: 'opt-2', text: { en: 'Spreadsheets, Databases, Web servers, Operating systems, Compilers, Device drivers, Kernel', si: 'පැතුරුම්පත්, දත්ත සමුදා, වෙබ් සේවාදායක, මෙහෙයුම් පද්ධති', ta: 'விரிதாள், தரவுத்தளம், வலை சேவையகம், இயக்க முறைமைகள்' } },
+        { id: 'opt-3', text: { en: 'Motherboards, CPUs, RAM sticks, Hard drives, Power supply, Graphics card, Monitor', si: 'මවුපුවරු, මධ්‍ය සැකසුම් ඒකක, මතක චිප, දෘඩ තැටි', ta: 'தாய்ப்பலகை, நினைவகம், வன்வட்டு, மின் வழங்கி' } },
+        { id: 'opt-4', text: { en: 'Video games, MP3 songs, 3D animations, Video renderers, Audio synthesizers', si: 'වීඩියෝ ක්‍රීඩා, ගීත, ත්‍රිමාණ සජීවීකරණ', ta: 'வீடியோ கேம்கள், பாடல்கள், அசைவூட்டங்கள்' } },
       ],
       correctOptionId: 'opt-1',
       educationalFeedback: {
-        en: 'Justify adjusts spacing between words so text touches both margins cleanly, giving printed documents a professional finish.',
-        si: 'Justify මඟින් වචන අතර පරතරය සකසා දෙපසම දාරවලට පෙළගස්වයි.',
-        ta: 'Justify பந்தியின் இரு ஓரங்களையும் நேர்த்தியாக சமப்படுத்துகிறது.',
+        en: 'Textbook Figure 3.1 (Page 35) explicitly identifies these 7 everyday documents as standard products of word processing software.',
+        si: 'පෙළපොතේ 35 වන පිටුවේ රූපය 3.1 මඟින් මෙම ලේඛන 7 වදන් සැකසුම් මෘදුකාංග මඟින් සකසන ප්‍රධාන ලේඛන ලෙස නම් කර ඇත.',
+        ta: 'பாடநூல் பக்கம் 35 இல் உள்ள படம் 3.1 இந்த 7 ஆவணங்களையும் சொல் செயலாக்கத்தின் பிரதான வெளியீடுகளாகக் குறிப்பிடுகிறது.',
       },
-      syllabusReference: 'Sri Lankan Grade 8 ICT — Chapter 3: Word Processing (Textbook p. 34–36)',
+      syllabusReference: 'Sri Lankan Grade 8 ICT — Chapter 3: Word Processing (Textbook p. 34–35, Fig 3.1)',
     }
   },
   {
     id: 'wp-step-2',
     stepNumber: 2,
     title: {
-      en: 'Tables, Graphics & Page Setup',
-      si: 'වගු, පින්තූර සහ පිටු සැකසුම (Page Setup)',
-      ta: 'அட்டவணைகள், படங்கள் மற்றும் பக்க வடிவமைப்பு',
+      en: 'Common Tools & Edit Operations (Textbook p. 35–36)',
+      si: 'පොදු මෙවලම් සහ සංස්කරණ මෙවලම් (පිටු 35–36)',
+      ta: 'பொது ஆவணக் கருவிகள் மற்றும் திருத்தல் கருவிகள் (பக். 35–36)',
     },
     concept: {
-      en: 'Organizing information in Word processors uses Tables (composed of Rows, Columns, and Cells). Documents are framed by Page Setup: Margins (Top, Bottom, Left, Right), Orientation (Portrait for standard reports, Landscape for wide tables), and Headers/Footers containing page numbers and school names.',
-      si: 'තොරතුරු පිළිවෙළකට දැක්වීමට පේළි (Rows), තීරු (Columns) සහ කොටු (Cells) වලින් සමන්විත වගු (Tables) භාවිත කෙරේ. තවද පිටු සැකසුම (Page Setup) මඟින් පිටු මායිම් (Margins), දිශානතිය (Portrait / Landscape) සහ ශීර්ෂ/පාදක (Headers/Footers) සකසයි.',
-      ta: 'தகவல்களை நேர்த்தியாக காட்ட அட்டவணைகள் (வரிசைகள், நிரல்கள், சிற்றறைகள்) பயன்படுகின்றன. பக்க அமைப்பில் ஓரங்கள் (Margins), பக்க அமைவு (Portrait / Landscape) மற்றும் தலைப்புகள்/அடிக்குறிப்புகள் அடங்கும்.',
+      en: 'Word processors provide two core groups of foundational tools:\n1. Common File Tools (p. 35): New (Ctrl+N, create blank file), Open (Ctrl+O, open existing document), Save (Ctrl+S, save changes to current file), Save As (save under a new name, location, or file type), Print Preview (inspect layout before printing), and Print (Ctrl+P, output to paper).\n2. Edit & Clipboard Tools (p. 36): Undo (Ctrl+Z, reverse last action), Redo (Ctrl+Y, re-apply undone action), Cut (Ctrl+X, remove to clipboard), Copy (Ctrl+C, duplicate to clipboard), Paste (Ctrl+V, insert from clipboard), and Spell Check (F7, identify spelling errors with red wavy underlines and grammar with green/blue wavy underlines).',
+      si: 'වදන් සැකසුම් මෘදුකාංගවල මූලික මෙවලම් කාණ්ඩ දෙකක් ඇත:\n1. පොදු මෙවලම් (පිටුව 35): New (නව ලේඛනයක්), Open (පවතින ලේඛනයක් විවෘත කිරීම), Save (සුරැකීම), Save As (වෙනත් නමකින් හෝ ස්ථානයක සුරැකීම), Print Preview (මුද්‍රණයට පෙර පෙරදසුන), Print (මුද්‍රණය කිරීම).\n2. සංස්කරණ මෙවලම් (පිටුව 36): Undo (අවසන් ක්‍රියාව අහෝසි කිරීම), Redo (අහෝසි කළ ක්‍රියාව නැවත කිරීම), Cut (කපා ගැනීම), Copy (පිටපත් කිරීම), Paste (ඇලවීම), Spell Check (අක්ෂර වින්‍යාස පරීක්ෂාව - රතු/නිල් රැලි සහිත ඉරි).',
+      ta: 'சொல் செயலாக்க மென்பொருளில் இரண்டு பிரதான கருவிக் குழுக்கள் உள்ளன:\n1. பொதுக் கருவிகள் (பக். 35): New (புதிய ஆவணம்), Open (திறத்தல்), Save (சேமித்தல்), Save As (வேறு பெயரில் சேமித்தல்), Print Preview (அச்சு முன்னோட்டம்), Print (அச்சிடுதல்).\n2. திருத்தல் கருவிகள் (பக். 36): Undo (செயல்தவிர்), Redo (மீண்டும் செய்), Cut (வெட்டு), Copy (பிரதி செய்), Paste (ஒட்டு), Spell Check (எழுத்துப்பிழை திருத்தம் - சிவப்பு/நீல அலை அலையான கோடுகள்).',
     },
     visualCard: {
-      title: 'Page Orientation Types',
+      title: 'Common & Edit Tools Ribbon',
       diagramType: 'infographic',
-      content: 'Portrait (Height > Width, e.g. Letters)  vs  Landscape (Width > Height, e.g. Wide Timetables)',
-      caption: 'Header appears at the top of every page; Footer appears at the bottom.'
+      content: 'File: New | Open | Save | Save As | Print Preview | Print  ||  Edit: Undo | Redo | Cut | Copy | Paste | Spell Check',
+      caption: 'Official toolbars defined in Grade 8 ICT Pages 35–36'
     },
     realWorldExample: {
-      en: 'When creating your weekly school class timetable, changing page orientation from Portrait to Landscape provides enough horizontal space to show all 8 school periods across Monday to Friday cleanly.',
-      si: 'පාසලේ සතිපතා කාලසටහන සකස් කිරීමේදී Landscape දිශානතිය තෝරාගැනීමෙන් සඳුදා සිට සිකුරාදා දක්වා කාලච්ඡේද 8ම එක පිටුවකට පහසුවෙන් ඇතුළත් කළ හැක.',
-      ta: 'பள்ளி நேர அட்டவணையை உருவாக்கும் போது Landscape அமைப்பை தெரிவு செய்தால் அனைத்து பாடவேளைகளையும் ஒரே பக்கத்தில் காட்டலாம்.',
+      en: 'If you accidentally erase an entire paragraph while preparing your school report, pressing Undo (Ctrl+Z) restores the lost text instantly!',
+      si: 'වාර්තාවක් සකස් කිරීමේදී අත්වැරදීමකින් ඡේදයක් මැකී ගියහොත් Undo (Ctrl+Z) මඟින් ක්ෂණිකව එම ඡේදය නැවත ලබාගත හැක.',
+      ta: 'அறிக்கையைத் தயாரிக்கும் போது தவறுதலாக ஒரு பந்தியை அழித்துவிட்டால் Undo (Ctrl+Z) மூலம் அதை உடனடியாக மீளப்பெறலாம்.',
     },
     checkQuestion: {
       id: 'wp-q2',
@@ -999,21 +999,174 @@ export const TEACH_ME_WORD_PROCESSING_STEPS: LessonStep[] = [
       examCategory: 'general',
       isDemonstrationSample: true,
       questionText: {
-        en: 'Which page orientation is best suited for printing a wide multi-column table such as a school timetable?',
-        si: 'පාසල් කාලසටහනක් වැනි තීරු රාශියක් සහිත පුළුල් වගුවක් මුද්‍රණය කිරීමට වඩාත්ම සුදුසු පිටු දිශානතිය (Orientation) කුමක්ද?',
-        ta: 'பள்ளி நேர அட்டவணை போன்ற அகலமான அட்டவணையை அச்சிட மிகவும் பொருத்தமான பக்க அமைவு எது?',
+        en: 'What is the precise distinction between the "Save" and "Save As" tools in word processing software?',
+        si: 'වදන් සැකසුම් මෘදුකාංගයක "Save" සහ "Save As" අතර ඇති නිශ්චිත වෙනස කුමක්ද?',
+        ta: 'சொல் செயலாக்க மென்பொருளில் "Save" மற்றும் "Save As" கருவிகளுக்கு இடையிலான துல்லியமான வேறுபாடு யாது?',
       },
       options: [
-        { id: 'opt-1', text: { en: 'Landscape', si: 'Landscape (තිරස් දිශානතිය)', ta: 'Landscape (கிடைமட்ட அமைவு)' } },
-        { id: 'opt-2', text: { en: 'Portrait', si: 'Portrait (සිරස් දිශානතිය)', ta: 'Portrait (செங்குத்து அமைவு)' } },
-        { id: 'opt-3', text: { en: 'Inverted Mirror', si: 'කැඩපත් ප්‍රතිබිම්බය', ta: 'தலைகீழ் அமைவு' } },
-        { id: 'opt-4', text: { en: 'Circular wrap', si: 'වෘත්තාකාර සැකසුම', ta: 'வட்ட அமைவு' } },
+        { id: 'opt-1', text: { en: 'Save updates the existing file, while Save As saves a copy under a new name, location, or format', si: 'Save මඟින් පවතින ගොනුවට වෙනස්කම් සුරකින අතර Save As මඟින් නව නමකින් හෝ ස්ථානයක පිටපතක් සුරකියි', ta: 'Save தற்போதைய ஆவணத்தை புதுப்பிக்கும், Save As புதிய பெயரில் அல்லது கோப்பு வடிவத்தில் சேமிக்கும்' } },
+        { id: 'opt-2', text: { en: 'Save prints the document, while Save As closes the computer', si: 'Save මඟින් ලේඛනය මුද්‍රණය කරන අතර Save As මඟින් පරිගණකය වසා දමයි', ta: 'Save ஆவணத்தை அச்சிடும், Save As கணினியை மூடும்' } },
+        { id: 'opt-3', text: { en: 'Save creates a new empty document, while Save As checks spelling', si: 'Save මඟින් හිස් ලේඛනයක් සාදන අතර Save As මඟින් අක්ෂර වින්‍යාසය බලයි', ta: 'Save புதிய ஆவணத்தை உருவாக்கும், Save As எழுத்துப் பிழையைச் சரிபார்க்கும்' } },
+        { id: 'opt-4', text: { en: 'There is no difference; both commands perform the exact same task', si: 'කිසිදු වෙනසක් නැත, දෙකෙන්ම එකම දේ සිදුවේ', ta: 'எந்த வேறுபாடும் இல்லை, இரண்டும் ஒரே பணியைச் செய்யும்' } },
       ],
       correctOptionId: 'opt-1',
       educationalFeedback: {
-        en: 'Landscape orientation orients the page horizontally (width greater than height), providing ample lateral width for broad columns.',
-        si: 'Landscape මඟින් පිටුව තිරස් අතට හරවන බැවින් වැඩි තීරු ගණනක් පැහැදිලිව මුද්‍රණය කළ හැක.',
-        ta: 'Landscape அமைப்பில் அகலம் அதிகமாக இருப்பதால் விரிவான அட்டவணைகளை எளிதில் அச்சிடலாம்.',
+        en: 'According to page 35, Save writes modifications to the currently opened file, whereas Save As allows saving the document under another name or at a different storage destination.',
+        si: '35 පිටුව අනුව Save මඟින් පවතින ගොනුව යාවත්කාලීන වන අතර, Save As මඟින් නව නමකින් හෝ නව ස්ථානයක සුරැකිය හැක.',
+        ta: 'பக்கம் 35 இன் படி Save தற்போதைய கோப்பில் மாற்றங்களைச் சேமிக்கும், Save As வேறொரு பெயரில் புதிய கோப்பாகச் சேமிக்கும்.',
+      },
+      syllabusReference: 'Sri Lankan Grade 8 ICT — Chapter 3: Word Processing (Textbook p. 35)',
+    }
+  },
+  {
+    id: 'wp-step-3',
+    stepNumber: 3,
+    title: {
+      en: 'Font Formatting, Styles & Subscript/Superscript (Textbook p. 36)',
+      si: 'අකුරු හැඩසවි ගැන්වීම, විලාස සහ උපලකුණු/උඩුලකුණු (පිටුව 36)',
+      ta: 'எழுத்துரு வடிவமைப்பு, பாணிகள் மற்றும் கீழ்/மேல் ஒட்டுகள் (பக். 36)',
+    },
+    concept: {
+      en: 'Text formatting alters character appearance without altering wording (Textbook p. 36):\n- Font Selection: Times New Roman, Cambria, Arial for English; Nirmala UI (Unicode) or FMAbhaya for Sinhala; Latha or Nirmala UI for Tamil.\n- Font Size: Typically 18pt+ for titles, 14pt for sub-headings, and 12pt for body paragraphs.\n- Styles: Bold (B, Ctrl+B for emphasis), Italic (I, Ctrl+I for terms/titles), Underline (U, Ctrl+U), Font Color, and Text Highlight Color.\n- Subscript & Superscript (Activities 3.4 & 3.5):\n  • Subscript (x₂): Lowers text below the normal line, essential for chemical formulas like CO₂ and H₂O.\n  • Superscript (x²): Raises text above the line, essential for mathematical powers (2³, 5²) and ordinal numbers (1ˢᵗ, 2ⁿᵈ).',
+      si: 'අකුරු හැඩසවි ගැන්වීම (පෙළපොත පිටුව 36):\n- අකුරු වර්ගය (Font): ඉංග්‍රීසි සඳහා Times New Roman, Cambria; සිංහල යුනිකෝඩ් සඳහා Nirmala UI හෝ FMAbhaya.\n- අකුරු ප්‍රමාණය (Font Size): මාතෘකා සඳහා 18pt+, උපමාතෘකා 14pt, සාමාන්‍ය ඡේද සඳහා 12pt.\n- විලාස (Styles): තද අකුරු (Bold, Ctrl+B), ඇල අකුරු (Italic, Ctrl+I), යටි ඉරි (Underline, Ctrl+U), අකුරු වර්ණ සහ Highlight.\n- උපලකුණු සහ උඩුලකුණු (ක්‍රියාකාරකම් 3.4 සහ 3.5):\n  • Subscript (x₂ - උපලකුණ): සාමාන්‍ය පෙළ මට්ටමට වඩා පහළින් ලියයි. රසායනික සූත්‍ර සඳහා (උදා: CO₂, H₂O).\n  • Superscript (x² - උඩුලකුණ): සාමාන්‍ය පෙළ මට්ටමට වඩා ඉහළින් ලියයි. ගණිතමය බල සහ දර්ශක සඳහා (උදා: 2³, 5², 1ˢᵗ).',
+      ta: 'எழுத்து வடிவமைப்பு (பாடநூல் பக்கம் 36):\n- எழுத்துரு வகை: ஆங்கிலத்திற்கு Times New Roman, Cambria; தமிழுக்கு Latha, Nirmala UI.\n- எழுத்து அளவு: தலைப்புகளுக்கு 18pt+, உப தலைப்புகளுக்கு 14pt, பந்திகளுக்கு 12pt.\n- பாணிகள்: தடித்த (Bold, Ctrl+B), சாய்வான (Italic, Ctrl+I), அடிக்கோடு (Underline, Ctrl+U), நிறங்கள்.\n- Subscript & Superscript (செயற்பாடுகள் 3.4 & 3.5):\n  • Subscript (x₂ - கீழ் ஒட்டு): வரிக் கோட்டிற்கு கீழே எழுதும். இரசாயன சூத்திரங்களுக்கு (உதா: CO₂, H₂O).\n  • Superscript (x² - மேல் ஒட்டு): வரிக் கோட்டிற்கு மேலே எழுதும். கணித அடுக்குகளுக்கு (உதா: 2³, 5²).'
+    },
+    visualCard: {
+      title: 'Subscript (x₂) vs Superscript (x²)',
+      diagramType: 'infographic',
+      content: 'Subscript (x₂): Chemical Formulas like CO₂, H₂O  ||  Superscript (x²): Mathematical Powers like 2³, 5²',
+      caption: 'Grade 8 ICT Page 36 Activity 3.4 & 3.5'
+    },
+    realWorldExample: {
+      en: 'When creating an 8th-grade Science examination paper, you must format carbon dioxide as CO₂ using Subscript, and in the Mathematics paper, format two-cubed as 2³ using Superscript!',
+      si: '8 ශ්‍රේණියේ විද්‍යාව ප්‍රශ්න පත්‍රයක් සකස් කිරීමේදී කාබන්ඩයොක්සයිඩ් CO₂ ලෙස ලිවීමට Subscript ද, ගණිතය ප්‍රශ්න පත්‍රයේ 2³ ලිවීමට Superscript ද භාවිත කළ යුතුය!',
+      ta: 'விஞ்ஞான வினாத்தாளில் காபனீரொட்சைட்டு CO₂ என எழுத Subscript உம், கணித வினாத்தாளில் 2³ என எழுத Superscript உம் பயன்படுகின்றன!',
+    },
+    checkQuestion: {
+      id: 'wp-q3',
+      subjectId: 'ict',
+      topicId: 'word-processing',
+      grade: 'grade-8',
+      examCategory: 'general',
+      isDemonstrationSample: true,
+      questionText: {
+        en: 'When typing a school examination paper, which font tools must be selected to format the chemical formula CO₂ and the mathematical power 2³ correctly?',
+        si: 'පාසල් විභාග ප්‍රශ්න පත්‍රයක් සකස් කිරීමේදී CO₂ රසායනික සූත්‍රය සහ 2³ ගණිතමය ප්‍රකාශනය ලිවීමට තෝරාගත යුතු අකුරු හැඩසවි මෙවලම් මොනවාද?',
+        ta: 'பரீட்சை வினாத்தாளில் CO₂ இரசாயன சூத்திரத்தையும் 2³ கணித அடுக்கையும் தட்டச்சு செய்ய முறையே தெரிவு செய்யப்பட வேண்டிய கருவிகள் எவை?',
+      },
+      options: [
+        { id: 'opt-1', text: { en: 'Subscript for the "2" in CO₂ and Superscript for the "3" in 2³', si: 'CO₂ හි "2" සඳහා Subscript (උපලකුණ) සහ 2³ හි "3" සඳහා Superscript (උඩුලකුණ)', ta: 'CO₂ இல் உள்ள "2" இற்கு Subscript மற்றும் 2³ இல் உள்ள "3" இற்கு Superscript' } },
+        { id: 'opt-2', text: { en: 'Strikethrough for CO₂ and Double Underline for 2³', si: 'CO₂ සඳහා Strikethrough සහ 2³ සඳහා යටි ඉරි', ta: 'CO₂ இற்கு Strikethrough மற்றும் 2³ இற்கு அடிக்கோடு' } },
+        { id: 'opt-3', text: { en: 'Center Alignment for CO₂ and Right Alignment for 2³', si: 'CO₂ සඳහා Center පෙළගැස්ම සහ 2³ සඳහා Right පෙළගැස්ම', ta: 'CO₂ இற்கு Center மற்றும் 2³ இற்கு Right' } },
+        { id: 'opt-4', text: { en: 'Uppercase for CO₂ and Lowercase for 2³', si: 'CO₂ සඳහා ලොකු අකුරු සහ 2³ සඳහා කුඩා අකුරු', ta: 'CO₂ இற்கு பெரிய எழுத்து மற்றும் 2³ இற்கு சிறிய எழுத்து' } },
+      ],
+      correctOptionId: 'opt-1',
+      educationalFeedback: {
+        en: 'As highlighted on page 36 (Activities 3.4 & 3.5), Subscript places numbers below the text baseline for chemical notation (CO₂), while Superscript elevates numbers above for algebraic exponents (2³).',
+        si: 'පෙළපොතේ 36 පිටුවේ දැක්වෙන පරිදි රසායනික සූත්‍රවල පාදස්ථ අංක සඳහා Subscript ද, ගණිතයේ දර්ශක සඳහා Superscript ද යොදාගනී.',
+        ta: 'பக்கம் 36 இன் படி இரசாயன சூத்திரங்களுக்கு Subscript உம், கணித அடுக்குகளுக்கு Superscript உம் பயன்படுத்தப்படுகின்றன.',
+      },
+      syllabusReference: 'Sri Lankan Grade 8 ICT — Chapter 3: Word Processing (Textbook p. 36)',
+    }
+  },
+  {
+    id: 'wp-step-4',
+    stepNumber: 4,
+    title: {
+      en: 'Paragraph Alignment, Spacing & Lists (Textbook p. 37)',
+      si: 'ඡේද පෙළගැස්වීම්, පරතරය සහ ලැයිස්තු (පිටුව 37)',
+      ta: 'பந்தி சீரமைப்பு, இடைவெளி மற்றும் பட்டியல்கள் (பக். 37)',
+    },
+    concept: {
+      en: 'Paragraph formatting controls text layout across document margins (Textbook p. 37):\n- 4 Alignment Options:\n  1. Align Left (Ctrl+L): Text aligns neatly with the left margin; right margin remains ragged. Standard default for letters and essays.\n  2. Center (Ctrl+E): Centers text equidistant between margins. Used for headings, titles, certificates, and cover pages.\n  3. Align Right (Ctrl+R): Text aligns squarely along the right margin. Used for dates, sender addresses, and signatures.\n  4. Justify (Ctrl+J): Dynamically adjusts spacing between words so text aligns squarely against BOTH the left and right margins simultaneously, creating the crisp, clean columns seen in textbooks, newspapers, and magazines.\n- Line Spacing: Adjusts vertical distance between lines of text (1.0 single, 1.15, 1.5).\n- Bullets & Numbering: Creates ordered and unordered lists (Activities 3.7 & 3.8).\n- Borders & Shading: Highlights important announcement callouts.',
+      si: 'ඡේද හැඩසවි ගැන්වීම මඟින් ලේඛනයේ පෙනුම මනාව පාලනය කරයි (පෙළපොත පිටුව 37):\n- පෙළගැස්වීම් 4 (Alignment):\n  1. වම් පෙළගැස්ම (Align Left, Ctrl+L): වම් දාරය කෙළින් පිහිටන අතර දකුණු දාරය අසමපාත වේ. සාමාන්‍ය ලිපි සඳහා සම්මතයයි.\n  2. මැදට පෙළගැස්ම (Center, Ctrl+E): දෙපස දාරවලට මැදිව පෙළගස්වයි. මාතෘකා, සහතිකපත් සහ ආවරණ පිටු සඳහා යොදාගනී.\n  3. දකුණු පෙළගැස්ම (Align Right, Ctrl+R): දකුණු දාරයට සමපාත වේ. දිනයන්, ලිපිනයන් සහ අත්සන් සඳහා යොදාගනී.\n  4. දෙපස සමපාත කිරීම (Justify, Ctrl+J): වචන අතර පරතරය ස්වයංක්‍රීයව සකසා වම් සහ දකුණු දාර දෙකටම එකවර සෘජුව පෙළගස්වයි. පෙළපොත්, පුවත්පත් සහ සඟරාවල මෙය සම්මතයයි.\n- පේළි පරතරය (Line Spacing), බුලට් සහ අංකනය (Bullets & Numbering), මායිම් සහ සෙවනැලි (Borders & Shading).',
+      ta: 'பந்தி வடிவமைப்பு (பாடநூல் பக்கம் 37):\n- 4 சீரமைப்பு வகைகள்:\n  1. இடது சீரமைப்பு (Align Left, Ctrl+L): இடது ஓரம் நேராகவும் வலது ஓரம் ஒழுங்கற்றும் இருக்கும்.\n  2. மைய சீரமைப்பு (Center, Ctrl+E): பந்தியை நடுவில் வைக்கும். தலைப்புகளுக்கு உகந்தது.\n  3. வலது சீரமைப்பு (Align Right, Ctrl+R): வலது ஓரம் நேராக இருக்கும். திகதி, கையொப்பங்களுக்கு உகந்தது.\n  4. இருபுற சீரமைப்பு (Justify, Ctrl+J): இடது மற்றும் வலது இரு ஓரங்களையும் நேர்த்தியாக சமப்படுத்தும். பாடநூல்கள், பத்திரிகைகளில் பயன்படும்.\n- வரி இடைவெளி (Line Spacing), புல்லட்டுகள் மற்றும் இலக்கமிடல் (Bullets & Numbering).'
+    },
+    visualCard: {
+      title: 'Four Paragraph Alignment Types',
+      diagramType: 'infographic',
+      content: 'Left (Default) | Center (Headings) | Right (Dates/Signatures) | Justify (Books/Newspapers both margins)',
+      caption: 'Textbook Page 37 Alignment Options'
+    },
+    realWorldExample: {
+      en: 'Open your Grade 8 ICT textbook right now: Notice how the chapter title "Word Processing" is Centered, the header with page number is Right-aligned, and all the body paragraphs are Justified on both sides!',
+      si: 'ඔබේ 8 ශ්‍රේණියේ තොරතුරු තාක්ෂණ පෙළපොත දෙස බලන්න: "වදන් සැකසුම" ප්‍රධාන මාතෘකාව Center කර ඇති අතර, පිටු අංක දකුණටද, සියලුම ප්‍රධාන ඡේද දෙපසම සෘජුව Justify කර ඇත!',
+      ta: 'உங்கள் தரம் 8 பாடநூலை கவனியுங்கள்: "சொல் செயலாக்கம்" தலைப்பு மையப்படுத்தப்பட்டும் (Center), பந்திகள் இருபுறமும் சமமாகவும் (Justify) அச்சிடப்பட்டுள்ளன!',
+    },
+    checkQuestion: {
+      id: 'wp-q4',
+      subjectId: 'ict',
+      topicId: 'word-processing',
+      grade: 'grade-8',
+      examCategory: 'general',
+      isDemonstrationSample: true,
+      questionText: {
+        en: 'Which paragraph alignment option adjusts spacing between words so text aligns evenly along BOTH the left and right margins simultaneously, as seen in published textbooks?',
+        si: 'පෙළපොත් සහ පුවත්පත්වල දක්නට ලැබෙන පරිදි, වචන අතර පරතරය සකසමින් වම් සහ දකුණු දාර දෙකටම එකවර සමපාත වන සේ පෙළගස්වන විකල්පය කුමක්ද?',
+        ta: 'பாடநூல்கள் மற்றும் பத்திரிகைகளில் காணப்படுவது போல், பந்தியின் உரையை இடது மற்றும் வலது இரு ஓரங்களிலும் ஒரே சீராக சமப்படுத்தும் சீரமைப்பு எது?',
+      },
+      options: [
+        { id: 'opt-1', text: { en: 'Justify (Ctrl+J)', si: 'Justify (දෙපස සමපාත කිරීම, Ctrl+J)', ta: 'Justify (இருபுற சீரமைப்பு, Ctrl+J)' } },
+        { id: 'opt-2', text: { en: 'Align Left (Ctrl+L)', si: 'Align Left (වම් පෙළගැස්ම, Ctrl+L)', ta: 'Align Left (இடது சீரமைப்பு, Ctrl+L)' } },
+        { id: 'opt-3', text: { en: 'Align Right (Ctrl+R)', si: 'Align Right (දකුණු පෙළගැස්ම, Ctrl+R)', ta: 'Align Right (வலது சீரமைப்பு, Ctrl+R)' } },
+        { id: 'opt-4', text: { en: 'Center (Ctrl+E)', si: 'Center (මැදට පෙළගැස්ම, Ctrl+E)', ta: 'Center (மைய சீரமைப்பு, Ctrl+E)' } },
+      ],
+      correctOptionId: 'opt-1',
+      educationalFeedback: {
+        en: 'Justify inserts subtle micro-spacing between words so every line starts flush against the left margin and ends flush against the right margin.',
+        si: 'Justify මඟින් වචන අතර පරතරය සකසා පෙළෙහි දෙපසම දාරවලට සෘජුව එක සමානව සමපාත කරයි.',
+        ta: 'Justify சொற்களுக்கு இடையில் இடைவெளியைச் சரிசெய்து பந்தியின் இரு ஓரங்களையும் நேர்த்தியாக சமப்படுத்துகிறது.',
+      },
+      syllabusReference: 'Sri Lankan Grade 8 ICT — Chapter 3: Word Processing (Textbook p. 37)',
+    }
+  },
+  {
+    id: 'wp-step-5',
+    stepNumber: 5,
+    title: {
+      en: 'Inserting Objects, Tables & Official Summary (Textbook p. 37–38)',
+      si: 'වස්තු ඇතුළත් කිරීම, වගු, පිටු සැකසුම සහ නිල සාරාංශය (පිටු 37–38)',
+      ta: 'உருப்படிகள் சேர்த்தல், அட்டவணைகள், பக்க வடிவமைப்பு மற்றும் சுருக்கம் (பக். 37–38)',
+    },
+    concept: {
+      en: 'Modern word processing goes beyond plain text by incorporating rich graphic objects and structured data (Textbook p. 37–38):\n- Insertable Objects:\n  • Pictures & Images: Importing digital photos from storage (e.g. school crest, scientific diagrams).\n  • Clip Art & Shapes: Geometric shapes (rectangles, banners, callouts, arrows) to construct flowcharts and diagrams.\n  • Word Art: Decorative, stylized artistic lettering for posters, certificates, and souvenir headings.\n  • Text Boxes: Floating, movable text containers used for highlighting quotations or side notes.\n  • Tables: Formed by intersecting horizontal Rows and vertical Columns to create Cells, perfect for class timetables, mark sheets, and price lists.\n- Page Setup & Layout: Margins (Top, Bottom, Left, Right), Orientation (Portrait for standard documents, Landscape for wide tables), and Paper Size (A4 standard).\n- Official Chapter 3 Summary (Textbook p. 38):\n  1. Word processors facilitate easy electronic creation, editing, and formatting of documents.\n  2. Common tools like New, Open, Save, and Print manage documents reliably.\n  3. Character formatting provides complete control over fonts, sizes, styles, and Subscript/Superscript.\n  4. Paragraph alignment tools (Left, Center, Right, Justify) produce professionally organized layouts.\n  5. Inserting visual objects, shapes, and tables transforms simple text into engaging, communicative publications.',
+      si: 'වදන් සැකසුම් මෘදුකාංග මඟින් සාමාන්‍ය පෙළට අමතරව විවිධ වස්තු සහ වගු ඇතුළත් කළ හැක (පෙළපොත පිටු 37–38):\n- ඇතුළත් කළ හැකි වස්තු (Insert Objects):\n  • පින්තූර (Pictures): පාසල් ලාංඡනය, විද්‍යාත්මක රූප සටහන් ආදිය ගොනු මඟින් ඇතුළත් කිරීම.\n  • හැඩතල (Shapes): ඊතල, බැනර්, ජ්‍යාමිතික හැඩතල මඟින් ප්‍රස්ථාර හා සටහන් නිර්මාණය කිරීම.\n  • Word Art: ආකර්ෂණීය අලංකාර අකුරු කලාව මඟින් සමරු කලාප, පෝස්ටර්වල ප්‍රධාන මාතෘකා සැකසීම.\n  • පෙළ කොටු (Text Boxes): නිදහසේ එහා මෙහා ගෙන යා හැකි පෙළ කොටු.\n  • වගු (Tables): තිරස් පේළි (Rows) සහ සිරස් තීරු (Columns) කැපී සෑදෙන කොටු (Cells) මඟින් කාලසටහන්, ලකුණු ලැයිස්තු සැකසීම.\n- පිටු සැකසුම (Page Setup): දිශානතිය (Portrait / Landscape), මායිම් (Margins).\n- නිල පාඩම් සාරාංශය (පිටුව 38): ලේඛන පහසුවෙන් සකස් කිරීම, පොදු මෙවලම් භාවිතය, අකුරු හා ඡේද හැඩසවි ගැන්වීම, වස්තු හා වගු මඟින් ලේඛනය ආකර්ෂණීය කර ගැනීම.',
+      ta: 'சொல் செயலாக்க மென்பொருளில் உரையைத் தவிர பல்வேறு உருப்படிகளையும் அட்டவணைகளையும் சேர்க்கலாம் (பாடநூல் பக். 37–38):\n- சேர்க்கக்கூடிய உருப்படிகள்:\n  • படங்கள் (Pictures): புகைப்படங்கள், பாடசாலை இலச்சினை.\n  • வடிவங்கள் (Shapes): அம்புக்குறிகள், வடிவங்கள்.\n  • Word Art: கவர்ச்சிகரமான அலங்கார எழுத்துக்கள்.\n  • Text Boxes: நகர்த்தக்கூடிய உரைப்பெட்டிகள்.\n  • அட்டவணைகள் (Tables): வரிசைகள் மற்றும் நிரல்களால் ஆன சிற்றறைகள் (Cells), நேர அட்டவணைகளுக்கு உகந்தது.\n- பக்க வடிவமைப்பு: Orientation (Portrait / Landscape), ஓரங்கள் (Margins).\n- உத்தியோகபூர்வ சுருக்கம் (பக்கம் 38): ஆவண உருவாக்கம், பொதுக் கருவிகள், எழுத்துரு/பந்தி வடிவமைப்பு, அட்டவணைகள் மற்றும் உருப்படிகளைப் பயன்படுத்தி கவர்ச்சிகரமான ஆவணங்களை உருவாக்குதல்.'
+    },
+    visualCard: {
+      title: 'Objects, Tables & Page Setup',
+      diagramType: 'infographic',
+      content: 'Insert: Pictures | Clip Art | Shapes | Word Art | Text Boxes | Tables  ||  Layout: Margins | Portrait vs Landscape',
+      caption: 'Ministry Grade 8 ICT Chapter 3 Summary (Pages 37–38)'
+    },
+    realWorldExample: {
+      en: 'When organizing the Grade 8 English Day souvenir, students used Word Art for the decorative cover title, a Table with 5 columns for the prize-giving schedule, and inserted the school crest picture!',
+      si: '8 ශ්‍රේණියේ ඉංග්‍රීසි දින සමරු කලාපය සකස් කිරීමේදී ප්‍රධාන මාතෘකාවට Word Art ද, ත්‍යාග ප්‍රදානෝත්සව කාලසටහනට තීරු 5ක වගුවක්ද (Table), පාසල් ලාංඡනයද (Picture) ඇතුළත් කළහ!',
+      ta: 'ஆங்கில தின மலர் தயாரிப்பில் மாணவர்கள் தலைப்பிற்கு Word Art உம், பரிசளிப்பு நேர அட்டவணைக்கு 5 நிரல்களைக் கொண்ட Table உம், பாடசாலை இலச்சினைப் படமும் சேர்த்தனர்!',
+    },
+    checkQuestion: {
+      id: 'wp-q5',
+      subjectId: 'ict',
+      topicId: 'word-processing',
+      grade: 'grade-8',
+      examCategory: 'general',
+      isDemonstrationSample: true,
+      questionText: {
+        en: 'Which tool in a word processor should you use to structure a weekly school class timetable with days across the top and periods down the side?',
+        si: 'සතියේ දින ඉහළින්ද, කාලච්ඡේද පහළින්ද සිටින සේ සතිපතා පාසල් කාලසටහනක් පිළිවෙළකට සකස් කිරීමට යොදාගත යුතු වඩාත්ම සුදුසු මෙවලම කුමක්ද?',
+        ta: 'கிழமைகள் மேலேயும் பாடவேளைகள் பக்கவாட்டிலும் அமையுமாறு பள்ளி நேர அட்டவணையை நேர்த்தியாக அமைக்கப் பயன்படும் மிகச் சிறந்த கருவி எது?',
+      },
+      options: [
+        { id: 'opt-1', text: { en: 'Table (composed of rows and columns)', si: 'Table (පේළි සහ තීරු වලින් සමන්විත වගු)', ta: 'Table (வரிசைகள் மற்றும் நிரல்களால் ஆன அட்டவணை)' } },
+        { id: 'opt-2', text: { en: 'Word Art', si: 'Word Art (අලංකාර අකුරු)', ta: 'Word Art (அலங்கார எழுத்து)' } },
+        { id: 'opt-3', text: { en: 'Subscript tool', si: 'Subscript (උපලකුණු මෙවලම)', ta: 'Subscript (கீழ் ஒட்டுக் கருவி)' } },
+        { id: 'opt-4', text: { en: 'Spell check', si: 'Spell Check (අක්ෂර වින්‍යාස පරීක්ෂාව)', ta: 'Spell Check (எழுத்துப்பிழை திருத்தி)' } },
+      ],
+      correctOptionId: 'opt-1',
+      educationalFeedback: {
+        en: 'A Table organizes information systematically into a grid of rows and columns, making it ideal for timetables, registers, and schedules.',
+        si: 'වගුවක් (Table) මඟින් පේළි සහ තීරු ජාලයක් තුළ තොරතුරු ක්‍රමානුකූලව දැක්විය හැකි බැවින් කාලසටහන් සඳහා වඩාත්ම සුදුසු වේ.',
+        ta: 'அட்டவணை (Table) வரிசைகள் மற்றும் நிரல்களில் தகவல்களை ஒழுங்கமைக்க உதவுவதால் நேர அட்டவணைகளுக்கு மிகவும் ஏற்றது.',
       },
       syllabusReference: 'Sri Lankan Grade 8 ICT — Chapter 3: Word Processing (Textbook p. 37–38)',
     }
