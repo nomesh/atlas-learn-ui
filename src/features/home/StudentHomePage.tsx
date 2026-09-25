@@ -25,9 +25,13 @@ import { MOCK_SUBJECTS, MOCK_TOPICS } from '../../mocks/curriculumData';
 export const StudentHomePage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { studentName, grade, language, streakDays, tutorState, setCurriculumSubject } = useStudent();
+  const { studentName, grade, language, streakDays, tutorState, setCurriculumSubject, learningContext } = useStudent();
 
-  const continueTopic = MOCK_TOPICS.find((t) => t.id === 'photosynthesis') || MOCK_TOPICS[0];
+  const continueTopic =
+    (learningContext?.topicId ? MOCK_TOPICS.find((t) => t.id === learningContext.topicId) : null) ||
+    (learningContext?.subjectId ? MOCK_TOPICS.find((t) => t.subjectId === learningContext.subjectId) : null) ||
+    MOCK_TOPICS.find((t) => t.id === 'number-systems') ||
+    MOCK_TOPICS[0];
   const continueSubject = MOCK_SUBJECTS.find((s) => s.id === continueTopic.subjectId) || MOCK_SUBJECTS[0];
 
   const getSubjectIcon = (iconName: string) => {
@@ -51,8 +55,8 @@ export const StudentHomePage: React.FC = () => {
       border: 'hover:border-sky-300',
       glow: 'shadow-sky-100',
       onClick: () => {
-        setCurriculumSubject('science', 'photosynthesis');
-        navigate('/learn/photosynthesis');
+        setCurriculumSubject(continueSubject.id, continueTopic.id);
+        navigate(`/learn/${continueTopic.id}`);
       },
     },
     {
@@ -104,8 +108,8 @@ export const StudentHomePage: React.FC = () => {
       border: 'hover:border-emerald-300',
       glow: 'shadow-emerald-100',
       onClick: () => {
-        setCurriculumSubject('science', 'photosynthesis');
-        navigate('/learn/photosynthesis');
+        setCurriculumSubject(continueSubject.id, continueTopic.id);
+        navigate(`/learn/${continueTopic.id}`);
       },
     },
   ];
@@ -222,7 +226,7 @@ export const StudentHomePage: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center flex-shrink-0 text-sky-600">
-              <Atom className="w-6 h-6" />
+              {getSubjectIcon(continueSubject.iconName)}
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -260,8 +264,8 @@ export const StudentHomePage: React.FC = () => {
             <button
               type="button"
               onClick={() => {
-                setCurriculumSubject('science', 'photosynthesis');
-                navigate('/learn/photosynthesis');
+                setCurriculumSubject(continueSubject.id, continueTopic.id);
+                navigate(`/learn/${continueTopic.id}`);
               }}
               className="px-4 py-2 bg-slate-900 hover:bg-atlas-blue text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm flex-shrink-0"
             >
