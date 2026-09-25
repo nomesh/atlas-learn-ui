@@ -24,6 +24,8 @@ import { TutorTeachingHighlighter } from './TutorTeachingHighlighter';
 import { MemoryTrickCard } from './MemoryTrickCard';
 import { useStudent } from '../../state/studentContext';
 import { TutorAvatar } from '../avatar/TutorAvatar';
+import { AtlasTutorTalkingStage } from '../avatar/AtlasTutorTalkingStage';
+import { useTutorVoice } from '../../hooks/useTutorVoice';
 import { CitationDrawer } from './CitationDrawer';
 import { RichContentRenderer } from './RichContentRenderer';
 import { tutorService } from '../../api/tutorApi';
@@ -60,6 +62,9 @@ export const TutorPage: React.FC = () => {
 
   const [isCompanionOpen, setIsCompanionOpen] = useState(true);
   const [mobileView, setMobileView] = useState<'chat' | 'companion'>('chat');
+
+  // Centralized Tutor Voice & Talking Character Stage
+  const tutorVoice = useTutorVoice((st) => setTutorState(st));
 
   useEffect(() => {
     if (paramSubject || paramTopic) {
@@ -689,50 +694,73 @@ What ICT topic would you like to explore together today?`;
                   </p>
                 ) : (
                   <div>
-                    {/* Trilingual Answer Switcher */}
-                    {msg.languageVersions && (msg.languageVersions.si || msg.languageVersions.ta) && (
-                      <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-slate-100 flex-wrap gap-2">
+                    {/* Trilingual Answer Switcher & Voice Audio Action */}
+                    <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-slate-100 flex-wrap gap-2">
+                      {msg.languageVersions && (msg.languageVersions.si || msg.languageVersions.ta) ? (
                         <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
                           <Globe className="w-3.5 h-3.5 text-cyan-600" />
-                          <span>Answer Language:</span>
+                          <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleMsgLang(msg.id, 'en')}
+                              className={`px-2 py-0.5 rounded-lg text-xs font-semibold transition-all ${
+                                (msg.activeLang || 'en') === 'en'
+                                  ? 'bg-white text-slate-900 shadow-sm font-bold'
+                                  : 'text-slate-600 hover:text-slate-900'
+                              }`}
+                            >
+                              English
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleMsgLang(msg.id, 'si')}
+                              className={`px-2 py-0.5 rounded-lg text-xs font-semibold transition-all ${
+                                msg.activeLang === 'si'
+                                  ? 'bg-white text-slate-900 shadow-sm font-bold'
+                                  : 'text-slate-600 hover:text-slate-900'
+                              }`}
+                            >
+                              සිංහල
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleMsgLang(msg.id, 'ta')}
+                              className={`px-2 py-0.5 rounded-lg text-xs font-semibold transition-all ${
+                                msg.activeLang === 'ta'
+                                  ? 'bg-white text-slate-900 shadow-sm font-bold'
+                                  : 'text-slate-600 hover:text-slate-900'
+                              }`}
+                            >
+                              தமிழ்
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleMsgLang(msg.id, 'en')}
-                            className={`px-2 py-0.5 rounded-lg text-xs font-semibold transition-all ${
-                              (msg.activeLang || 'en') === 'en'
-                                ? 'bg-white text-slate-900 shadow-sm font-bold'
-                                : 'text-slate-600 hover:text-slate-900'
-                            }`}
-                          >
-                            English
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleToggleMsgLang(msg.id, 'si')}
-                            className={`px-2 py-0.5 rounded-lg text-xs font-semibold transition-all ${
-                              msg.activeLang === 'si'
-                                ? 'bg-white text-slate-900 shadow-sm font-bold'
-                                : 'text-slate-600 hover:text-slate-900'
-                            }`}
-                          >
-                            සිංහල
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleToggleMsgLang(msg.id, 'ta')}
-                            className={`px-2 py-0.5 rounded-lg text-xs font-semibold transition-all ${
-                              msg.activeLang === 'ta'
-                                ? 'bg-white text-slate-900 shadow-sm font-bold'
-                                : 'text-slate-600 hover:text-slate-900'
-                            }`}
-                          >
-                            தமிழ்
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                      ) : <div />}
+
+                      {/* Listen with Voice Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const activeContent = (msg.activeLang && msg.languageVersions?.[msg.activeLang]) || msg.content;
+                          // Clean markdown formatting for clear audio
+                          const cleanVoiceText = activeContent
+                            .replace(/[#*_`>]/g, '')
+                            .replace(/\n+/g, '. ')
+                            .substring(0, 480);
+                          tutorVoice.speak({
+                            text: cleanVoiceText,
+                            title: 'Atlas Tutor Lesson Explanation',
+                            concept: 'Grounded Curriculum Unit',
+                            language: msg.activeLang || language,
+                          });
+                        }}
+                        className="px-2.5 py-1 rounded-xl bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200 text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs"
+                        title="Listen to this lesson with Atlas Tutor Voice"
+                      >
+                        <Volume2 className="w-3.5 h-3.5 text-cyan-600" />
+                        <span>Listen with Voice</span>
+                      </button>
+                    </div>
 
                     {/* Interactive Teaching Highlighter & Content */}
                     <TutorTeachingHighlighter
@@ -746,6 +774,8 @@ What ICT topic would you like to explore together today?`;
                       <MemoryTrickCard
                         memoryTrick={msg.memoryTrick}
                         language={msg.activeLang || language}
+                        onTriggerVoice={(opts) => tutorVoice.speak(opts)}
+                        isExternalPlaying={tutorVoice.isSpeaking && tutorVoice.concept === msg.memoryTrick.concept}
                         onPlayStateChange={(isPlaying) => setTutorState(isPlaying ? 'speaking' : 'idle')}
                       />
                     )}
@@ -1015,6 +1045,24 @@ What ICT topic would you like to explore together today?`;
           </div>
         </div>
       )}
+
+      {/* Reasonably Large Atlas Tutor Character Talking Stage */}
+      <AtlasTutorTalkingStage
+        isOpen={tutorVoice.isSpeaking || tutorVoice.isPaused || tutorVoice.isCompleted}
+        isSpeaking={tutorVoice.isSpeaking}
+        isPaused={tutorVoice.isPaused}
+        isCompleted={tutorVoice.isCompleted}
+        title={tutorVoice.title}
+        concept={tutorVoice.concept}
+        spokenText={tutorVoice.spokenText}
+        currentWord={tutorVoice.currentWord}
+        language={tutorVoice.language}
+        onPause={tutorVoice.pause}
+        onResume={tutorVoice.resume}
+        onReplay={tutorVoice.replay}
+        onClose={tutorVoice.stop}
+        tutorState={tutorState}
+      />
     </div>
   );
 };

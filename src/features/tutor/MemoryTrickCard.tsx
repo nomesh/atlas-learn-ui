@@ -14,16 +14,23 @@ interface MemoryTrickCardProps {
   memoryTrick: MemoryTrick;
   language?: Language;
   onPlayStateChange?: (isPlaying: boolean) => void;
+  onTriggerVoice?: (options: { text: string; title: string; concept: string; language: Language }) => void;
+  isExternalPlaying?: boolean;
 }
 
 export const MemoryTrickCard: React.FC<MemoryTrickCardProps> = ({
   memoryTrick,
   language = 'en',
   onPlayStateChange,
+  onTriggerVoice,
+  isExternalPlaying = false,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
+
+  // Sync external playing state
+  const currentlyPlaying = isPlaying || isExternalPlaying;
 
   useEffect(() => {
     setIsSupported('speechSynthesis' in window);
@@ -37,6 +44,20 @@ export const MemoryTrickCard: React.FC<MemoryTrickCardProps> = ({
   const handleToggleAudio = () => {
     if (!isSupported) return;
 
+    const textToSpeak = memoryTrick.audioText || memoryTrick.rhyme || memoryTrick.trick;
+
+    // If external trigger is provided (e.g. from TutorPage to launch large talking stage)
+    if (onTriggerVoice) {
+      setHasPlayed(true);
+      onTriggerVoice({
+        text: textToSpeak,
+        title: `Tutor Memory Trick`,
+        concept: memoryTrick.concept,
+        language: language,
+      });
+      return;
+    }
+
     if (isPlaying) {
       window.speechSynthesis.cancel();
       setIsPlaying(false);
@@ -46,7 +67,6 @@ export const MemoryTrickCard: React.FC<MemoryTrickCardProps> = ({
 
     window.speechSynthesis.cancel();
 
-    const textToSpeak = memoryTrick.audioText || memoryTrick.rhyme || memoryTrick.trick;
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
 
     // Pick best matching voice
@@ -120,13 +140,13 @@ export const MemoryTrickCard: React.FC<MemoryTrickCardProps> = ({
             type="button"
             onClick={handleToggleAudio}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm ${
-              isPlaying
+              currentlyPlaying
                 ? 'bg-amber-400 text-slate-950 ring-2 ring-amber-300/50 scale-105'
                 : 'bg-indigo-600/80 hover:bg-indigo-600 text-white border border-indigo-400/30'
             }`}
-            title={isPlaying ? 'Pause narration' : 'Listen to Atlas Tutor voice trick'}
+            title={currentlyPlaying ? 'Pause narration' : 'Listen to Atlas Tutor voice trick'}
           >
-            {isPlaying ? (
+            {currentlyPlaying ? (
               <>
                 <VolumeX className="w-3.5 h-3.5" />
                 <span>Pause Voice</span>
