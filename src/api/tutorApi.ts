@@ -117,16 +117,20 @@ export class MockTutorAdapter implements TutorAdapter {
       return this.handleAncientHydraulics(lang);
     }
 
+    if (lowerQ.includes('clarify') || lowerQ.includes('break this down') || lowerQ.includes('more detail') || lowerQ.includes('තවදුරටත්') || lowerQ.includes('விளக்குங்கள்')) {
+      return this.handleClarifyExplanation(lang, context);
+    }
+
     if (lowerQ.includes('again') || lowerQ.includes('නැවත') || lowerQ.includes('மீண்டும்')) {
       return this.handleRepeatExplanation(lang);
     }
 
     if (lowerQ.includes('easier') || lowerQ.includes('simpler') || lowerQ.includes('සරල') || lowerQ.includes('எளிதாக')) {
-      return this.handleSimplerExplanation(lang);
+      return this.handleSimplerExplanation(lang, context);
     }
 
     if (lowerQ.includes('example') || lowerQ.includes('උදාහරණ') || lowerQ.includes('உதாரணம்')) {
-      return this.handleExample(lang);
+      return this.handleExample(lang, context);
     }
 
     if (lowerQ.includes('sinhala') || lowerQ.includes('සිංහල')) {
@@ -346,46 +350,199 @@ Would you like to try calculating a hypotenuse together?`,
     };
   }
 
-  private handleSimplerExplanation(lang: 'en' | 'si' | 'ta'): RAGResponse {
-    return {
-      answer: lang === 'si'
-        ? `තවත් සරල කරමු:
-- **ශාකය ගන්නේ:** හිරු එළිය ☀️ + ජලය 💧 + කාබන් ඩයොක්සයිඩ් 💨
-- **ශාකය හදන්නේ:** ආහාර (ග්ලූකෝස්) 🍯 + අපට හුස්ම ගන්න ඔක්සිජන් 🍃
+    private handleClarifyExplanation(lang: 'en' | 'si' | 'ta', context: LearningContext): RAGResponse {
+    const isIct = context.subjectId === 'ict';
+    const isHistory = context.subjectId === 'history';
 
-මේ ක්‍රියාවලිය නැත්නම් මිහිමත කිසිම සතෙකුට හෝ මිනිසෙකුට ඔක්සිජන් ලැබෙන්නේ නැහැ!`
-        : `Super simple version:
+    if (isIct) {
+      const en = `### Detailed Step-by-Step Breakdown: Number Systems & Binary Logic
+
+Let's examine how electrical circuits calculate numbers step by step:
+
+1. **Step 1: The Transistor as an On/Off Valve**
+   Inside your computer's CPU, billions of microscopic transistors act just like a home wall switch. When $+3.3\\text{V}$ electrical current flows through, the circuit closes ($1$). When voltage is cut ($0\\text{V}$), the circuit opens ($0$).
+
+2. **Step 2: Positional Powers of 2**
+   Why powers of 2? Because there are only 2 states ($0$ and $1$):
+   - First column on the right: $2^0 = 1$
+   - Second column: $2^1 = 2$
+   - Third column: $2^2 = 4$
+   - Fourth column: $2^3 = 8$
+   Each position to the left is worth exactly **double** the one before it!
+
+3. **Step 3: Calculating Decimal from Binary (e.g. $1011_2$)**
+   - Position 3 ($2^3 = 8$): bit is 1 $\\to 8$
+   - Position 2 ($2^2 = 4$): bit is 0 $\\to 0$
+   - Position 1 ($2^1 = 2$): bit is 1 $\\to 2$
+   - Position 0 ($2^0 = 1$): bit is 1 $\\to 1$
+   - Total Sum: $8 + 0 + 2 + 1 = \\mathbf{11_{10}}$.
+
+Would you like to try converting another decimal number or test it in the interactive 8-bit switchboard?`;
+
+      return {
+        answer: en,
+        sources: [
+          {
+            source: 'Grade 8 ICT Textbook — Deep Dive into Positional Weights',
+            pageNumber: 5,
+            distance: 0.10,
+          }
+        ],
+        suggestedFollowUps: [
+          'Explain simpler: Can you explain binary in simpler terms for a beginner?',
+          'Sri Lankan Example: How is this used in smartphones in Sri Lanka?',
+          'Memory trick: Give me a rhyme to remember powers of 2',
+          'Quiz me on binary conversion'
+        ],
+      };
+    }
+
+    if (isHistory) {
+      return {
+        answer: `### Step-by-Step Breakdown: Ancient Hydraulic Engineering
+
+1. **Catchment Basin:** Rain falling in the central highlands was caught by trans-basin earthen bunds.
+2. **Bisokotuwa Water Gate:** Water entered an inner stone chamber (Biso-Kotuwa). Thick stone baffles absorbed the massive hydrostatic pressure of the deep water, slowing the rush to a safe trickle.
+3. **Distribution Canal (Yoda Ela):** The water was released into long canals engineered with a gradient of less than 6 inches per mile, irrigating dry-zone paddy fields across hundreds of villages!`,
+        sources: [
+          {
+            source: 'Grade 10 History Textbook — Ancient Engineering Innovations',
+            pageNumber: 25,
+            distance: 0.12,
+          }
+        ],
+        suggestedFollowUps: [
+          'Explain simpler: How does the Bisokotuwa work like a bathroom tap?',
+          'Sri Lankan Example: The engineering of Jaya Ganga',
+          'Memory trick: Parakramabahu\'s famous motto',
+          'Quiz me on ancient hydraulics'
+        ],
+      };
+    }
+
+    return {
+      answer: `### Step-by-Step Clarification: Photosynthesis Chemistry
+
+1. **Light Reaction (Granum):** Sunlight hits chlorophyll in the leaf. Water ($H_2O$) is split into Hydrogen and Oxygen ($O_2$). Oxygen diffuses out into the air.
+2. **Dark Reaction / Calvin Cycle (Stroma):** Carbon Dioxide ($CO_2$) combines with Hydrogen to build Glucose ($C_6H_{12}O_6$).
+3. **Storage:** The plant links glucose molecules into insoluble starch, stored in roots, tubers, and fruits!`,
+      sources: [
+        {
+          source: 'Grade 8 Science — Photosynthesis In-Depth Mechanism',
+          pageNumber: 44,
+          distance: 0.11,
+        }
+      ],
+      suggestedFollowUps: [
+        'Explain simpler: What goes in and what comes out?',
+        'Sri Lankan Example: Why do king coconuts have sweet water?',
+        'Memory trick: Photosynthesis equation rhyme',
+        'Quiz me on photosynthesis'
+      ]
+    };
+  }
+
+  private handleSimplerExplanation(lang: 'en' | 'si' | 'ta', context?: LearningContext): RAGResponse {
+    const isIct = context?.subjectId === 'ict';
+    const isHistory = context?.subjectId === 'history';
+
+    if (isIct) {
+      const en = `### Super Simple Version: Binary & Bits
+
+Think of your bedroom ceiling light switch:
+- **Switch down (OFF):** No electricity flows. That is a **0**!
+- **Switch up (ON):** Electricity flows and lights up the bulb. That is a **1**!
+
+Because computer chips have billions of microscopic switches, they count only using **0** and **1**:
+- One switch = **1 Bit** (a tiny piece of information).
+- A group of 8 switches = **1 Byte** (enough to store 1 English letter, like 'A').
+
+When you type 'A', the keyboard simply sets 8 switches to: \`01000001\`! That's all there is to it!`;
+      return {
+        answer: en,
+        sources: [{ source: 'Grade 8 ICT Basics', pageNumber: 2 }],
+        suggestedFollowUps: [
+          'Clarify more: How do 8 bits add up to numbers?',
+          'Sri Lankan Example: Why does a USB drive say 32GB or 64GB?',
+          'Memory trick: Catchy rhyme for bits and bytes',
+          'Quiz me on bits and bytes'
+        ]
+      };
+    }
+
+    if (isHistory) {
+      return {
+        answer: `### Super Simple Version: The Bisokotuwa Sluice Gate
+
+Imagine blowing water through a straw with full force: it blasts out wildly. But if you blow into a cup with tiny holes first, the water flows out smoothly without splashing.
+
+Ancient Sinhala kings built stone chambers inside reservoirs called **Bisokotuwa**. It trapped the wild, roaring water pressure so it wouldn't smash the mud dam, letting smooth water flow safely to the farmers!`,
+        sources: [{ source: 'Grade 10 History Basics', pageNumber: 15 }],
+        suggestedFollowUps: [
+          'Clarify more: The technical design of Bisokotuwa',
+          'Sri Lankan Example: Reservoirs in Anuradhapura',
+          'Memory trick for King Parakramabahu',
+          'Quiz me on history'
+        ]
+      };
+    }
+
+    return {
+      answer: `Super simple version:
 - **What goes in:** Sunlight ☀️ + Water 💧 + Air ($CO_2$) 💨
 - **What comes out:** Plant Food (Glucose) 🍯 + Clean Oxygen ($O_2$) 🍃
 
 Without this simple plant magic, living creatures wouldn't have oxygen to breathe!`,
-      sources: [
-        {
-          documentId: 'sl-nie-sci-gr8-ch4',
-          source: 'Grade 8 Science — Foundation Concepts',
-          pageNumber: 42,
-          distance: 0.15,
-        }
-      ],
+      sources: [{ source: 'Grade 8 Science — Foundation Concepts', pageNumber: 42 }],
+      suggestedFollowUps: [
+        'Clarify more: Step-by-step chemical reaction',
+        'Sri Lankan Example: King Coconut tree',
+        'Memory trick for photosynthesis',
+        'Quiz me on science'
+      ]
     };
   }
 
-  private handleExample(lang: 'en' | 'si' | 'ta'): RAGResponse {
+  private handleExample(lang: 'en' | 'si' | 'ta', context?: LearningContext): RAGResponse {
+    const isIct = context?.subjectId === 'ict';
+    const isHistory = context?.subjectId === 'history';
+
+    if (isIct) {
+      return {
+        answer: `**A Real-World Sri Lankan Example of ICT & Binary:**
+
+Next time you visit a computer shop at **Majestic City** or **Unity Plaza** in Colombo, look at the memory cards and pen drives for sale:
+- **16 GB**, **32 GB**, **64 GB**, **128 GB**, **256 GB**!
+
+Have you ever wondered why there is no 20 GB or 50 GB pen drive? 
+Because computer memory is physically wired in **Powers of 2**:
+- $2^4 = 16$
+- $2^5 = 32$
+- $2^6 = 64$
+- $2^7 = 128$
+
+Every single memory device sold across Sri Lanka follows the exact binary place values taught in Grade 8 ICT Chapter 1!`,
+        sources: [{ source: 'Grade 8 ICT — Real World Digital Storage', pageNumber: 8 }],
+        suggestedFollowUps: [
+          'Clarify more: Why does binary double every step?',
+          'Explain simpler: Bits vs Bytes in plain English',
+          'Memory trick: Rhyme for powers of 2',
+          'Quiz me on ICT examples'
+        ]
+      };
+    }
+
     return {
-      answer: lang === 'si'
-        ? `**ශ්‍රී ලාංකික සැබෑ උදාහරණයක්:**
-ඔබ පොල් ගසක් දෙස බලන්න. පොල් අතු දිග හැරෙන්නේ හිරු එළිය උපරිමයෙන් ලබාගන්නයි. ඒ පොල් අතුවල සිදුවන ප්‍රභාසංස්ලේෂණයෙන් නිපදවන ශක්තියෙන් තමයි පොල් ගෙඩිය තුළ පැණි රස පොල් වතුර සහ මදය හැදෙන්නේ! ඔබ බොන තැඹිලි වතුරෙහි අඩංගු ග්ලූකෝස් මුලින්ම හැදුණේ හිරු එළියෙනි.`
-        : `**A Real-World Sri Lankan Example:**
+      answer: `**A Real-World Sri Lankan Example:**
 Think of a King Coconut (Thambili) tree in your garden. The tall fronds spread wide to catch equatorial sunshine. 
 Through photosynthesis, the palm creates glucose and electrolytes, which it pumps into the young king coconuts. The sweet, refreshing water you drink on a hot afternoon was synthesized by the leaves using sunlight!`,
-      sources: [
-        {
-          documentId: 'sl-nie-sci-gr8-ch4',
-          source: 'Grade 8 Science Textbook — Plant Physiology in Tropical Ecosystems',
-          pageNumber: 45,
-          distance: 0.18,
-        }
-      ],
+      sources: [{ source: 'Grade 8 Science Textbook — Plant Physiology in Tropical Ecosystems', pageNumber: 45 }],
+      suggestedFollowUps: [
+        'Clarify more: How do roots pump water upward?',
+        'Explain simpler: Photosynthesis basics',
+        'Memory trick for plant nutrition',
+        'Quiz me on photosynthesis'
+      ]
     };
   }
 
@@ -636,82 +793,83 @@ Would you like to explore subjects currently active in your syllabus, such as **
       }
     ];
 
-    if (lang === 'si') {
-      return {
-        answer: `**සංඛ්‍යා පද්ධති (Number Systems) — 1 වන පරිච්ඡේදය**
+    const enAnswer = `**Number Systems — Grade 8 ICT (Chapter 1)**
+
+Modern digital computers operate using the **Binary Number System (Base 2)** consisting of only two digits: **0** and **1**. While humans naturally use the **Decimal System (Base 10)** with digits 0 through 9, electronic computer hardware relies on microscopic transistors acting as physical electrical switches:
+- **State 0 (OFF):** Low voltage ($0\\text{V}$), electric switch open / circuit disconnected.
+- **State 1 (ON):** High voltage ($+3.3\\text{V}$ or $+5\\text{V}$), electric switch closed / circuit connected.
+
+### Positional Weights (Powers of 2 from Right to Left):
+$2^7(128) \\quad 2^6(64) \\quad 2^5(32) \\quad 2^4(16) \\quad 2^3(8) \\quad 2^2(4) \\quad 2^1(2) \\quad 2^0(1)$
+
+### Example: Converting Decimal 13 to Binary
+Using successive division by 2:
+1. $13 \\div 2 = 6$ (Remainder **1**)
+2. $6 \\div 2 = 3$ (Remainder **0**)
+3. $3 \\div 2 = 1$ (Remainder **1**)
+4. $1 \\div 2 = 0$ (Remainder **1**)
+
+Reading remainders from bottom to top (MSB to LSB) yields: **$13_{10} = 1101_2$** ($8 + 4 + 0 + 1 = 13$).`;
+
+    const siAnswer = `**සංඛ්‍යා පද්ධති (Number Systems) — 1 වන පරිච්ඡේදය**
 
 ඩිජිටල් පරිගණක ක්‍රියාත්මක වන්නේ **ද්විමය (Binary / පාදය 2)** සංඛ්‍යා පද්ධතියෙනි. මිනිසුන් වන අප සාමාන්‍යයෙන් 0 සිට 9 දක්වා සංකේත 10ක් සහිත **දශමය (Decimal / පාදය 10)** පද්ධතිය භාවිත කළද, පරිගණක ඉලෙක්ට්‍රොනික පරිපථ (ට්‍රාන්සිස්ටර) පහසුවෙන් පාලනය කළ හැකි තත්ත්ව දෙකක් පමණක් හඳුනාගනී:
 - **0 (OFF):** අඩු වෝල්ටීයතාවය (0V) / විදුලි ස්විචය විසන්ධි තත්ත්වය.
 - **1 (ON):** ඉහළ වෝල්ටීයතාවය (+3.3V හෝ +5V) / විදුලි ස්විචය සක්‍රිය තත්ත්වය.
 
 ### 2 හි බල සහ ස්ථානීය අගයන් (දකුණේ සිට වමට):
-$2^7(128) \quad 2^6(64) \quad 2^5(32) \quad 2^4(16) \quad 2^3(8) \quad 2^2(4) \quad 2^1(2) \quad 2^0(1)$
+$2^7(128) \\quad 2^6(64) \\quad 2^5(32) \\quad 2^4(16) \\quad 2^3(8) \\quad 2^2(4) \\quad 2^1(2) \\quad 2^0(1)$
 
 ### දශමය 13 ද්විමය බවට පත්කිරීම (Successive Division by 2):
-- $13 \div 2 = 6$ (ඉතිරිය **1**)
-- $6 \div 2 = 3$ (ඉතිරිය **0**)
-- $3 \div 2 = 1$ (ඉතිරිය **1**)
-- $1 \div 2 = 0$ (ඉතිරිය **1**)
-පහළ සිට ඉහළට කියවූ විට: **$13_{10} = 1101_2$** ($8 + 4 + 0 + 1 = 13$).`,
-        sources,
-        suggestedFollowUps: [
-          'දශමය සංඛ්‍යාවක් ද්විමය කිරීමට තවත් උදාහරණයක් දෙන්න',
-          'විදුලි ස්විචය (OFF/ON) සහ පරිගණක ට්‍රාන්සිස්ටර අතර සම්බන්ධය කුමක්ද?',
-          'බිටු 8ක් (Byte) මඟින් නිරූපණය කළ හැකි උපරිම අගය කීයද?',
-        ],
-      };
-    }
+- $13 \\div 2 = 6$ (ඉතිරිය **1**)
+- $6 \\div 2 = 3$ (ඉතිරිය **0**)
+- $3 \\div 2 = 1$ (ඉතිරිය **1**)
+- $1 \\div 2 = 0$ (ඉතිරිය **1**)
+පහළ සිට ඉහළට කියවූ විට: **$13_{10} = 1101_2$** ($8 + 4 + 0 + 1 = 13$).`;
 
-    if (lang === 'ta') {
-      return {
-        answer: `**எண் முறைகள் (Number Systems) — அத்தியாயம் 1**
+    const taAnswer = `**எண் முறைகள் (Number Systems) — அத்தியாயம் 1**
 
 கணினிகள் **இரும (Binary / அடி 2)** எண் முறையில் இயங்குகின்றன. மனிதர்கள் 0 முதல் 9 வரையிலான 10 இலக்கங்களைக் கொண்ட **தசம (Decimal / அடி 10)** முறையைப் பயன்படுத்துகின்றனர். கணினியின் டிரான்சிஸ்டர்கள் இரு மின் நிலைகளை மட்டுமே உணர்கின்றன:
 - **0 (OFF):** குறைந்த மின்னழுத்தம் (0V) / மின் சுவிட்ச் அணைக்கப்பட்டது.
 - **1 (ON):** உயர் மின்னழுத்தம் (+3.3V / +5V) / மின் சுவிட்ச் இயக்கப்பட்டது.
 
 ### 2 இன் அடுக்குகள் (வலமிருந்து இடமாக):
-$2^7(128) \quad 2^6(64) \quad 2^5(32) \quad 2^4(16) \quad 2^3(8) \quad 2^2(4) \quad 2^1(2) \quad 2^0(1)$
+$2^7(128) \\quad 2^6(64) \\quad 2^5(32) \\quad 2^4(16) \\quad 2^3(8) \\quad 2^2(4) \\quad 2^1(2) \\quad 2^0(1)$
 
 ### தசம எண் 13 ஐ இருமமாக மாற்றுதல்:
-- $13 \div 2 = 6$ (மீதி **1**)
-- $6 \div 2 = 3$ (மீதி **0**)
-- $3 \div 2 = 1$ (மீதி **1**)
-- $1 \div 2 = 0$ (மீதி **1**)
-கீழிருந்து மேலாக: **$13_{10} = 1101_2$** ($8 + 4 + 0 + 1 = 13$).`,
-        sources,
-        suggestedFollowUps: [
-          'தசமத்திலிருந்து இருமத்திற்கு மாற்றும் முறை',
-          'டிரான்சிஸ்டர் சுவிட்ச் எவ்வாறு செயல்படுகிறது?',
-          'இரும எண் முறை வினாடி வினா',
-        ],
-      };
-    }
+- $13 \\div 2 = 6$ (மீதி **1**)
+- $6 \\div 2 = 3$ (மீதி **0**)
+- $3 \\div 2 = 1$ (மீதி **1**)
+- $1 \\div 2 = 0$ (மீதி **1**)
+கீழிருந்து மேலாக: **$13_{10} = 1101_2$** ($8 + 4 + 0 + 1 = 13$).`;
 
     return {
-      answer: `**Number Systems — Grade 8 ICT (Chapter 1)**
-
-Modern digital computers operate using the **Binary Number System (Base 2)** consisting of only two digits: **0** and **1**. While humans naturally use the **Decimal System (Base 10)** with digits 0 through 9, electronic computer hardware relies on microscopic transistors acting as physical electrical switches:
-- **State 0 (OFF):** Low voltage ($0\text{V}$), electric switch open / circuit disconnected.
-- **State 1 (ON):** High voltage ($+3.3\text{V}$ or $+5\text{V}$), electric switch closed / circuit connected.
-
-### Positional Weights (Powers of 2 from Right to Left):
-$$2^7(128) \quad 2^6(64) \quad 2^5(32) \quad 2^4(16) \quad 2^3(8) \quad 2^2(4) \quad 2^1(2) \quad 2^0(1)$$
-
-### Example: Converting Decimal 13 to Binary
-Using successive division by 2:
-1. $13 \div 2 = 6$ (Remainder **1**)
-2. $6 \div 2 = 3$ (Remainder **0**)
-3. $3 \div 2 = 1$ (Remainder **1**)
-4. $1 \div 2 = 0$ (Remainder **1**)
-
-Reading remainders from bottom to top (MSB to LSB) yields: **$13_{10} = 1101_2$** ($8 + 4 + 0 + 1 = 13$).`,
+      answer: lang === 'si' ? siAnswer : lang === 'ta' ? taAnswer : enAnswer,
       sources,
+      languageVersions: {
+        en: enAnswer,
+        si: siAnswer,
+        ta: taAnswer,
+      },
+      keyPoints: [
+        'Binary (Base 2: 0 and 1)',
+        'Decimal (Base 10: 0 to 9)',
+        'State 0 (OFF: 0V)',
+        'State 1 (ON: +3.3V)',
+        'Powers of 2 (1, 2, 4, 8, 16, 32, 64, 128)',
+        'Successive Division by 2'
+      ],
+      memoryTrick: {
+        concept: 'Powers of 2 & Binary Place Values',
+        trick: 'Double trouble from Right to Left! Start at 1, then double each step: 1, 2, 4, 8, 16, 32, 64, 128!',
+        rhyme: 'Start at ONE on the far Right,\nDouble each step with all your might!\n1, 2, 4, 8, sixteen more,\n32, 64, 128 in store!',
+        audioText: 'Here is your memory trick for binary numbers! Start at one on the far right, and double every step: 1, 2, 4, 8, 16, 32, 64, and 128! Every bit to the left is twice as big!'
+      },
       suggestedFollowUps: [
+        'Clarify more: Can you break this down step-by-step with more details?',
+        'Explain simpler: Can you explain binary in simpler terms for a beginner?',
+        'Sri Lankan Example: Give a real-world Sri Lankan application',
         'How do I convert decimal 25 to binary?',
-        'Explain the Electric Switch ON/OFF logic in CPUs',
-        'What is the maximum decimal value an 8-bit byte can store?',
-        'Quiz me on Grade 8 Number Systems'
       ],
     };
   }
@@ -738,9 +896,26 @@ Reading remainders from bottom to top (MSB to LSB) yields: **$13_{10} = 1101_2$*
       }
     ];
 
-    if (lang === 'si') {
-      return {
-        answer: `**පරිගණකයක් වින්‍යාසගත කිරීම සහ හැඩසවි ගැන්වීම — 2 වන පරිච්ඡේදය**
+    const enAnswer = `**Configuring and Formatting a Computer — Grade 8 ICT (Chapter 2)**
+
+Setting up your desktop environment, regional languages, and storage volumes correctly ensures your workstation runs smoothly:
+
+### 1. Screen Resolution:
+- Measured as **Horizontal Pixels × Vertical Pixels**.
+- Standard Full HD: **1920 × 1080 Pixels** ($2,073,600$ dots of light).
+- Matching your monitor's native aspect ratio (typically 16:9) prevents stretching or blurriness.
+
+### 2. Regional Language Keyboard Setup:
+- **Wijesekara Layout:** Standard Sri Lankan government keyboard layout.
+- **Phonetic (Singlish/Tamil):** Typing sounds (e.g., 'k'+'a' produces 'ක', 'k'+'i' produces 'කි').
+- Configured via Windows Settings $\\to$ Time & Language $\\to$ Preferred Languages.
+
+### 3. Storage Drive Formatting:
+- **FAT32:** Compatible across Windows, Mac, and Linux, but max file size is $4\\text{GB}$.
+- **NTFS:** Default for modern Windows, supports large files and file encryption security.
+- *Caution:* Formatting creates a new File Allocation Table and deletes all existing files!`;
+
+    const siAnswer = `**පරිගණකයක් වින්‍යාසගත කිරීම සහ හැඩසවි ගැන්වීම — 2 වන පරිච්ඡේදය**
 
 පරිගණකයක් කාර්යක්ෂමව භාවිත කිරීමට ඩෙස්ක්ටොප් පරිසරය, භාෂා සහ ආචයන තැටි නිවැරදිව සකසා ගැනීම අත්‍යවශ්‍ය වේ:
 
@@ -749,72 +924,53 @@ Reading remainders from bottom to top (MSB to LSB) yields: **$13_{10} = 1101_2$*
 - සම්මත Full HD විභේදනය: **1920 × 1080 Pixels** (පික්සෙල් 2,073,600).
 - විභේදනය නිවැරදිව සැකසූ විට අකුරු සහ රූප පැහැදිලිව දර්ශනය වේ.
 
-### 2. සිංහල සහ දෙමළ යුනිකෝඩ් යතුරුපුවරු:
-- ශ්‍රී ලංකාවේ සම්මත වේලා කලාපය **UTC+05:30** (Sri Lanka Standard Time) ලෙස සකසයි.
-- **Windows Key + Spacebar** එබීමෙන් ඉංග්‍රීසි, සිංහල (විජේසේකර) සහ දෙමළ යතුරුපුවරු අතර ක්ෂණිකව මාරු විය හැක.
+### 2. ප්‍රාදේශීය භාෂා යතුරුපුවරු සකස් කිරීම:
+- **විජේසේකර යතුරුපුවරුව:** ශ්‍රී ලංකා ප්‍රමිති කාර්යාංශය විසින් අනුමත නිල සිංහල යතුරුපුවරු සැකසුමයි.
+- **ශබ්දානුකූල (Phonetic / Singlish):** උච්චාරණය අනුව ටයිප් කිරීම (උදා: 'k'+'a' $\\to$ 'ක').
 
 ### 3. ආචයන තැටි හැඩසවි ගැන්වීම (Drive Formatting):
-- USB ධාවක හෝ දෘඪ තැටි Format කිරීමේදී නව ගොනු පද්ධතියක් (NTFS, FAT32) ස්ථාපනය වේ.
-- **අවවාදයයි:** Format කිරීමෙන් එහි ඇති සියලුම දත්ත මුළුමනින්ම මැකී යයි. එබැවින් පෙර සූදානමක් ලෙස පිටපතක් (Backup) ලබාගැනීම අනිවාර්ය වේ!`,
-        sources,
-        suggestedFollowUps: [
-          'FAT32 සහ NTFS ගොනු පද්ධති අතර වෙනස කුමක්ද?',
-          'Format කිරීමට පෙර Backup ගන්නේ කෙසේද?',
-          'සිංහල යුනිකෝඩ් යතුරුපුවරුව පරිගණකයට එක්කරන්නේ කෙසේද?',
-        ],
-      };
-    }
+- **FAT32:** සියලුම මෙහෙයුම් පද්ධති වලට ගැළපෙන නමුත් 4GB ට වඩා විශාල තනි ගොනු ගබඩා කළ නොහැක.
+- **NTFS:** නවීන Windows සඳහා සම්මත ගොනු පද්ධතියයි (විශාල ගොනු සහ ආරක්ෂණ පහසුකම් ඇත).
+- *අවවාදයයි:* Format කිරීමේදී තැටියේ ඇති සියලුම දත්ත මැකී යයි!`;
 
-    if (lang === 'ta') {
-      return {
-        answer: `**கணினியை உள்ளமைத்தல் மற்றும் வடிவமைத்தல் — அத்தியாயம் 2**
+    const taAnswer = `**கணினியை உள்ளமைத்தல் மற்றும் வடிவமைத்தல் — அத்தியாயம் 2**
 
 ### 1. திரை தெளிவுத்திறன் (Screen Resolution):
-- கிடைமட்ட மற்றும் செங்குத்து பிக்சல்களின் எண்ணிக்கை (எ.கா: 1920 × 1080 Full HD).
-- சரியான தெளிவுத்திறன் எழுத்துக்களையும் படங்களையும் மிகத் தெளிவாகக் காட்டும்.
+- கிடைமட்ட மற்றும் செங்குத்து பிக்சல்களின் எண்ணிக்கை (**1920 × 1080** Full HD).
 
-### 2. மொழி விசைப்பலகை மற்றும் நேர வலயம்:
-- இலங்கைக்கான நேர வலயம் **UTC+05:30** ஆகும்.
-- **Windows Key + Spacebar** அழுத்துவதன் மூலம் ஆங்கிலம், தமிழ் (தமிழ் 99) மற்றும் சிங்கள விசைப்பலகைகளுக்கு மாறலாம்.
+### 2. பிராந்திய மொழி விசைப்பலகை அமைப்புகள்:
+- **விஜேசேகர விசைப்பலகை** மற்றும் **ஒலியியல் (Phonetic)** விசைப்பலகை அமைப்புகள்.
 
 ### 3. சேமிப்பக வடிவமைத்தல் (Drive Formatting):
-- பென்டிரைவ் அல்லது வன்தட்டை Format செய்யும் போது புதிய கோப்பு அமைப்பு (NTFS, FAT32) உருவாகிறது.
-- **எச்சரிக்கை:** Format செய்தால் அனைத்து தரவுகளும் அழியும், எனவே முன்கூட்டியே Backup எடுக்க வேண்டும்!`,
-        sources,
-        suggestedFollowUps: [
-          'FAT32 மற்றும் NTFS வேறுபாடுகள் என்ன?',
-          'Format செய்வதற்கு முன் Backup எடுப்பது ஏன் முக்கியம்?',
-          'தமிழ் விசைப்பலகையை எவ்வாறு அமைப்பது?',
-        ],
-      };
-    }
+- **FAT32 vs NTFS:** FAT32 அதிகபட்சம் 4GB கோப்புகளை ஆதரிக்கிறது; NTFS பெரிய கோப்புகளை ஆதரிக்கிறது.
+- நினைவில் கொள்க: வடிவமைத்தல் (Formatting) செய்யும் போது கோப்புகள் அனைத்தும் அழிக்கப்படும்!`;
 
     return {
-      answer: `**Configuring and Formatting a Computer — Grade 8 ICT (Chapter 2)**
-
-Configuring your computer system optimizes productivity, ergonomic comfort, and hardware stability:
-
-### 1. Display Resolution & Screen Personalization:
-- **Screen Resolution:** Measures the total number of distinct pixels displayed horizontally and vertically (e.g. **1920 × 1080 Full HD** contains 2,073,600 individual pixels).
-- Selecting the monitor's native resolution prevents image stretching and blurred fonts.
-- Desktop wallpapers, screen savers, and font scaling can be adjusted under *Windows Settings $\rightarrow$ Personalization $\rightarrow$ Display*.
-
-### 2. Sri Lankan Regional Language & Keyboard Setup:
-- **Time Zone:** Set to **UTC+05:30** (Sri Lanka Standard Time - Colombo).
-- **Unicode Keyboards:** Installing the Sinhala (Wijesekara) and Tamil (Tamil 99/Phonetic) input packages allows typing across web browsers and word processors.
-- Shortcut: Press **Windows Key + Spacebar** to toggle between English, Sinhala, and Tamil input methods.
-
-### 3. Storage Drive Formatting & Precautions:
-- **Formatting:** Prepares a storage partition by creating a file system index table:
-  - **NTFS:** Windows internal drives (supports files > 4GB and disk encryption).
-  - **FAT32:** High compatibility for USB flash drives across school labs.
-- **CRITICAL PRECAUTION:** Formatting completely erases all existing data! Always create a **Backup copy** on external cloud or physical storage before initiating a drive format.`,
+      answer: lang === 'si' ? siAnswer : lang === 'ta' ? taAnswer : enAnswer,
       sources,
+      languageVersions: {
+        en: enAnswer,
+        si: siAnswer,
+        ta: taAnswer,
+      },
+      keyPoints: [
+        'Screen Resolution (1920 × 1080 Full HD)',
+        'Aspect Ratio (16:9 widescreen)',
+        'Wijesekara Keyboard Layout',
+        'Unicode Font Rendering',
+        'Drive Formatting (NTFS vs FAT32)'
+      ],
+      memoryTrick: {
+        concept: 'Screen Resolution & Drive Formats',
+        trick: 'Pixels = Width × Height! NTFS for Big Files, FAT32 for Universal Sharing!',
+        rhyme: 'Pixels across and pixels down,\nCrisp Full HD all over town!\nNineteen-twenty by ten-eighty wide,\nFormat with care and backup inside!',
+        audioText: 'Here is your memory trick for screen resolution and drive formatting! Resolution is width times height in dots! Remember, NTFS handles big files over four gigabytes, while FAT32 works everywhere! Always backup before formatting!'
+      },
       suggestedFollowUps: [
-        'What is the difference between FAT32 and NTFS file systems?',
-        'Why must you always backup files before formatting a USB drive?',
-        'How do I configure Sinhala and Tamil Unicode keyboards?',
-        'Quiz me on Grade 8 Computer Configuration'
+        'Clarify more: Can you break this down step-by-step with more details?',
+        'Explain simpler: Can you explain screen resolution in simple terms?',
+        'Sri Lankan Example: How to type Sinhala and Tamil in school labs?',
+        'What is the difference between FAT32 and NTFS?',
       ],
     };
   }
@@ -826,32 +982,73 @@ Configuring your computer system optimizes productivity, ergonomic comfort, and 
         source: 'Grade 8 ICT Textbook — Chapter 3: Word Processing (Educational Publications Department Sri Lanka)',
         fileType: 'PDF',
         pageNumber: 35,
-        chunkNumber: 74,
+        chunkNumber: 82,
         distance: 0.13,
         excerpt: null,
       }
     ];
 
+    const enAnswer = `**Word Processing — Grade 8 ICT (Chapter 3)**
+
+Word processing software allows creating, editing, formatting, and printing standardized electronic documents:
+
+### 1. Text Formatting & Alignment:
+- **Left Align (Ctrl+L):** Standard for informal English reading left-to-right.
+- **Center Align (Ctrl+E):** Used for titles, certificates, and poem stanzas.
+- **Right Align (Ctrl+R):** Used for date lines and sender addresses.
+- **Justify (Ctrl+J):** Aligns text evenly along **both** left and right margins with uniform spacing. Used in official textbooks and newspapers!
+
+### 2. Document Setup:
+- **Page Orientation:** Portrait (vertical) vs Landscape (horizontal).
+- **Margins:** Top, Bottom, Left, and Right whitespace borders.
+- **Headers & Footers:** Automatic page numbering, document titles, or dates displayed consistently across all pages.`;
+
+    const siAnswer = `**වදන් සැකසුම (Word Processing) — 3 වන පරිච්ඡේදය**
+
+### 1. ඡේද පෙළගැස්වීම් (Paragraph Alignments):
+- **වමට පෙළගැස්වීම (Ctrl+L):** සාමාන්‍ය ලේඛන සඳහා.
+- **මධ්‍යගත කිරීම (Ctrl+E):** ප්‍රධාන මාතෘකා සහ සහතිකපත් සඳහා.
+- **දකුණට පෙළගැස්වීම (Ctrl+R):** ලිපින සහ දිනයන් සඳහා.
+- **සමපාත කිරීම (Justify - Ctrl+J):** වම් සහ දකුණු දෙපසම පිළිවෙළට සමානව තැබීම. පුවත්පත් සහ පෙළපොත් වල භාවිත වේ!
+
+### 2. පිටු සැකසුම (Page Setup):
+- **දිශානතිය (Orientation):** සිරස් (Portrait) සහ තිරස් (Landscape).
+- **ශීර්ෂක සහ පාදක (Header & Footer):** සෑම පිටුවකම ඉහළ සහ පහළින් පිටු අංක හෝ මාතෘකා යෙදීම.`;
+
+    const taAnswer = `**சொல் செயலாக்கம் (Word Processing) — அத்தியாயம் 3**
+
+### 1. உரை சீரமைப்பு (Text Alignment):
+- **இடது சீரமைப்பு (Ctrl+L)**
+- **மையச் சீரமைப்பு (Ctrl+E)**
+- **வலது சீரமைப்பு (Ctrl+R)**
+- **நேர்த்தி செய்தல் (Justify - Ctrl+J):** இருபுறமும் சீராக அமையச்செய்தல்.`;
+
     return {
-      answer: `**Word Processing — Grade 8 ICT (Chapter 3)**
-
-Word processing software (such as LibreOffice Writer or Microsoft Word) is used to create and format professional documents.
-
-### Key Formatting Principles:
-1. **Font Typography:** Font family, font size, bold (Ctrl+B), italic (Ctrl+I), and underline (Ctrl+U).
-2. **Four Paragraph Alignments:**
-   - **Align Left:** Standard alignment for English letters and notes.
-   - **Center:** Headings, certificates, and poem verses.
-   - **Align Right:** Signatures, dates, and reference numbers.
-   - **Justify (Ctrl+J):** Aligns text evenly against **both left and right margins** simultaneously by adjusting word spacing, standard in official ministry textbooks and newspapers!
-3. **Tables & Page Setup:**
-   - Tables are composed of Rows, Columns, and Cells.
-   - **Page Orientation:** Portrait (vertical) for standard essays vs **Landscape** (horizontal) for wide school timetables and mark sheets.`,
+      answer: lang === 'si' ? siAnswer : lang === 'ta' ? taAnswer : enAnswer,
       sources,
+      languageVersions: {
+        en: enAnswer,
+        si: siAnswer,
+        ta: taAnswer,
+      },
+      keyPoints: [
+        'Justify Alignment (Ctrl+J)',
+        'Portrait vs Landscape Orientation',
+        'Header & Footer (Page numbers)',
+        'Table Insertion & Formatting',
+        'Font Typography & Styles'
+      ],
+      memoryTrick: {
+        concept: 'Word Processing Shortcuts & Justify',
+        trick: 'L=Left, R=Right, E=cEnter, and J=Justify for perfect textbook margins!',
+        rhyme: 'Left, Center, Right, or Justify line,\nCtrl+J makes publications shine!\nPortrait stands tall, Landscape lies flat,\nHeaders on top keep page numbers pat!',
+        audioText: 'Here is your memory trick for word processing! Remember: L is Left, R is Right, E is Center, and J is Justify! Ctrl plus J aligns both left and right margins straight like your school textbook!'
+      },
       suggestedFollowUps: [
-        'When should I use Justify paragraph alignment?',
-        'What is the difference between Portrait and Landscape orientation?',
-        'How do I insert and format a table in Word?'
+        'Clarify more: Can you break this down step-by-step with more details?',
+        'Explain simpler: Why do books use Justify alignment?',
+        'Sri Lankan Example: How to format an official school permission letter',
+        'How to insert and customize tables in Word',
       ],
     };
   }
@@ -862,32 +1059,69 @@ Word processing software (such as LibreOffice Writer or Microsoft Word) is used 
         documentId: 'moe-lk-ict-gr8-ict-gr8-en',
         source: 'Grade 8 ICT Textbook — Chapter 4: Programming (Educational Publications Department Sri Lanka)',
         fileType: 'PDF',
-        pageNumber: 44,
-        chunkNumber: 96,
-        distance: 0.12,
+        pageNumber: 62,
+        chunkNumber: 110,
+        distance: 0.10,
         excerpt: null,
       }
     ];
 
+    const enAnswer = `**Visual Programming with Scratch — Grade 8 ICT (Chapter 4)**
+
+Scratch is a visual block-based programming environment developed by MIT to teach computational thinking:
+
+### 1. Core Programming Concepts:
+- **Sprites:** Characters or objects on the Stage that carry out code instructions.
+- **Variables:** Named storage containers holding numbers, words, or scores that change during execution (e.g. \`score = score + 1\`).
+- **Conditionals (If-Then-Else):** Make logical decisions based on a true/false condition (e.g. \`If touching edge, bounce\`).
+- **Loops (Iteration):**
+  - **Repeat (N):** Runs code a fixed number of times.
+  - **Forever:** Continuous animation until stopped.
+  - **Repeat Until:** Loops until a specific condition becomes true.`;
+
+    const siAnswer = `**Scratch දෘශ්‍ය ක්‍රමලේඛනය — 4 වන පරිච්ඡේදය**
+
+### 1. ප්‍රධාන ක්‍රමලේඛන සංකල්ප:
+- **ස්ප්‍රයිට් (Sprites):** තිරය මත චලනය වන සහ විධාන ක්‍රියාත්මක කරන චරිත හෝ වස්තූන්.
+- **විචල්‍යයන් (Variables):** ක්‍රමලේඛනය ක්‍රියාත්මක වන විට වෙනස් වන අගයන් ගබඩා කර තබා ගන්නා මතක බහාලුම් (උදා: \`ලකුණු = ලකුණු + 1\`).
+- **තේරීම් (Conditionals: If-Then):** කොන්දේසියක් සත්‍ය නම් පමණක් විධාන ක්‍රියාත්මක කිරීම.
+- **පුනරාවර්තන (Loops):**
+  - **නියමිත වාර ගණනක් (Repeat N):** නිශ්චිත වට ගණනක් නැවත නැවත සිදු කිරීම.
+  - **නිරන්තරයෙන් (Forever):** නවත්වන තුරුම අඛණ්ඩව ක්‍රියාත්මක වීම.`;
+
+    const taAnswer = `**Scratch நிரலாக்கம் — அத்தியாயம் 4**
+
+### 1. முக்கிய கருத்துக்கள்:
+- **உருவங்கள் (Sprites)**
+- **மாறிகள் (Variables):** மதிப்புகளைச் சேமிக்கும் கொள்கலன்கள்.
+- **சுழற்சிகள் (Loops: Repeat, Forever, Repeat Until)**`;
+
     return {
-      answer: `**Programming with Scratch — Grade 8 ICT (Chapter 4)**
-
-Scratch is a visual block-based programming environment developed by MIT that teaches algorithmic thinking without syntax errors:
-
-### Core Scratch Components:
-1. **Stage:** The background area where the interactive project runs ($480\times360$ pixels).
-2. **Sprites:** The characters or objects that execute instructions (e.g. the Scratch Cat).
-3. **Variables:** Named storage containers that hold dynamic values (e.g. \`Score\`, \`Timer\`, \`Lives\`).
-
-### Control Structures:
-- **Selection (If-Then / If-Then-Else):** Executes actions only when a condition is met (e.g. *If touching Edge, bounce*).
-- **Iteration (Repeat / Forever):** Repeats a set of blocks multiple times without copying code:
-  - \`repeat (4) [move 100 steps, turn 90 degrees]\` draws a perfect square on the stage!`,
+      answer: lang === 'si' ? siAnswer : lang === 'ta' ? taAnswer : enAnswer,
       sources,
+      languageVersions: {
+        en: enAnswer,
+        si: siAnswer,
+        ta: taAnswer,
+      },
+      keyPoints: [
+        'Sprites & Stage',
+        'Variables (Data storage)',
+        'Repeat Loops (Iteration)',
+        'If-Then Conditionals',
+        'Event Triggers (Green Flag)'
+      ],
+      memoryTrick: {
+        concept: 'Scratch Loops & Variables',
+        trick: 'Variables store what changes fast, Repeat loops save typing and make code last!',
+        rhyme: 'Variables store what changes fast,\nRepeat loops make our programs last!\nCheck the condition, test the clue,\nIf it is true, execute through!',
+        audioText: 'Here is your memory trick for Scratch programming! Variables store what changes fast, like your game score! Repeat loops save you from writing the same code again and again!'
+      },
       suggestedFollowUps: [
-        'How do variables work in Scratch games?',
-        'How to draw a square using Repeat (4) loop',
-        'What is the difference between If-Then and If-Then-Else?'
+        'Clarify more: Can you break this down step-by-step with more details?',
+        'Explain simpler: How do loops make drawings in Scratch?',
+        'Sri Lankan Example: How to build a traffic light simulator in Scratch',
+        'Difference between Repeat and Repeat-Until loops',
       ],
     };
   }
@@ -898,36 +1132,76 @@ Scratch is a visual block-based programming environment developed by MIT that te
         documentId: 'moe-lk-ict-gr8-ict-gr8-en',
         source: 'Grade 8 ICT Textbook — Chapter 5: Physical Computing (Educational Publications Department Sri Lanka)',
         fileType: 'PDF',
-        pageNumber: 57,
-        chunkNumber: 128,
-        distance: 0.14,
+        pageNumber: 88,
+        chunkNumber: 145,
+        distance: 0.12,
         excerpt: null,
       }
     ];
 
+    const enAnswer = `**Physical Computing & Microcontrollers — Grade 8 ICT (Chapter 5)**
+
+Physical computing bridges digital code and physical reality using single-board microcontrollers like the **BBC micro:bit** or **Arduino**:
+
+### 1. Sensors (Input Devices):
+Detect physical environmental phenomena and convert them into electrical data:
+- **LDR (Light Dependent Resistor):** Measures ambient light intensity.
+- **Push Buttons (Button A / B):** Detect user touches and button presses.
+- **Temperature Sensor:** Measures ambient classroom temperature.
+
+### 2. Actuators (Output Devices):
+Take computer electrical signals and produce physical effects:
+- **5×5 LED Matrix Display:** Displays numbers, text, and heart icons.
+- **Piezo Buzzer:** Generates sound waves and alert beeps.
+- **Servo Motor:** Produces mechanical physical rotation.`;
+
+    const siAnswer = `**භෞතික පරිගණනය සහ ක්ෂුද්‍ර පාලක — 5 වන පරිච්ඡේදය**
+
+### 1. සංවේදක (Sensors / ආදාන උපාංග):
+පරිසරයේ භෞතික වෙනස්කම් හඳුනාගෙන විද්‍යුත් සංඥා බවට පත්කරයි:
+- **LDR (ආලෝක පරායත්ත ප්‍රතිරෝධකය):** ආලෝක තීව්‍රතාවය මනියි.
+- **තල්ලු බොත්තම් (Button A / B):** පරිශීලක එබීම් හඳුනාගනී.
+
+### 2. ක්‍රියාකරවන (Actuators / ප්‍රතිදාන උපාංග):
+පරිගණක සංඥා මඟින් භෞතික ක්‍රියාවක් සිදුකරයි:
+- **5×5 LED න්‍යාසය:** අකුරු, සංඛ්‍යා සහ රූප ප්‍රදර්ශනය කරයි.
+- **Piezo Buzzer (නාදකය):** ශබ්ද සහ අනතුරු ඇඟවීමේ නාද නිකුත් කරයි.`;
+
+    const taAnswer = `**பௌதீகக் கணினியியல் — அத்தியாயம் 5**
+
+### 1. உணரிகள் (Sensors):
+- **LDR:** ஒளிச்செறிவை உணரும் கருவி.
+- **பொத்தான்கள் (Buttons)**
+
+### 2. இயங்கிகள் (Actuators):
+- **LED அணி (5x5 Matrix)**
+- **ஒலிப்பான் (Buzzer)**`;
+
     return {
-      answer: `**Physical Computing — Grade 8 ICT (Chapter 5)**
-
-Physical computing involves building interactive systems that sense and respond to the real physical world using programmable microcontrollers:
-
-### 1. Microcontrollers (BBC micro:bit & Arduino):
-- Unlike general-purpose PCs, microcontrollers are compact single-chip computers dedicated to controlling physical hardware.
-- The BBC micro:bit has built-in buttons A/B, a 5×5 LED matrix display, and accelerometer tilt sensors.
-
-### 2. Sensors (Inputs) vs Actuators (Outputs):
-- **Sensors (Inputs):** Detect environmental phenomena:
-  - Light Dependent Resistor (LDR) measures ambient illumination.
-  - Temperature sensor probes measure warmth.
-  - Push button switches detect mechanical press.
-- **Actuators (Outputs):** Perform physical work or produce signals:
-  - 5×5 LED matrix displays numbers or status smileys.
-  - Piezo buzzers emit audible alert beeps.
-  - DC motors and servos rotate wheels and gates.`,
+      answer: lang === 'si' ? siAnswer : lang === 'ta' ? taAnswer : enAnswer,
       sources,
+      languageVersions: {
+        en: enAnswer,
+        si: siAnswer,
+        ta: taAnswer,
+      },
+      keyPoints: [
+        'Microcontrollers (micro:bit & Arduino)',
+        'Sensors (Input: LDR, Temperature, Buttons)',
+        'Actuators (Output: LEDs, Buzzer, Servo Motor)',
+        'Analog vs Digital Signals'
+      ],
+      memoryTrick: {
+        concept: 'Sensors vs Actuators',
+        trick: 'Sensors SENSE in (Input), Actuators ACT out (Output)!',
+        rhyme: 'Sensors listen, feel, and see,\nInputs telling what could be!\nActuators move, display, and ring,\nOutputs doing everything!',
+        audioText: 'Here is your memory trick for physical computing! Remember: Sensors sense inward as Inputs, while Actuators act outward as Outputs! Like eyes versus hands!'
+      },
       suggestedFollowUps: [
-        'What is the difference between a sensor and an actuator?',
-        'How does an LDR light sensor work in smart street lamps?',
-        'Explain the Sense-Think-Act loop in physical computing'
+        'Clarify more: Can you break this down step-by-step with more details?',
+        'Explain simpler: How does an automatic street light work with an LDR?',
+        'Sri Lankan Example: Automated paddy storage alarm using micro:bit',
+        'Difference between microcontrollers and personal computers',
       ],
     };
   }
@@ -938,37 +1212,81 @@ Physical computing involves building interactive systems that sense and respond 
         documentId: 'moe-lk-ict-gr8-ict-gr8-en',
         source: 'Grade 8 ICT Textbook — Chapter 6: Internet (Educational Publications Department Sri Lanka)',
         fileType: 'PDF',
-        pageNumber: 65,
-        chunkNumber: 154,
-        distance: 0.12,
+        pageNumber: 110,
+        chunkNumber: 180,
+        distance: 0.11,
         excerpt: null,
       }
     ];
 
-    return {
-      answer: `**Internet & Digital Communication — Grade 8 ICT (Chapter 6)**
+    const enAnswer = `**Internet & Electronic Communication — Grade 8 ICT (Chapter 6)**
 
-### 1. Uniform Resource Locator (URL) Anatomy:
-In \`https://www.moe.gov.lk/textbooks.pdf\`:
-- **Protocol (\`https://\`):** Secure encrypted communication protocol.
-- **Domain Name (\`moe.gov\`):** Ministry of Education government portal.
-- **Country Code (\`.lk\`):** Sri Lanka top-level country domain.
-- **Path (\`/textbooks.pdf\`):** Specific file location on the server.
+### 1. Anatomy of a URL (Uniform Resource Locator):
+Example: \`https://www.moe.gov.lk/textbooks.pdf\`
+- **Protocol (\`https://\`):** Secure encrypted hypertext transfer protocol.
+- **Domain Name (\`moe.gov\`):** Registered server name (Ministry of Education).
+- **Country Code TLD (\`.lk\`):** Official Sri Lanka top-level country code domain.
+- **Path (\`/textbooks.pdf\`):** Specific resource file on the server.
 
-### 2. Email Communication & Privacy:
-- **To:** Primary recipient expected to take action.
+### 2. Email Address Fields & Privacy:
+- **To:** Primary recipients expected to respond.
 - **Cc (Carbon Copy):** Secondary recipients kept informed transparently.
-- **Bcc (Blind Carbon Copy):** Addresses are **hidden** from all other recipients. Always use Bcc when emailing large groups of parents or students to protect their personal privacy!
+- **Bcc (Blind Carbon Copy):** Addresses are **hidden** from all recipients. Always use Bcc when emailing groups to protect student and parent personal privacy!
 
 ### 3. Cyber Safety:
-- Never share passwords or OTP codes.
-- Beware of phishing emails asking for login credentials.
-- Look for the padlock icon (HTTPS) before entering credentials on websites.`,
+- Never share passwords or two-factor OTPs.
+- Verify HTTPS padlock before entering school credentials.`;
+
+    const siAnswer = `**අන්තර්ජාලය සහ සන්නිවේදනය — 6 වන පරිච්ඡේදය**
+
+### 1. URL එකක ව්‍යුහය:
+උදා: \`https://www.moe.gov.lk/textbooks.pdf\`
+- **ප්‍රොටෝකෝලය (\`https://\`):** ආරක්ෂිත දත්ත සම්ප්‍රේෂණය.
+- **වසම් නාමය (\`moe.gov\`):** අදාළ ආයතනයේ නම.
+- **රට සංකේතය (\`.lk\`):** ශ්‍රී ලංකාව සඳහා වන ඉහළ මට්ටමේ වසම.
+
+### 2. විද්‍යුත් තැපෑල (Email) රහස්‍යතාව:
+- **To:** ප්‍රධාන ලබන්නා.
+- **Cc:** පිටපත් ලබන්නන් (සැමට පෙනේ).
+- **Bcc:** රහස්‍ය පිටපත් ලබන්නන් (කිසිවෙකුට නොපෙනේ). පෞද්ගලිකත්වය රැකීමට Bcc භාවිත කරන්න!`;
+
+    const taAnswer = `**இணையம் மற்றும் மின்னஞ்சல் — அத்தியாயம் 6**
+
+### 1. URL அமைப்பியல்:
+- **HTTPS:** பாதுகாப்பான நெறிமுறை.
+- **.lk:** இலங்கைக்கான ஆள்களப் பெயர்.
+
+### 2. மின்னஞ்சல் புலங்கள்:
+- **To:** முதன்மை பெறுநர்.
+- **Cc:** நகல் பெறுநர்.
+- **Bcc:** மறைக்கப்பட்ட நகல் பெறுநர்.`;
+
+    return {
+      answer: lang === 'si' ? siAnswer : lang === 'ta' ? taAnswer : enAnswer,
       sources,
+      languageVersions: {
+        en: enAnswer,
+        si: siAnswer,
+        ta: taAnswer,
+      },
+      keyPoints: [
+        'Protocol (HTTPS - Secure)',
+        'Domain Name (.gov.lk)',
+        'URL Path & Resources',
+        'Email To vs Cc vs Bcc',
+        'Cyber Safety & Privacy'
+      ],
+      memoryTrick: {
+        concept: 'URL Anatomy & Email Bcc',
+        trick: 'HTTPS is the lock, .lk is our rock! And Blind Carbon Copy (Bcc) hides email addresses for privacy!',
+        rhyme: 'HTTPS keeps secrets safe,\nDot LK is our country\'s place!\nSend with Bcc to friends,\nTheir private email it defends!',
+        audioText: 'Here is your memory trick for the Internet! HTTPS keeps your passwords safe with encryption! And always remember to use Bcc when sending emails to groups so nobody\'s email is exposed!'
+      },
       suggestedFollowUps: [
-        'Why should you use Bcc when emailing school groups?',
-        'What does the .lk domain indicate?',
-        'How to recognize phishing scam emails'
+        'Clarify more: Can you break this down step-by-step with more details?',
+        'Explain simpler: Why does Bcc protect student privacy?',
+        'Sri Lankan Example: How to identify authentic .gov.lk school portals',
+        'Common phishing scam indicators',
       ],
     };
   }
@@ -986,8 +1304,7 @@ In \`https://www.moe.gov.lk/textbooks.pdf\`:
       }
     ];
 
-    return {
-      answer: `**Sri Lankan History — Grade 10 National Curriculum**
+    const enAnswer = `**Sri Lankan History — Grade 10 National Curriculum**
 
 ### 1. Historical & Archaeological Sources:
 - **Literary Sources:** Indigenous chronicles (Deepavamsa, Mahavamsa by Ven. Mahanama, Pujavaliya) and foreign travelogues (Faxian, Ibn Battuta, Robert Knox).
@@ -1000,12 +1317,58 @@ In \`https://www.moe.gov.lk/textbooks.pdf\`:
 
 ### 3. Colonial Era & Kandyan Resistance:
 - Portuguese arrival (1505) and Dutch conquest (1658) controlled maritime coastal regions.
-- The independent Kingdom of Kandy defeated Portuguese invasions at the **Battle of Danture (1594)** and **Battle of Gannoruwa (1638)**.`,
+- The independent Kingdom of Kandy defeated Portuguese invasions at the **Battle of Danture (1594)** and **Battle of Gannoruwa (1638)**.`;
+
+    const siAnswer = `**ශ්‍රී ලංකා ඉතිහාසය — 10 ශ්‍රේණිය නිල විෂය නිර්දේශය**
+
+### 1. ඓතිහාසික සහ පුරාවිද්‍යාත්මක මූලාශ්‍ර:
+- **සාහිත්‍ය මූලාශ්‍ර:** දීපවංශය, මහාවංශය (මහානාම හිමි), පූජාවලිය සහ විදේශීය වාර්තා (පාහියන්, ඉබන් බතූතා, රොබට් නොක්ස්).
+- **සෙල්ලිපි (Epigraphy):** ලෙන් බ්‍රාහ්මී ලිපි, ටැම් ලිපි (බදුලු ටැම් ලිපිය) සහ පුවරු ලිපි (පොළොන්නරුව).
+- **කාසි (Numismatics):** කහවණු, හස්ති රූප කාසි (රෝමය, චීනය සහ ඉන්දියාව සමඟ පැවති වෙළඳ සබඳතා).
+
+### 2. පොළොන්නරු යුගය සහ පරාක්‍රම සමුද්‍රය:
+- මහා පරාක්‍රමබාහු රජු (1153–1186): *"අහසින් වැටෙන එකදු දිය බිඳක්වත් මිනිසාගේ ප්‍රයෝජනයට නොගෙන මුහුදට ගලා යාමට ඉඩ නොතැබිය යුතුය."*
+- තෝපා වැව, දඹුළු වැව, එරමුදු වැව එක්කොට **පරාක්‍රම සමුද්‍රය** ඉදිකරන ලදී.
+
+### 3. යටත්විජිත සමය සහ උඩරට ප්‍රතිරෝධය:
+- පෘතුගීසි (1505) සහ ලන්දේසි (1658) මුහුදුබඩ ප්‍රදේශ පාලනය කළහ.
+- ස්වාධීන උඩරට රාජධානිය විසින් **දන්තුරේ සටන (1594)** සහ **ගන්නෝරුව සටන (1638)** දී පෘතුගීසීන් පරාජය කරන ලදී.`;
+
+    const taAnswer = `**இலங்கை வரலாறு — தரம் 10 தேசிய பாடத்திட்டம்**
+
+### 1. வரலாற்று மற்றும் தொல்பொருள் மூலங்கள்:
+- **இலக்கிய மூலங்கள்:** தீபவம்சம், மகாவம்சம்.
+- **கல்வெட்டுகள் & நாணயங்கள்:** கஹவணு நாணயங்கள்.
+
+### 2. பொலன்னறுவை காலம்:
+- மகா பராக்கிரமபாகு மன்னர் (1153–1186) கட்டிய **பராக்கிரம சமுத்திரம்**.`;
+
+    return {
+      answer: lang === 'si' ? siAnswer : lang === 'ta' ? taAnswer : enAnswer,
       sources,
+      languageVersions: {
+        en: enAnswer,
+        si: siAnswer,
+        ta: taAnswer,
+      },
+      keyPoints: [
+        'King Parakramabahu the Great (1153–1186)',
+        'Parakrama Samudraya (Topa, Dambulu, Eramudu Wewa)',
+        'Bisokotuwa (Cistern Sluice valve)',
+        'Mahavamsa & Inscriptions',
+        'Kandyan Battles (Danture 1594, Gannoruwa 1638)'
+      ],
+      memoryTrick: {
+        concept: 'Parakramabahu & Water Conservation',
+        trick: 'Every rain drop counts! Bisokotuwa controls water pressure, Parakrama Samudra stores it all!',
+        rhyme: 'Not a single drop of rain,\nShall reach the ocean all in vain!\nBisokotuwa calms the water\'s might,\nFeeding golden fields with ancient light!',
+        audioText: 'Here is your memory trick for Sri Lankan history! King Parakramabahu the Great declared: Not even a single drop of rain water must flow into the ocean without being of use to mankind! Remember the Bisokotuwa regulates the pressure, and Parakrama Samudraya catches every drop!'
+      },
       suggestedFollowUps: [
-        'What were the archaeological sources used to reconstruct Sri Lankan history?',
-        'How did King Parakramabahu I develop agriculture in Polonnaruwa?',
-        'Significance of the Battle of Danture in 1594'
+        'Clarify more: Can you break this down step-by-step with more details?',
+        'Explain simpler: How did the Bisokotuwa release water without breaking?',
+        'Sri Lankan Example: Archaeological remains at Polonnaruwa',
+        'Significance of the Battle of Danture in 1594',
       ],
     };
   }

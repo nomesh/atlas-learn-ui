@@ -16,9 +16,12 @@ import {
   AlertTriangle,
   PanelRightClose,
   PanelRightOpen,
-  MessageSquare
+  MessageSquare,
+  Globe
 } from 'lucide-react';
 import { CurriculumCompanionPane } from './CurriculumCompanionPane';
+import { TutorTeachingHighlighter } from './TutorTeachingHighlighter';
+import { MemoryTrickCard } from './MemoryTrickCard';
 import { useStudent } from '../../state/studentContext';
 import { TutorAvatar } from '../avatar/TutorAvatar';
 import { CitationDrawer } from './CitationDrawer';
@@ -33,7 +36,7 @@ import {
   getDeviceFriendlyName,
   type TutorLeaseResponse,
 } from '../../api/authApi';
-import type { ChatMessage, SourceCitation, TutorAction } from '../../types';
+import type { ChatMessage, SourceCitation, TutorAction, Language } from '../../types';
 
 export const TutorPage: React.FC = () => {
   const { t } = useTranslation();
@@ -80,6 +83,20 @@ export const TutorPage: React.FC = () => {
   leaseTokenRef.current = leaseToken;
 
   // Guards against React StrictMode double-invocation and in-flight race conditions
+  const handleToggleMsgLang = (msgId: string, targetLang: Language) => {
+    setMessages((prev) =>
+      prev.map((msg) => {
+        if (msg.id === msgId) {
+          return {
+            ...msg,
+            activeLang: targetLang,
+          };
+        }
+        return msg;
+      })
+    );
+  };
+
   const processedQueryRef = useRef<string | null>(null);
   const isSendingRef = useRef<boolean>(false);
   const messageCounterRef = useRef<number>(0);
@@ -178,6 +195,20 @@ What ICT topic would you like to explore together today?`;
         content: getInitialGreeting(),
         timestamp: new Date().toISOString(),
         suggestedActions: starterTopicPills,
+        languageVersions: {
+          en: getInitialGreeting(),
+          si: activeSubjectId === 'ict' ? `ආයුබෝවන් ${studentName}! මම ඔබගේ **තොරතුරු හා සන්නිවේදන තාක්ෂණය (ICT)** ගුරුතුමා. ඔබගේ 8 ශ්‍රේණියේ නිල පෙළපොතෙහි පරිච්ඡේද 6 (සංඛ්‍යා පද්ධති, පරිගණක වින්‍යාසය, වදන් සැකසුම, Scratch ක්‍රමලේඛනය, භෞතික පරිගණනය සහ අන්තර්ජාලය) පිළිබඳ ඕනෑම කරුණක් මා සමඟ සාකච්ඡා කළ හැක.\n\nඅද අපි කුමන ICT පාඩමෙන් පටන් ගනිමුද?` : getInitialGreeting(),
+          ta: activeSubjectId === 'ict' ? `வணக்கம் ${studentName}! நான் உங்கள் **தகவல் தொழில்நுட்ப (ICT)** ஆசிரியர். உங்கள் தரம் 8 பாடநூலின் அத்தியாயங்கள் (எண் முறைகள், கணினி உள்ளமைவு, சொல் செயலாக்கம், Scratch நிரலாக்கம், பௌதீகக் கணினியியல் மற்றும் இணையம்) தொடர்பான உங்கள் சந்தேகங்களைக் கேளுங்கள்.\n\nநாம் இன்று எந்த ICT பாடத்திலிருந்து தொடங்கலாம்?` : getInitialGreeting(),
+        },
+        activeLang: language,
+        keyPoints: activeSubjectId === 'ict' ? [
+          'Ch 1: Number Systems (Binary & Switches)',
+          'Ch 2: Configuring Computers (Resolution)',
+          'Ch 3: Word Processing (Justify Margins)',
+          'Ch 4: Programming (Scratch Loops)',
+          'Ch 5: Physical Computing (micro:bit)',
+          'Ch 6: Internet (URL & Email Privacy)'
+        ] : undefined,
       },
     ];
   });
@@ -349,6 +380,10 @@ What ICT topic would you like to explore together today?`;
         citations: response.sources,
         suggestedActions: actionPills,
         tutorState: nextState,
+        languageVersions: response.languageVersions,
+        activeLang: language,
+        memoryTrick: response.memoryTrick,
+        keyPoints: response.keyPoints,
       };
 
       setMessages((prev) => [...prev, tutorMsg]);
@@ -654,20 +689,109 @@ What ICT topic would you like to explore together today?`;
                   </p>
                 ) : (
                   <div>
-                    <RichContentRenderer content={msg.content} />
+                    {/* Trilingual Answer Switcher */}
+                    {msg.languageVersions && (msg.languageVersions.si || msg.languageVersions.ta) && (
+                      <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-slate-100 flex-wrap gap-2">
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
+                          <Globe className="w-3.5 h-3.5 text-cyan-600" />
+                          <span>Answer Language:</span>
+                        </div>
+                        <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleMsgLang(msg.id, 'en')}
+                            className={`px-2 py-0.5 rounded-lg text-xs font-semibold transition-all ${
+                              (msg.activeLang || 'en') === 'en'
+                                ? 'bg-white text-slate-900 shadow-sm font-bold'
+                                : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            English
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleMsgLang(msg.id, 'si')}
+                            className={`px-2 py-0.5 rounded-lg text-xs font-semibold transition-all ${
+                              msg.activeLang === 'si'
+                                ? 'bg-white text-slate-900 shadow-sm font-bold'
+                                : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            සිංහල
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleMsgLang(msg.id, 'ta')}
+                            className={`px-2 py-0.5 rounded-lg text-xs font-semibold transition-all ${
+                              msg.activeLang === 'ta'
+                                ? 'bg-white text-slate-900 shadow-sm font-bold'
+                                : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            தமிழ்
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Interactive Teaching Highlighter & Content */}
+                    <TutorTeachingHighlighter
+                      content={(msg.activeLang && msg.languageVersions?.[msg.activeLang]) || msg.content}
+                      keyPoints={msg.keyPoints}
+                      onTutorStateChange={(state) => setTutorState(state)}
+                    />
+
+                    {/* Interactive Memory Trick Card with Voice Audio */}
+                    {msg.memoryTrick && (
+                      <MemoryTrickCard
+                        memoryTrick={msg.memoryTrick}
+                        language={msg.activeLang || language}
+                        onPlayStateChange={(isPlaying) => setTutorState(isPlaying ? 'speaking' : 'idle')}
+                      />
+                    )}
 
                     {/* Child-Friendly Citation Drawer */}
                     {msg.citations && msg.citations.length > 0 && (
                       <CitationDrawer citations={msg.citations} />
                     )}
 
-                    {/* Suggested Follow-Up Actions */}
-                    {msg.suggestedActions && msg.suggestedActions.length > 0 && (
-                      <div className="mt-4 pt-3 border-t border-slate-100">
-                        <div className="text-[11px] font-bold text-slate-400 mb-2 uppercase tracking-wider">
-                          Suggested Questions:
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
+                    {/* Immediate Quick Actions Bar (Clarify, Simpler, Sri Lankan Example) */}
+                    <div className="mt-4 pt-3 border-t border-slate-100 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          Follow-up & Clarifications:
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleSendMessage('Can you clarify this step-by-step with more details?')}
+                          className="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-200 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs"
+                        >
+                          <span>🔍 Clarify more</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleSendMessage('Can you explain this in simpler terms for a beginner?')}
+                          className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs"
+                        >
+                          <span>🐣 Explain simpler</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleSendMessage('Can you give a real-world Sri Lankan everyday example of this?')}
+                          className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs"
+                        >
+                          <span>🇱🇰 Sri Lankan Example</span>
+                        </button>
+                      </div>
+
+                      {/* Topic-specific suggested questions */}
+                      {msg.suggestedActions && msg.suggestedActions.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 pt-1">
                           {msg.suggestedActions.map((action) => (
                             <button
                               key={action.id}
@@ -681,8 +805,8 @@ What ICT topic would you like to explore together today?`;
                             </button>
                           ))}
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

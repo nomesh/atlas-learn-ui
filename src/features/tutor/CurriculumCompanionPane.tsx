@@ -10,7 +10,8 @@ import {
   HelpCircle,
   ExternalLink,
   Layers,
-  ArrowRight
+  ArrowRight,
+  AlertTriangle
 } from 'lucide-react';
 import { MOCK_SUBJECTS, MOCK_TOPICS, getLessonStepsForTopic } from '../../mocks/curriculumData';
 import { ElectricSwitchVisualizer } from '../../components/interactive/ElectricSwitchVisualizer';
@@ -26,6 +27,61 @@ interface CurriculumCompanionPaneProps {
   onAskQuestion: (query: string) => void;
   onSelectTopic: (newTopicId: string) => void;
 }
+
+
+const getTopicDeepDive = (topicId: string) => {
+  switch (topicId) {
+    case 'number-systems':
+      return {
+        examTrap: '⚠️ O/L Paper 1 Trap: Remember that 2⁰ = 1, NOT 0! Any positive number raised to power 0 equals 1. Many students mistakenly lose marks here!',
+        challenge: '🎯 Interactive Challenge: Use the 8-bit switchboard above to toggle bits and build the decimal number 77 (64 + 8 + 4 + 1)!',
+        clarifyPrompt: 'Can you clarify how decimal 77 is represented in 8-bit binary step-by-step?',
+        verifyPrompt: 'I set binary bits for decimal 77 (01001101). Can you verify if my calculation is correct?'
+      };
+    case 'configuring-formatting-computer':
+      return {
+        examTrap: '⚠️ O/L Exam Trap: Formatting a USB storage drive removes the entire File Allocation Table. Backup your files before choosing NTFS or FAT32!',
+        challenge: '🎯 Interactive Challenge: Compare 1920×1080 Full HD vs 800×600 SVGA in the visualizer above to see the pixel density difference!',
+        clarifyPrompt: 'Can you clarify why Full HD has over 2 million pixels and how aspect ratio works?',
+        verifyPrompt: 'Can you explain why FAT32 cannot store a single movie file larger than 4GB?'
+      };
+    case 'word-processing':
+      return {
+        examTrap: '⚠️ Word Processing Trap: Justify (Ctrl+J) aligns BOTH left and right margins, while Center (Ctrl+E) only balances text in the middle.',
+        challenge: '🎯 Challenge: Try identifying when to use Portrait vs Landscape orientation for official school certificates!',
+        clarifyPrompt: 'Can you clarify the difference between Justify and Center alignments in Word?',
+        verifyPrompt: 'How do headers and footers work when printing two-sided exam papers?'
+      };
+    case 'programming':
+      return {
+        examTrap: '⚠️ Scratch Trap: In a "repeat until" loop, if the condition variable does not change inside the loop, the program gets stuck in an infinite loop!',
+        challenge: '🎯 Interactive Challenge: In the block visualizer above, set a repeat count of 4 and a turn of 90 degrees to draw a perfect square!',
+        clarifyPrompt: 'Can you clarify how variables and repeat loops work together in Scratch?',
+        verifyPrompt: 'Why does my Scratch sprite draw a square when turning 90 degrees 4 times?'
+      };
+    case 'physical-computing':
+      return {
+        examTrap: '⚠️ Sensor vs Actuator Trap: Sensors are INPUT devices (detecting light/heat); Actuators are OUTPUT devices (moving/lighting/beeping)!',
+        challenge: '🎯 Interactive Challenge: Move the LDR light sensor slider below 30% to see if the night light activates on the micro:bit matrix!',
+        clarifyPrompt: 'Can you clarify the difference between digital and analog sensor inputs on a micro:bit?',
+        verifyPrompt: 'How can I program an automated street lamp using an LDR sensor and LED?'
+      };
+    case 'internet':
+      return {
+        examTrap: '⚠️ Cyber Privacy Trap: When emailing notices to a large group of parents or students, always put addresses in Bcc (Blind Carbon Copy) to prevent exposing private email addresses!',
+        challenge: '🎯 Interactive Challenge: Click each part of the URL in the anatomy visualizer above to identify the protocol, domain, and file path!',
+        clarifyPrompt: 'Can you clarify the difference between Cc and Bcc in email communication?',
+        verifyPrompt: 'What should I do if I receive a suspicious email asking for my school account password?'
+      };
+    default:
+      return {
+        examTrap: '⚠️ National Syllabus Focus: Ensure you review past paper questions from the Educational Publications Department!',
+        challenge: '🎯 Practice Challenge: Ask the Tutor to quiz you on key terms from this chapter!',
+        clarifyPrompt: 'Can you clarify the core concepts of this lesson step-by-step?',
+        verifyPrompt: 'Can you give me a past paper question on this chapter?'
+      };
+  }
+};
 
 export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = ({
   subjectId,
@@ -254,6 +310,50 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
             </div>
           )}
         </div>
+
+        
+        {/* 4.5 Curriculum Deep Dive & Smart Recommendations */}
+        {(() => {
+          const deepDive = getTopicDeepDive(activeTopic.id);
+          return (
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/60 border border-slate-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5 font-mono">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Deep Dive & Smart Suggestions</span>
+                </span>
+                <span className="text-[10px] text-cyan-300 font-mono">Exam Master Tips</span>
+              </div>
+
+              {/* Exam Trap Alert */}
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 leading-relaxed font-medium">
+                {deepDive.examTrap}
+              </div>
+
+              {/* Interactive Challenge */}
+              <div className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-xs text-cyan-100 leading-relaxed font-medium space-y-2">
+                <p>{deepDive.challenge}</p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => onAskQuestion(deepDive.verifyPrompt)}
+                    className="px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 border border-cyan-400/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-xs"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Verify My Solution</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onAskQuestion(deepDive.clarifyPrompt)}
+                    className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition-all flex items-center gap-1"
+                  >
+                    <span>Clarify This Concept</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* 5. Next Chapters Recommendations */}
         <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-950 to-slate-900 border border-slate-800 space-y-2">

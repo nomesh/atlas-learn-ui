@@ -41,11 +41,25 @@ export interface SourceCitation {
 }
 
 
+export interface MemoryTrick {
+  concept: string;
+  trick: string;
+  rhyme?: string;
+  audioText: string;
+}
+
 // Exact wire answer structure from ATLAS backend
 export interface RAGResponse {
   answer: string;
   sources: SourceCitation[];
   suggestedFollowUps?: string[] | TutorAction[];
+  languageVersions?: {
+    en?: string;
+    si?: string;
+    ta?: string;
+  };
+  memoryTrick?: MemoryTrick;
+  keyPoints?: string[];
 }
 
 export interface TutorAction {
@@ -83,6 +97,14 @@ export interface ChatMessage {
   suggestedActions?: TutorAction[];
   tutorState?: TutorState;
   quizPrompt?: QuizQuestion;
+  languageVersions?: {
+    en?: string;
+    si?: string;
+    ta?: string;
+  };
+  activeLang?: Language;
+  memoryTrick?: MemoryTrick;
+  keyPoints?: string[];
 }
 
 export interface Subject {
