@@ -750,15 +750,30 @@ What ICT topic would you like to explore together today?`;
                             <button
                               type="button"
                               onClick={() => {
-                                // Clean markdown formatting for clear audio
-                                const cleanVoiceText = activeContent
-                                  .replace(/[#*_`>]/g, '')
+                                const memoryTrickAudio = msg.memoryTrick ? (
+                                  (currentMsgLang === 'si' && msg.memoryTrick.languageVersions?.si?.audioText) ||
+                                  (currentMsgLang === 'ta' && msg.memoryTrick.languageVersions?.ta?.audioText) ||
+                                  (currentMsgLang === 'en' && msg.memoryTrick.languageVersions?.en?.audioText) ||
+                                  msg.memoryTrick.audioText
+                                ) : null;
+
+                                const conceptTitle = msg.memoryTrick ? (
+                                  (currentMsgLang === 'si' && msg.memoryTrick.languageVersions?.si?.concept) ||
+                                  (currentMsgLang === 'ta' && msg.memoryTrick.languageVersions?.ta?.concept) ||
+                                  msg.memoryTrick.concept
+                                ) : (
+                                  currentMsgLang === 'si' ? 'ඇට්ලස් ටියුටර් පාඩම' : currentMsgLang === 'ta' ? 'அட்லஸ் ஆசிரியர் பாடம்' : 'Atlas Tutor Lesson Explanation'
+                                );
+
+                                const textToSpeak = memoryTrickAudio || activeContent
+                                  .replace(/[#*_>]/g, '')
                                   .replace(/\n+/g, '. ')
                                   .substring(0, 480);
+
                                 tutorVoice.speak({
-                                  text: cleanVoiceText,
+                                  text: textToSpeak,
                                   title: currentMsgLang === 'si' ? 'ඇට්ලස් ටියුටර් පාඩම' : currentMsgLang === 'ta' ? 'அட்லஸ் ஆசிரியர் பாடம்' : 'Atlas Tutor Lesson Explanation',
-                                  concept: currentMsgLang === 'si' ? 'විෂය නිර්දේශ පාඩම් ඒකකය' : currentMsgLang === 'ta' ? 'பாடத்திட்ட அலகு' : 'Grounded Curriculum Unit',
+                                  concept: conceptTitle,
                                   language: currentMsgLang,
                                 });
                               }}
