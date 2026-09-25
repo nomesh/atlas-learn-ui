@@ -695,90 +695,101 @@ What ICT topic would you like to explore together today?`;
                 ) : (
                   <div>
                     {/* Trilingual Answer Switcher & Voice Audio Action */}
-                    <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-slate-100 flex-wrap gap-2">
-                      {msg.languageVersions && (msg.languageVersions.si || msg.languageVersions.ta) ? (
-                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
-                          <Globe className="w-3.5 h-3.5 text-cyan-600" />
-                          <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+                    {(() => {
+                      const currentMsgLang = msg.activeLang || language;
+                      const activeContent = (msg.languageVersions && msg.languageVersions[currentMsgLang])
+                        || (currentMsgLang === 'si' && msg.languageVersions?.si)
+                        || (currentMsgLang === 'ta' && msg.languageVersions?.ta)
+                        || msg.content;
+
+                      return (
+                        <>
+                          <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-slate-100 flex-wrap gap-2">
+                            {msg.languageVersions && (msg.languageVersions.si || msg.languageVersions.ta) ? (
+                              <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
+                                <Globe className="w-3.5 h-3.5 text-cyan-600" />
+                                <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleMsgLang(msg.id, 'en')}
+                                    className={`px-2 py-0.5 rounded-lg text-xs font-semibold transition-all ${
+                                      currentMsgLang === 'en'
+                                        ? 'bg-white text-slate-900 shadow-sm font-bold'
+                                        : 'text-slate-600 hover:text-slate-900'
+                                    }`}
+                                  >
+                                    English
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleMsgLang(msg.id, 'si')}
+                                    className={`px-2 py-0.5 rounded-lg text-xs font-semibold transition-all ${
+                                      currentMsgLang === 'si'
+                                        ? 'bg-white text-slate-900 shadow-sm font-bold'
+                                        : 'text-slate-600 hover:text-slate-900'
+                                    }`}
+                                  >
+                                    සිංහල
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleMsgLang(msg.id, 'ta')}
+                                    className={`px-2 py-0.5 rounded-lg text-xs font-semibold transition-all ${
+                                      currentMsgLang === 'ta'
+                                        ? 'bg-white text-slate-900 shadow-sm font-bold'
+                                        : 'text-slate-600 hover:text-slate-900'
+                                    }`}
+                                  >
+                                    தமிழ்
+                                  </button>
+                                </div>
+                              </div>
+                            ) : <div />}
+
+                            {/* Listen with Voice Button */}
                             <button
                               type="button"
-                              onClick={() => handleToggleMsgLang(msg.id, 'en')}
-                              className={`px-2 py-0.5 rounded-lg text-xs font-semibold transition-all ${
-                                (msg.activeLang || 'en') === 'en'
-                                  ? 'bg-white text-slate-900 shadow-sm font-bold'
-                                  : 'text-slate-600 hover:text-slate-900'
-                              }`}
+                              onClick={() => {
+                                // Clean markdown formatting for clear audio
+                                const cleanVoiceText = activeContent
+                                  .replace(/[#*_`>]/g, '')
+                                  .replace(/\n+/g, '. ')
+                                  .substring(0, 480);
+                                tutorVoice.speak({
+                                  text: cleanVoiceText,
+                                  title: currentMsgLang === 'si' ? 'ඇට්ලස් ටියුටර් පාඩම' : currentMsgLang === 'ta' ? 'அட்லஸ் ஆசிரியர் பாடம்' : 'Atlas Tutor Lesson Explanation',
+                                  concept: currentMsgLang === 'si' ? 'විෂය නිර්දේශ පාඩම් ඒකකය' : currentMsgLang === 'ta' ? 'பாடத்திட்ட அலகு' : 'Grounded Curriculum Unit',
+                                  language: currentMsgLang,
+                                });
+                              }}
+                              className="px-2.5 py-1 rounded-xl bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200 text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs"
+                              title="Listen to this lesson with Atlas Tutor Voice"
                             >
-                              English
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleToggleMsgLang(msg.id, 'si')}
-                              className={`px-2 py-0.5 rounded-lg text-xs font-semibold transition-all ${
-                                msg.activeLang === 'si'
-                                  ? 'bg-white text-slate-900 shadow-sm font-bold'
-                                  : 'text-slate-600 hover:text-slate-900'
-                              }`}
-                            >
-                              සිංහල
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleToggleMsgLang(msg.id, 'ta')}
-                              className={`px-2 py-0.5 rounded-lg text-xs font-semibold transition-all ${
-                                msg.activeLang === 'ta'
-                                  ? 'bg-white text-slate-900 shadow-sm font-bold'
-                                  : 'text-slate-600 hover:text-slate-900'
-                              }`}
-                            >
-                              தமிழ்
+                              <Volume2 className="w-3.5 h-3.5 text-cyan-600" />
+                              <span>{currentMsgLang === 'si' ? 'හඬින් සවන් දෙන්න' : currentMsgLang === 'ta' ? 'குரலில் கேட்கவும்' : 'Listen with Voice'}</span>
                             </button>
                           </div>
-                        </div>
-                      ) : <div />}
 
-                      {/* Listen with Voice Button */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const activeContent = (msg.activeLang && msg.languageVersions?.[msg.activeLang]) || msg.content;
-                          // Clean markdown formatting for clear audio
-                          const cleanVoiceText = activeContent
-                            .replace(/[#*_`>]/g, '')
-                            .replace(/\n+/g, '. ')
-                            .substring(0, 480);
-                          tutorVoice.speak({
-                            text: cleanVoiceText,
-                            title: 'Atlas Tutor Lesson Explanation',
-                            concept: 'Grounded Curriculum Unit',
-                            language: msg.activeLang || language,
-                          });
-                        }}
-                        className="px-2.5 py-1 rounded-xl bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200 text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs"
-                        title="Listen to this lesson with Atlas Tutor Voice"
-                      >
-                        <Volume2 className="w-3.5 h-3.5 text-cyan-600" />
-                        <span>Listen with Voice</span>
-                      </button>
-                    </div>
+                          {/* Interactive Teaching Highlighter & Content */}
+                          <TutorTeachingHighlighter
+                            content={activeContent}
+                            keyPoints={msg.keyPoints}
+                            onTutorStateChange={(state) => setTutorState(state)}
+                          />
 
-                    {/* Interactive Teaching Highlighter & Content */}
-                    <TutorTeachingHighlighter
-                      content={(msg.activeLang && msg.languageVersions?.[msg.activeLang]) || msg.content}
-                      keyPoints={msg.keyPoints}
-                      onTutorStateChange={(state) => setTutorState(state)}
-                    />
-
-                    {/* Interactive Memory Trick Card with Voice Audio */}
-                    {msg.memoryTrick && (
-                      <MemoryTrickCard
-                        memoryTrick={msg.memoryTrick}
-                        language={msg.activeLang || language}
-                        onTriggerVoice={(opts) => tutorVoice.speak(opts)}
-                        isExternalPlaying={tutorVoice.isSpeaking && tutorVoice.concept === msg.memoryTrick.concept}
-                        onPlayStateChange={(isPlaying) => setTutorState(isPlaying ? 'speaking' : 'idle')}
-                      />
-                    )}
+                          {/* Interactive Memory Trick Card with Voice Audio */}
+                          {msg.memoryTrick && (
+                            <MemoryTrickCard
+                              memoryTrick={msg.memoryTrick}
+                              language={currentMsgLang}
+                              onTriggerVoice={(opts) => tutorVoice.speak(opts)}
+                              isExternalPlaying={tutorVoice.isSpeaking && (tutorVoice.concept === msg.memoryTrick.concept || tutorVoice.concept === msg.memoryTrick.languageVersions?.[currentMsgLang]?.concept)}
+                              onPlayStateChange={(isPlaying) => setTutorState(isPlaying ? 'speaking' : 'idle')}
+                            />
+                          )}
+                        </>
+                      );
+                    })()}
 
                     {/* Child-Friendly Citation Drawer */}
                     {msg.citations && msg.citations.length > 0 && (

@@ -909,7 +909,27 @@ $2^7(128) \\quad 2^6(64) \\quad 2^5(32) \\quad 2^4(16) \\quad 2^3(8) \\quad 2^2(
         concept: 'Powers of 2 & Binary Place Values',
         trick: 'Double trouble from Right to Left! Start at 1, then double each step: 1, 2, 4, 8, 16, 32, 64, 128!',
         rhyme: 'Start at ONE on the far Right,\nDouble each step with all your might!\n1, 2, 4, 8, sixteen more,\n32, 64, 128 in store!',
-        audioText: 'Here is your memory trick for binary numbers! Start at one on the far right, and double every step: 1, 2, 4, 8, 16, 32, 64, and 128! Every bit to the left is twice as big!'
+        audioText: 'Here is your memory trick for binary numbers! Start at one on the far right, and double every step: 1, 2, 4, 8, 16, 32, 64, and 128! Every bit to the left is twice as big!',
+        languageVersions: {
+          en: {
+            concept: 'Powers of 2 & Binary Place Values',
+            trick: 'Double trouble from Right to Left! Start at 1, then double each step: 1, 2, 4, 8, 16, 32, 64, 128!',
+            rhyme: 'Start at ONE on the far Right,\nDouble each step with all your might!\n1, 2, 4, 8, sixteen more,\n32, 64, 128 in store!',
+            audioText: 'Here is your memory trick for binary numbers! Start at one on the far right, and double every step: 1, 2, 4, 8, 16, 32, 64, and 128! Every bit to the left is twice as big!'
+          },
+          si: {
+            concept: 'දෙකේ බල සහ ද්විමය ස්ථානීය අගය',
+            trick: 'දකුණේ සිට වමට දෙගුණ කරගෙන යන්න! 1න් පටන් ගෙන දෙගුණ කරන්න: 1, 2, 4, 8, 16, 32, 64, 128!',
+            rhyme: 'දකුණු පසින් එකෙන් පටන් ගන්න,\nදෙගුණ කරමින් ඉදිරියටම යන්න!\n1, 2, 4, 8 සහ 16,\n32, 64, 128 මතක තියාගන්න!',
+            audioText: 'ද්විමය සංඛ්‍යා මතක තබා ගැනීමේ කෙටි ක්‍රමය මෙන්න! දකුණෙන් එකෙන් පටන් ගෙන, වමට යන සෑම පියවරකදීම අගය දෙගුණ කරන්න: 1, 2, 4, 8, 16, 32, 64, සහ 128!'
+          },
+          ta: {
+            concept: 'இரண்டின் அடுக்குகள் மற்றும் இரும இடப்பெறுமானம்',
+            trick: 'வலமிருந்து இடமாக இரட்டிப்பாக்குங்கள்! 1 இலிருந்து தொடங்கி இரட்டிப்பாக்குங்கள்: 1, 2, 4, 8, 16, 32, 64, 128!',
+            rhyme: 'வலது பக்கத்தில் ஒன்றில் தொடங்கு,\nஇரட்டிப்பாக்கி முன்னேறிச் செல்லு!\n1, 2, 4, 8 பதினாறுடன்,\n32, 64, 128 நினைவில் நில்லு!',
+            audioText: 'இரும எண்களை நினைவில் கொள்வதற்கான எளிய வழி இதோ! வலதுபுறம் ஒன்றில் தொடங்கி, இடப்புறம் செல்லச் செல்ல இரட்டிப்பாக்குங்கள்: 1, 2, 4, 8, 16, 32, 64, மற்றும் 128!'
+          }
+        }
       },
       suggestedFollowUps: [
         'Clarify more: Can you break this down step-by-step with more details?',
@@ -1010,7 +1030,27 @@ Setting up your desktop environment, regional languages, and storage volumes cor
         concept: 'Screen Resolution & Drive Formats',
         trick: 'Pixels = Width × Height! NTFS for Big Files, FAT32 for Universal Sharing!',
         rhyme: 'Pixels across and pixels down,\nCrisp Full HD all over town!\nNineteen-twenty by ten-eighty wide,\nFormat with care and backup inside!',
-        audioText: 'Here is your memory trick for screen resolution and drive formatting! Resolution is width times height in dots! Remember, NTFS handles big files over four gigabytes, while FAT32 works everywhere! Always backup before formatting!'
+        audioText: 'Here is your memory trick for screen resolution and drive formatting! Resolution is width times height in dots! Remember, NTFS handles big files over four gigabytes, while FAT32 works everywhere! Always backup before formatting!',
+        languageVersions: {
+          en: {
+            concept: 'Screen Resolution & Drive Formats',
+            trick: 'Pixels = Width × Height! NTFS for Big Files, FAT32 for Universal Sharing!',
+            rhyme: 'Pixels across and pixels down,\nCrisp Full HD all over town!\nNineteen-twenty by ten-eighty wide,\nFormat with care and backup inside!',
+            audioText: 'Here is your memory trick for screen resolution and drive formatting! Resolution is width times height in dots! Remember, NTFS handles big files over four gigabytes, while FAT32 works everywhere! Always backup before formatting!'
+          },
+          si: {
+            concept: 'තිර විභේදනය සහ ධාවක හැඩසවි ගැන්වීම',
+            trick: 'පික්සල් = පළල × උස! විශාල ලිපිගොනු සඳහා NTFS, පොදු බෙදාගැනීම සඳහා FAT32!',
+            rhyme: 'තිරයේ පළලයි උසයි බලා,\nවිභේදනය ගනිමු මැනලා!\nවිශාල ගොනුවලට NTFS නියමයි,\nබැකප් කර ෆෝමැට් කිරීම සුදුසුයි!',
+            audioText: 'තිර විභේදනය සහ ධාවක හැඩසවි ගැන්වීම මතක තබා ගැනීමේ ක්‍රමය මෙන්න! විභේදනය කියන්නේ තිරයේ පළල ගුණ කිරීම උසයි. විශාල ගොනු සඳහා NTFS ද, පොදුවේ භාවිතයට FAT32 ද යොදාගන්න! හැමවිටම බැකප් එකක් තබාගන්න!'
+          },
+          ta: {
+            concept: 'திரை தெளிவுத்திறன் & இயக்கக வடிவமைத்தல்',
+            trick: 'பிக்சல்கள் = அகலம் × உயரம்! பெரிய கோப்புகளுக்கு NTFS, பொதுவான பயன்பாட்டுக்கு FAT32!',
+            rhyme: 'அகலமும் உயரமும் பிக்சல் ஆகும்,\nதெளிவான Full HD கண்ணைக் கவரும்!\nபெரிய கோப்புகளுக்கு NTFS சிறந்தது,\nவடிவமைக்கும் முன் காப்புப்பிரதி எடுப்பது நன்று!',
+            audioText: 'திரை தெளிவுத்திறன் மற்றும் இயக்கக வடிவமைத்தலை நினைவில் கொள்வதற்கான வழி இதோ! தெளிவுத்திறன் என்பது அகலம் பெருக்கல் உயரம். பெரிய கோப்புகளுக்கு NTFS இனைப் பயன்படுத்துங்கள்!'
+          }
+        }
       },
       suggestedFollowUps: [
         'Clarify more: Can you break this down step-by-step with more details?',
@@ -1296,7 +1336,27 @@ Word processing software is used in schools and offices to produce:
         concept: 'Grade 8 ICT Word Processing Mastery (Textbook p. 34–38)',
         trick: 'Save As for New Copies, Justify (Ctrl+J) for Clean Margins, Subscript (x₂) Below for CO₂, Superscript (x²) Above for 2³!',
         rhyme: 'New and Save to keep your file,\nCut and Paste to change your style,\nSubscript drops for CO₂ in line,\nSuperscript raises 2³ so fine!\nAlign Left, Center, Right in view,\nCtrl+J makes book margins true!',
-        audioText: 'Here is your official Grade 8 ICT memory trick for Word Processing! Remember: L is Left, R is Right, E is Center, and J is Justify for textbook borders! Subscript places the two down low for C O 2, while Superscript raises the power three high for two cubed! Save updates your document, and Save As makes a fresh copy!'
+        audioText: 'Here is your official Grade 8 ICT memory trick for Word Processing! Remember: L is Left, R is Right, E is Center, and J is Justify for textbook borders! Subscript places the two down low for C O 2, while Superscript raises the power three high for two cubed! Save updates your document, and Save As makes a fresh copy!',
+        languageVersions: {
+          en: {
+            concept: 'Grade 8 ICT Word Processing Mastery (Textbook p. 34–38)',
+            trick: 'Save As for New Copies, Justify (Ctrl+J) for Clean Margins, Subscript (x₂) Below for CO₂, Superscript (x²) Above for 2³!',
+            rhyme: 'New and Save to keep your file,\nCut and Paste to change your style,\nSubscript drops for CO₂ in line,\nSuperscript raises 2³ so fine!\nAlign Left, Center, Right in view,\nCtrl+J makes book margins true!',
+            audioText: 'Here is your official Grade 8 ICT memory trick for Word Processing! Remember: L is Left, R is Right, E is Center, and J is Justify for textbook borders! Subscript places the two down low for C O 2, while Superscript raises the power three high for two cubed! Save updates your document, and Save As makes a fresh copy!'
+          },
+          si: {
+            concept: '8 ශ්‍රේණිය වදන් සැකසුම (පෙළපොත පිටු 34–38)',
+            trick: 'අලුත් පිටපත් වලට Save As, පුවත්පත් පෙළගැස්මට Justify (Ctrl+J), CO₂ සඳහා උපලකුණ Subscript (x₂), 2³ සඳහා උඩුලකුණ Superscript (x²)!',
+            rhyme: 'Save As මඟින් අලුත් පිටපතක් හදමු,\nCtrl+J යොදා දෙපසම පෙළගස්වමු!\nCO₂ සූත්‍රයට Subscript පහළට,\n2³ බලයට Superscript ඉහළට!',
+            audioText: 'වදන් සැකසුම පිළිබඳ කෙටි මතක සටහන මෙන්න! L කියන්නේ වමට, R කියන්නේ දකුණට, E කියන්නේ මැදට, සහ J කියන්නේ Justify දෙපසම පෙළගැස්වීමටයි! රසායන සූත්‍ර වලට Subscript ද, ගණිත දර්ශක සඳහා Superscript ද මතක තබාගන්න!'
+          },
+          ta: {
+            concept: 'தரம் 8 சொல் செயலாக்கம் (பாடநூல் பக். 34–38)',
+            trick: 'புதிய நகல்களுக்கு Save As, புத்தக சீரமைப்புக்கு Justify (Ctrl+J), CO₂ க்கு Subscript (x₂), 2³ க்கு Superscript (x²)!',
+            rhyme: 'புதிய நகலுக்கு Save As செய்வோம்,\nஇருபுற சீரமைப்புக்கு Ctrl+J சேர்ப்போம்!\nCO₂ க்கு Subscript கீழே இறங்கும்,\n2³ அடுக்குக்கு Superscript மேலே உயரும்!',
+            audioText: 'சொல் செயலாக்கத்தை நினைவில் கொள்வதற்கான வழி இதோ! Ctrl+L இடது சீரமைப்பு, Ctrl+R வலது சீரமைப்பு, Ctrl+J இருபுற சீரமைப்பு! CO2 க்கு Subscript இனைப் பயன்படுத்துங்கள், கணித அடுக்குகளுக்கு Superscript இனைப் பயன்படுத்துங்கள்!'
+          }
+        }
       },
       suggestedFollowUps: [
         'Clarify more: Can you explain the 7 document types in Figure 3.1 with textbook examples?',
@@ -1415,6 +1475,32 @@ Here is a step-by-step educational guide on how word processing works in Grade 8
         'Subscript (CO₂) and Superscript (2³)',
         'Justify alignment for book columns'
       ],
+      memoryTrick: {
+        concept: 'Grade 8 ICT Word Processing Mastery (Textbook p. 34–38)',
+        trick: 'Save As for New Copies, Justify (Ctrl+J) for Clean Margins, Subscript (x₂) Below for CO₂, Superscript (x²) Above for 2³!',
+        rhyme: 'New and Save to keep your file,\nCut and Paste to change your style,\nSubscript drops for CO₂ in line,\nSuperscript raises 2³ so fine!\nAlign Left, Center, Right in view,\nCtrl+J makes book margins true!',
+        audioText: 'Here is your official Grade 8 ICT memory trick for Word Processing! Remember: L is Left, R is Right, E is Center, and J is Justify for textbook borders! Subscript places the two down low for C O 2, while Superscript raises the power three high for two cubed! Save updates your document, and Save As makes a fresh copy!',
+        languageVersions: {
+          en: {
+            concept: 'Grade 8 ICT Word Processing Mastery (Textbook p. 34–38)',
+            trick: 'Save As for New Copies, Justify (Ctrl+J) for Clean Margins, Subscript (x₂) Below for CO₂, Superscript (x²) Above for 2³!',
+            rhyme: 'New and Save to keep your file,\nCut and Paste to change your style,\nSubscript drops for CO₂ in line,\nSuperscript raises 2³ so fine!\nAlign Left, Center, Right in view,\nCtrl+J makes book margins true!',
+            audioText: 'Here is your official Grade 8 ICT memory trick for Word Processing! Remember: L is Left, R is Right, E is Center, and J is Justify for textbook borders! Subscript places the two down low for C O 2, while Superscript raises the power three high for two cubed! Save updates your document, and Save As makes a fresh copy!'
+          },
+          si: {
+            concept: '8 ශ්‍රේණිය වදන් සැකසුම (පෙළපොත පිටු 34–38)',
+            trick: 'අලුත් පිටපත් වලට Save As, පුවත්පත් පෙළගැස්මට Justify (Ctrl+J), CO₂ සඳහා උපලකුණ Subscript (x₂), 2³ සඳහා උඩුලකුණ Superscript (x²)!',
+            rhyme: 'Save As මඟින් අලුත් පිටපතක් හදමු,\nCtrl+J යොදා දෙපසම පෙළගස්වමු!\nCO₂ සූත්‍රයට Subscript පහළට,\n2³ බලයට Superscript ඉහළට!',
+            audioText: 'වදන් සැකසුම පිළිබඳ කෙටි මතක සටහන මෙන්න! L කියන්නේ වමට, R කියන්නේ දකුණට, E කියන්නේ මැදට, සහ J කියන්නේ Justify දෙපසම පෙළගැස්වීමටයි! රසායන සූත්‍ර වලට Subscript ද, ගණිත දර්ශක සඳහා Superscript ද මතක තබාගන්න!'
+          },
+          ta: {
+            concept: 'தரம் 8 சொல் செயலாக்கம் (பாடநூல் பக். 34–38)',
+            trick: 'புதிய நகல்களுக்கு Save As, புத்தக சீரமைப்புக்கு Justify (Ctrl+J), CO₂ க்கு Subscript (x₂), 2³ க்கு Superscript (x²)!',
+            rhyme: 'புதிய நகலுக்கு Save As செய்வோம்,\nஇருபுற சீரமைப்புக்கு Ctrl+J சேர்ப்போம்!\nCO₂ க்கு Subscript கீழே இறங்கும்,\n2³ அடுக்குக்கு Superscript மேலே உயரும்!',
+            audioText: 'சொல் செயலாக்கத்தை நினைவில் கொள்வதற்கான வழி இதோ! Ctrl+L இடது சீரமைப்பு, Ctrl+R வலது சீரமைப்பு, Ctrl+J இருபுற சீரமைப்பு! CO2 க்கு Subscript இனைப் பயன்படுத்துங்கள், கணித அடுக்குகளுக்கு Superscript இனைப் பயன்படுத்துங்கள்!'
+          }
+        }
+      },
       suggestedFollowUps: [
         'Explain simpler: Can you explain word processing in simpler terms for a beginner?',
         'Sri Lankan Example: How to format an English Day invitation card',
@@ -1620,7 +1706,27 @@ Scratch is a visual block-based programming environment developed by MIT to teac
         concept: 'Scratch Loops & Variables',
         trick: 'Variables store what changes fast, Repeat loops save typing and make code last!',
         rhyme: 'Variables store what changes fast,\nRepeat loops make our programs last!\nCheck the condition, test the clue,\nIf it is true, execute through!',
-        audioText: 'Here is your memory trick for Scratch programming! Variables store what changes fast, like your game score! Repeat loops save you from writing the same code again and again!'
+        audioText: 'Here is your memory trick for Scratch programming! Variables store what changes fast, like your game score! Repeat loops save you from writing the same code again and again!',
+        languageVersions: {
+          en: {
+            concept: 'Scratch Loops & Variables',
+            trick: 'Variables store what changes fast, Repeat loops save typing and make code last!',
+            rhyme: 'Variables store what changes fast,\nRepeat loops make our programs last!\nCheck the condition, test the clue,\nIf it is true, execute through!',
+            audioText: 'Here is your memory trick for Scratch programming! Variables store what changes fast, like your game score! Repeat loops save you from writing the same code again and again!'
+          },
+          si: {
+            concept: 'Scratch හි විචල්‍යයන් සහ පුනරාවර්තන',
+            trick: 'වෙනස්වන අගයන් ගබඩා කරන්නේ විචල්‍යයන් තුළයි, නැවත නැවත සිදුවන දේට Repeat loops යොදාගනී!',
+            rhyme: 'ලකුණු වැනි දේ විචල්‍යයේ රඳවන්න,\nකේතය කෙටි කර loops භාවිත කරන්න!\nකොන්දේසිය සත්‍ය නම් ඉදිරියට යන්න,\nScratch ක්‍රමලේඛනය පහසුවෙන් ඉගෙනගන්න!',
+            audioText: 'Scratch ක්‍රමලේඛනය මතක තබා ගැනීමේ ක්‍රමය මෙන්න! ක්‍රීඩාවේ ලකුණු වැනි නිතර වෙනස් වන දත්ත විචල්‍යයන් වල රඳවන්න. එකම දේ නැවත නැවත ලිවීමෙන් වැළකීමට Repeat loops භාවිත කරන්න!'
+          },
+          ta: {
+            concept: 'Scratch மாறிகள் & சுழற்சிகள்',
+            trick: 'மாறும் மதிப்புகளை மாறிகளில் சேமிப்போம், திரும்பத் திரும்பச் செய்ய Repeat சுழற்சிகளைப் பயன்படுத்துவோம்!',
+            rhyme: 'மதிப்புகளை மாறிகளில் பத்திரப்படுத்துவோம்,\nசுழற்சிகள் மூலம் நிரல்களைச் சுருக்குவோம்!\nநிபந்தனை சரியாயின் இயக்கிப் பார்ப்போம்,\nScratch நிரலாக்கத்தில் வெற்றி கொள்வோம்!',
+            audioText: 'Scratch நிரலாக்கத்திற்கான நினைவுக் குறிப்பு இதோ! அடிக்கடி மாறும் தகவல்களை மாறிகளில் சேமிக்கவும், மீண்டும் மீண்டும் செய்ய வேண்டியவற்றுக்கு Repeat சுழற்சிகளைப் பயன்படுத்தவும்!'
+          }
+        }
       },
       suggestedFollowUps: [
         'Clarify more: Can you break this down step-by-step with more details?',
@@ -1700,7 +1806,27 @@ Take computer electrical signals and produce physical effects:
         concept: 'Sensors vs Actuators',
         trick: 'Sensors SENSE in (Input), Actuators ACT out (Output)!',
         rhyme: 'Sensors listen, feel, and see,\nInputs telling what could be!\nActuators move, display, and ring,\nOutputs doing everything!',
-        audioText: 'Here is your memory trick for physical computing! Remember: Sensors sense inward as Inputs, while Actuators act outward as Outputs! Like eyes versus hands!'
+        audioText: 'Here is your memory trick for physical computing! Remember: Sensors sense inward as Inputs, while Actuators act outward as Outputs! Like eyes versus hands!',
+        languageVersions: {
+          en: {
+            concept: 'Sensors vs Actuators',
+            trick: 'Sensors SENSE in (Input), Actuators ACT out (Output)!',
+            rhyme: 'Sensors listen, feel, and see,\nInputs telling what could be!\nActuators move, display, and ring,\nOutputs doing everything!',
+            audioText: 'Here is your memory trick for physical computing! Remember: Sensors sense inward as Inputs, while Actuators act outward as Outputs! Like eyes versus hands!'
+          },
+          si: {
+            concept: 'සංවේදක (Sensors) සහ ක්‍රියාකරවන (Actuators)',
+            trick: 'සංවේදක සංවේදනය කර ඇතුළට ගනී (ආදාන), ක්‍රියාකරවන ක්‍රියාත්මක වී එළියට දෙයි (ප්‍රතිදාන)!',
+            rhyme: 'පරිසරය මනින සංවේදක ආදාන,\nමෝටර් බසර ලයිට් ක්‍රියාකරවන ප්‍රතිදාන!\nඇස හා කන වගේ සංවේදක දැනගන්න,\nඅත් පා වගේ ක්‍රියාකරවන හඳුනාගන්න!',
+            audioText: 'භෞතික පරිගණනය මතක තබා ගැනීමේ ක්‍රමය මෙන්න! සංවේදක පරිසරය සංවේදනය කර ආදානයක් ලෙස දත්ත ලබාදෙයි. ක්‍රියාකරවන මඟින් බසර් හෝ මෝටර් ක්‍රියාත්මක කර ප්‍රතිදානය පෙන්වයි! අපේ ඇස් වගේ ආදාන, අත් වගේ ප්‍රතිදාන!'
+          },
+          ta: {
+            concept: 'உணரிகள் vs இயங்கிகள்',
+            trick: 'உணரிகள் உணர்ந்து உள்ளே எடுக்கும் (உள்ளீடு), இயங்கிகள் இயங்கி வெளியே தரும் (வெளியீடு)!',
+            rhyme: 'உணரிகள் சூழலை உணரும் உள்ளீடு,\nஇயங்கிகள் காரியம் செய்யும் வெளியீடு!\nகண்கள் காதுகள் உணரிக்கு உதாரணம்,\nகைகள் கால்கள் இயங்கிக்கு காரணம்!',
+            audioText: 'பௌதீகக் கணினியியல் நினைவுக் குறிப்பு இதோ! உணரிகள் சூழலை உணர்ந்து உள்ளீடாகச் செலுத்துகின்றன, இயங்கிகள் விளைவுகளை வெளியீடாகத் தருகின்றன!'
+          }
+        }
       },
       suggestedFollowUps: [
         'Clarify more: Can you break this down step-by-step with more details?',
@@ -1785,7 +1911,27 @@ Example: \`https://www.moe.gov.lk/textbooks.pdf\`
         concept: 'URL Anatomy & Email Bcc',
         trick: 'HTTPS is the lock, .lk is our rock! And Blind Carbon Copy (Bcc) hides email addresses for privacy!',
         rhyme: 'HTTPS keeps secrets safe,\nDot LK is our country\'s place!\nSend with Bcc to friends,\nTheir private email it defends!',
-        audioText: 'Here is your memory trick for the Internet! HTTPS keeps your passwords safe with encryption! And always remember to use Bcc when sending emails to groups so nobody\'s email is exposed!'
+        audioText: 'Here is your memory trick for the Internet! HTTPS keeps your passwords safe with encryption! And always remember to use Bcc when sending emails to groups so nobody\'s email is exposed!',
+        languageVersions: {
+          en: {
+            concept: 'URL Anatomy & Email Bcc',
+            trick: 'HTTPS is the lock, .lk is our rock! And Blind Carbon Copy (Bcc) hides email addresses for privacy!',
+            rhyme: 'HTTPS keeps secrets safe,\nDot LK is our country\'s place!\nSend with Bcc to friends,\nTheir private email it defends!',
+            audioText: 'Here is your memory trick for the Internet! HTTPS keeps your passwords safe with encryption! And always remember to use Bcc when sending emails to groups so nobody\'s email is exposed!'
+          },
+          si: {
+            concept: 'URL ව්‍යුහය සහ ඊමේල් Bcc රහස්‍යතාව',
+            trick: 'HTTPS අගුල ආරක්ෂාව සපයයි, dot lk අපේ රටේ ඩොමේනයයි! Bcc මඟින් අන් අයගේ ඊමේල් ලිපින ආරක්ෂා කරයි!',
+            rhyme: 'HTTPS මඟින් දත්ත රහසිගත වේ,\ndot lk අපේ ලංකාවේ වසම වේ!\nBcc දමා යවන විට ලිපි සැමට,\nලිපින නොපෙනෙයි කිසිවෙකුගේ ඇසට!',
+            audioText: 'අන්තර්ජාලය පිළිබඳ මතක සටහන මෙන්න! HTTPS මඟින් ඔබගේ මුරපද ආරක්ෂිතව සම්ප්‍රේෂණය කරයි. කණ්ඩායම් වලට ඊමේල් යවන විට Bcc භාවිත කිරීමෙන් සියලු දෙනාගේ පෞද්ගලිකත්වය ආරක්ෂා වේ!'
+          },
+          ta: {
+            concept: 'இணைய URL மற்றும் மின்னஞ்சல் Bcc',
+            trick: 'HTTPS பாதுகாப்பானது, dot lk நமது நாட்டின் டொமைன்! Bcc பிறர் மின்னஞ்சல் முகவரிகளைப் பாதுகாக்கும்!',
+            rhyme: 'HTTPS தகவலைப் பாதுகாக்கும் நெறிமுறை,\ndot lk நமது நாட்டின் இணைய எல்லை!\nBcc மூலம் மின்னஞ்சல் அனுப்புவோம்,\nஅனைவரின் தனிமனித பாதுகாப்பை உறுதிசெய்வோம்!',
+            audioText: 'இணைய பயன்பாட்டுக்கான நினைவுக் குறிப்பு இதோ! HTTPS உங்கள் கடவுச்சொற்களைப் பாதுகாக்கிறது. மின்னஞ்சல் அனுப்பும்போது முகவரிகளை மறைக்க Bcc இனைப் பயன்படுத்துங்கள்!'
+          }
+        }
       },
       suggestedFollowUps: [
         'Clarify more: Can you break this down step-by-step with more details?',
@@ -1867,7 +2013,27 @@ Example: \`https://www.moe.gov.lk/textbooks.pdf\`
         concept: 'Parakramabahu & Water Conservation',
         trick: 'Every rain drop counts! Bisokotuwa controls water pressure, Parakrama Samudra stores it all!',
         rhyme: 'Not a single drop of rain,\nShall reach the ocean all in vain!\nBisokotuwa calms the water\'s might,\nFeeding golden fields with ancient light!',
-        audioText: 'Here is your memory trick for Sri Lankan history! King Parakramabahu the Great declared: Not even a single drop of rain water must flow into the ocean without being of use to mankind! Remember the Bisokotuwa regulates the pressure, and Parakrama Samudraya catches every drop!'
+        audioText: 'Here is your memory trick for Sri Lankan history! King Parakramabahu the Great declared: Not even a single drop of rain water must flow into the ocean without being of use to mankind! Remember the Bisokotuwa regulates the pressure, and Parakrama Samudraya catches every drop!',
+        languageVersions: {
+          en: {
+            concept: 'Parakramabahu & Water Conservation',
+            trick: 'Every rain drop counts! Bisokotuwa controls water pressure, Parakrama Samudra stores it all!',
+            rhyme: 'Not a single drop of rain,\nShall reach the ocean all in vain!\nBisokotuwa calms the water\'s might,\nFeeding golden fields with ancient light!',
+            audioText: 'Here is your memory trick for Sri Lankan history! King Parakramabahu the Great declared: Not even a single drop of rain water must flow into the ocean without being of use to mankind! Remember the Bisokotuwa regulates the pressure, and Parakrama Samudraya catches every drop!'
+          },
+          si: {
+            concept: 'මහා පරාක්‍රමබාහු රජු සහ වාරි තාක්ෂණය',
+            trick: 'අහසින් වැටෙන කිසිදු දිය බිඳක් අපතේ නොයවන්න! බිසෝකොටුව පීඩනය පාලනය කරද්දී, පරාක්‍රම සමුද්‍රය ජලය රඳවා තබයි!',
+            rhyme: 'අහසින් වැටෙන එක දිය බිඳකුදු නොහැර,\nමුහුදට නොයවා රැකගමු සැමවර!\nබිසෝකොටුවෙන් පීඩනය බිඳ හෙලලා,\nකෙත්බිම් සරු කළා අටුකොටු පුරවාලා!',
+            audioText: 'ශ්‍රී ලංකා ඉතිහාසය පිළිබඳ මතක සටහන මෙන්න! මහා පරාක්‍රමබාහු රජතුමා පැවසුවේ, අහසින් වැටෙන එකදු දිය බිඳක්වත් මිනිසාගේ ප්‍රයෝජනයට නොගෙන මුහුදට ගලා යාමට ඉඩ නොතැබිය යුතු බවයි! බිසෝකොටුව ජල පීඩනය පාලනය කර වැව් බැම්ම ආරක්ෂා කළා!'
+          },
+          ta: {
+            concept: 'பராக்கிரமபாகு மன்னன் & நீர்ப்பாசன நுட்பம்',
+            trick: 'மழைத்துளி எதுவும் வீணாகக் கூடாது! பிசோகொட்டுவ நீர் அழுத்தத்தைக் கட்டுப்படுத்தும், பராக்கிரம சமுத்திரம் நீரைச் சேமிக்கும்!',
+            rhyme: 'வானத்து மழைத்துளி வீணாகக் கடலுக்குப் போகாமல்,\nமனிதனின் பயனுக்குத் தடுத்து நிறுத்துவோம்!\nபிசோகொட்டுவ நீரின் வேகத்தைக் கட்டுப்படுத்தும்,\nபராக்கிரம சமுத்திரம் நாடு முழுதும் செழிக்கச் செய்யும்!',
+            audioText: 'இலங்கை வரலாற்றிற்கான நினைவுக் குறிப்பு இதோ! மகா பராக்கிரமபாகு மன்னன் வானிலிருந்து விழும் ஒரு துளி நீரும் வீணாக கடலை அடையக்கூடாது என்றார். பிசோகொட்டுவ அணைக்கட்டின் அழுத்தத்தைக் கட்டுப்படுத்துகிறது!'
+          }
+        }
       },
       suggestedFollowUps: [
         'Clarify more: Can you break this down step-by-step with more details?',

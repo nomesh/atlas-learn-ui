@@ -39,6 +39,7 @@ export const AtlasTutorTalkingStage: React.FC<AtlasTutorTalkingStageProps> = ({
   concept = 'Curriculum Voice Narration',
   spokenText = '',
   currentWord = '',
+  language = 'en',
   onPause,
   onResume,
   onReplay,
@@ -144,6 +145,9 @@ export const AtlasTutorTalkingStage: React.FC<AtlasTutorTalkingStageProps> = ({
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-cyan-400">
                     Atlas Live Tutor Audio
+                  </span>
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-cyan-900/60 text-cyan-200 border border-cyan-400/30">
+                    {language === 'si' ? 'සිංහල Lady Voice' : language === 'ta' ? 'தமிழ் Lady Voice' : 'English Lady Voice'}
                   </span>
                   <Sparkles className="w-3 h-3 text-amber-400 animate-spin" style={{ animationDuration: '6s' }} />
                 </div>

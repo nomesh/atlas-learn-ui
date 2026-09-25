@@ -25,6 +25,73 @@ export interface TutorVoiceState {
   replay: () => void;
 }
 
+function findLadyVoice(voices: SpeechSynthesisVoice[], lang: Language): SpeechSynthesisVoice | undefined {
+  if (!voices || voices.length === 0) return undefined;
+
+  // Male voice names to strictly avoid
+  const maleKeywords = [
+    'david', 'mark', 'george', 'guy', 'stefan', 'male', 'valluvar', 'ravi',
+    'prabhat', 'james', 'richard', 'paul', 'brian', 'daniel', 'oliver', 'alex'
+  ];
+
+  // Well-known female / lady voice names across Microsoft Edge, Chrome, Safari, and Windows
+  const femaleKeywords = [
+    'zira', 'jenny', 'aria', 'ava', 'emma', 'sonia', 'samantha', 'victoria',
+    'karen', 'moira', 'tessa', 'fiona', 'thilini', 'sanduni', 'pallavi', 'saranya',
+    'vani', 'kavya', 'female', 'woman', 'girl'
+  ];
+
+  const isMale = (name: string) => maleKeywords.some((kw) => name.toLowerCase().includes(kw));
+  const isFemale = (name: string) => femaleKeywords.some((kw) => name.toLowerCase().includes(kw));
+
+  if (lang === 'si') {
+    // 1. Sinhala voices
+    const siVoices = voices.filter(
+      (v) => v.lang.toLowerCase().includes('si') || v.lang.toLowerCase().includes('lk')
+    );
+    if (siVoices.length > 0) {
+      const femaleSi = siVoices.find((v) => isFemale(v.name) && !isMale(v.name));
+      if (femaleSi) return femaleSi;
+      const nonMaleSi = siVoices.find((v) => !isMale(v.name));
+      if (nonMaleSi) return nonMaleSi;
+      return siVoices[0];
+    }
+  }
+
+  if (lang === 'ta') {
+    // 2. Tamil voices
+    const taVoices = voices.filter(
+      (v) => v.lang.toLowerCase().includes('ta') || (v.lang.toLowerCase().includes('in') && v.name.toLowerCase().includes('tamil'))
+    );
+    if (taVoices.length > 0) {
+      const femaleTa = taVoices.find((v) => isFemale(v.name) && !isMale(v.name));
+      if (femaleTa) return femaleTa;
+      const nonMaleTa = taVoices.find((v) => !isMale(v.name));
+      if (nonMaleTa) return nonMaleTa;
+      return taVoices[0];
+    }
+  }
+
+  // 3. English voices (or fallback)
+  const enVoices = voices.filter((v) => v.lang.toLowerCase().startsWith('en'));
+
+  // Priority 1: Explicit female name (e.g. Microsoft Zira, Jenny, Aria, Samantha)
+  const ladyEn = enVoices.find((v) => isFemale(v.name) && !isMale(v.name));
+  if (ladyEn) return ladyEn;
+
+  // Priority 2: Microsoft Natural / Google female (avoiding males)
+  const naturalFemale = enVoices.find(
+    (v) => (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Female')) && !isMale(v.name)
+  );
+  if (naturalFemale) return naturalFemale;
+
+  // Priority 3: Any non-male English voice
+  const nonMaleEn = enVoices.find((v) => !isMale(v.name));
+  if (nonMaleEn) return nonMaleEn;
+
+  return enVoices[0] || voices[0];
+}
+
 export function useTutorVoice(
   onStateChange?: (state: TutorState) => void
 ): TutorVoiceState {
@@ -37,6 +104,7 @@ export function useTutorVoice(
   const [currentWord, setCurrentWord] = useState('');
   const [language, setLanguage] = useState<Language>('en');
   const [isSupported, setIsSupported] = useState(true);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
 
   const lastOptionsRef = useRef<VoiceNarrationOptions | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -45,11 +113,20 @@ export function useTutorVoice(
     const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
     setIsSupported(supported);
 
-    return () => {
-      if (supported) {
+    if (supported) {
+      const loadVoices = () => {
+        const list = window.speechSynthesis.getVoices();
+        setAvailableVoices(list);
+      };
+
+      loadVoices();
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+
+      return () => {
         window.speechSynthesis.cancel();
-      }
-    };
+        window.speechSynthesis.onvoiceschanged = null;
+      };
+    }
   }, []);
 
   const stop = useCallback(() => {
@@ -81,30 +158,17 @@ export function useTutorVoice(
       const utterance = new SpeechSynthesisUtterance(options.text);
       utteranceRef.current = utterance;
 
-      // Select suitable voice
-      const voices = window.speechSynthesis.getVoices();
-      if (lang === 'si') {
-        const siVoice = voices.find((v) => v.lang.includes('si') || v.lang.includes('LK'));
-        if (siVoice) utterance.voice = siVoice;
-        utterance.lang = 'si-LK';
-      } else if (lang === 'ta') {
-        const taVoice = voices.find(
-          (v) => v.lang.includes('ta') || v.lang.includes('IN') || v.lang.includes('LK')
-        );
-        if (taVoice) utterance.voice = taVoice;
-        utterance.lang = 'ta-LK';
-      } else {
-        const enVoice =
-          voices.find(
-            (v) =>
-              (v.name.includes('Google') || v.name.includes('Natural')) && v.lang.startsWith('en')
-          ) || voices.find((v) => v.lang.startsWith('en'));
-        if (enVoice) utterance.voice = enVoice;
-        utterance.lang = 'en-US';
+      // Select female/lady voice matching the requested language
+      const voicesList = availableVoices.length > 0 ? availableVoices : window.speechSynthesis.getVoices();
+      const ladyVoice = findLadyVoice(voicesList, lang);
+      if (ladyVoice) {
+        utterance.voice = ladyVoice;
       }
+      utterance.lang = lang === 'si' ? 'si-LK' : lang === 'ta' ? 'ta-LK' : 'en-US';
 
-      utterance.pitch = 1.06; // Warm, friendly educational tutor tone
-      utterance.rate = 0.94;  // Encouraging, deliberate cadence for young learners
+      // Always tune pitch to a warm, friendly female teacher tone
+      utterance.pitch = 1.18;
+      utterance.rate = 0.94; // Clear, encouraging cadence for young students
 
       utterance.onstart = () => {
         setIsSpeaking(true);

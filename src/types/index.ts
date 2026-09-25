@@ -46,6 +46,11 @@ export interface MemoryTrick {
   trick: string;
   rhyme?: string;
   audioText: string;
+  languageVersions?: {
+    en?: { concept?: string; trick?: string; rhyme?: string; audioText: string };
+    si?: { concept?: string; trick?: string; rhyme?: string; audioText: string };
+    ta?: { concept?: string; trick?: string; rhyme?: string; audioText: string };
+  };
 }
 
 // Exact wire answer structure from ATLAS backend

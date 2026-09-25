@@ -41,18 +41,35 @@ export const MemoryTrickCard: React.FC<MemoryTrickCardProps> = ({
     };
   }, []);
 
+  const localizedConcept = (language === 'si' && memoryTrick.languageVersions?.si?.concept)
+    || (language === 'ta' && memoryTrick.languageVersions?.ta?.concept)
+    || memoryTrick.concept;
+
+  const localizedTrick = (language === 'si' && memoryTrick.languageVersions?.si?.trick)
+    || (language === 'ta' && memoryTrick.languageVersions?.ta?.trick)
+    || memoryTrick.trick;
+
+  const localizedRhyme = (language === 'si' && memoryTrick.languageVersions?.si?.rhyme)
+    || (language === 'ta' && memoryTrick.languageVersions?.ta?.rhyme)
+    || memoryTrick.rhyme;
+
   const handleToggleAudio = () => {
     if (!isSupported) return;
 
-    const textToSpeak = memoryTrick.audioText || memoryTrick.rhyme || memoryTrick.trick;
+    const textToSpeak = (language === 'si' && memoryTrick.languageVersions?.si?.audioText)
+      || (language === 'ta' && memoryTrick.languageVersions?.ta?.audioText)
+      || (language === 'en' && memoryTrick.languageVersions?.en?.audioText)
+      || memoryTrick.audioText || memoryTrick.rhyme || memoryTrick.trick;
+
+    const titleToSpeak = language === 'si' ? 'ටියුටර් මතක කෙටි ක්‍රමය' : language === 'ta' ? 'ஆசிரியர் நினைவுக் குறிப்பு' : 'Tutor Memory Trick';
 
     // If external trigger is provided (e.g. from TutorPage to launch large talking stage)
     if (onTriggerVoice) {
       setHasPlayed(true);
       onTriggerVoice({
         text: textToSpeak,
-        title: `Tutor Memory Trick`,
-        concept: memoryTrick.concept,
+        title: titleToSpeak,
+        concept: localizedConcept,
         language: language,
       });
       return;
@@ -87,7 +104,7 @@ export const MemoryTrickCard: React.FC<MemoryTrickCardProps> = ({
       utterance.lang = 'en-US';
     }
 
-    utterance.pitch = 1.08; // Friendly, warm tutor voice
+    utterance.pitch = 1.18; // Friendly lady tutor pitch
     utterance.rate = 0.94;  // Clear, encouraging pacing for learners
 
     utterance.onstart = () => {
@@ -124,12 +141,12 @@ export const MemoryTrickCard: React.FC<MemoryTrickCardProps> = ({
           <div>
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] font-extrabold tracking-wider uppercase text-amber-300 font-mono">
-                Tutor Memory Trick
+                {language === 'si' ? 'ටියුටර් මතක කෙටි ක්‍රමය' : language === 'ta' ? 'ஆசிரியர் நினைவுக் குறிப்பு' : 'Tutor Memory Trick'}
               </span>
               <Sparkles className="w-3 h-3 text-amber-400" />
             </div>
             <h4 className="text-xs sm:text-sm font-bold text-white">
-              {memoryTrick.concept}
+              {localizedConcept}
             </h4>
           </div>
         </div>
@@ -149,7 +166,7 @@ export const MemoryTrickCard: React.FC<MemoryTrickCardProps> = ({
             {currentlyPlaying ? (
               <>
                 <VolumeX className="w-3.5 h-3.5" />
-                <span>Pause Voice</span>
+                <span>{language === 'si' ? 'හඬ නවත්වන්න' : language === 'ta' ? 'குரலை நிறுத்தவும்' : 'Pause Voice'}</span>
                 {/* Audio wave animation */}
                 <span className="flex items-center gap-0.5 ml-1">
                   <span className="w-1 h-3 bg-slate-950 rounded-full animate-bounce [animation-delay:0ms]" />
@@ -160,7 +177,11 @@ export const MemoryTrickCard: React.FC<MemoryTrickCardProps> = ({
             ) : (
               <>
                 <Volume2 className="w-3.5 h-3.5 text-cyan-200" />
-                <span>{hasPlayed ? 'Listen Again' : 'Listen with Voice'}</span>
+                <span>
+                  {hasPlayed
+                    ? (language === 'si' ? 'නැවත සවන් දෙන්න' : language === 'ta' ? 'மீண்டும் கேட்கவும்' : 'Listen Again')
+                    : (language === 'si' ? 'හඬින් සවන් දෙන්න' : language === 'ta' ? 'குரலில் கேட்கவும்' : 'Listen with Voice')}
+                </span>
               </>
             )}
           </button>
@@ -170,17 +191,17 @@ export const MemoryTrickCard: React.FC<MemoryTrickCardProps> = ({
       {/* Main Trick / Rhyme Display */}
       <div className="relative z-10 bg-slate-950/70 rounded-xl p-3 sm:p-4 border border-indigo-400/20 my-2 space-y-2">
         <p className="text-xs sm:text-sm text-indigo-100 font-medium leading-relaxed">
-          {memoryTrick.trick}
+          {localizedTrick}
         </p>
 
-        {memoryTrick.rhyme && (
+        {localizedRhyme && (
           <div className="pt-2 border-t border-indigo-500/20">
             <div className="text-[10px] font-mono text-cyan-300 uppercase tracking-wider mb-1 flex items-center gap-1">
               <Zap className="w-3 h-3 text-cyan-400" />
-              <span>Catchy Mnemonic Rhyme:</span>
+              <span>{language === 'si' ? 'මතක තබා ගැනීමේ කෙටි කවිය:' : language === 'ta' ? 'நினைவில் நிறுத்த உதவும் பாடல்:' : 'Catchy Mnemonic Rhyme:'}</span>
             </div>
             <pre className="font-serif italic text-xs sm:text-sm text-amber-200/90 whitespace-pre-line leading-relaxed bg-black/30 p-2.5 rounded-lg border border-amber-500/20">
-              "{memoryTrick.rhyme}"
+              "{localizedRhyme}"
             </pre>
           </div>
         )}
@@ -190,7 +211,7 @@ export const MemoryTrickCard: React.FC<MemoryTrickCardProps> = ({
       <div className="flex items-center justify-between text-[11px] text-indigo-200/80 pt-1">
         <span className="flex items-center gap-1.5">
           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Remember this rhyme for the next exam question!</span>
+          <span>{language === 'si' ? 'විභාග ප්‍රශ්න සඳහා මෙම කවිය මතක තබාගන්න!' : language === 'ta' ? 'தேர்வு வினாக்களுக்கு இந்தப் பாடலை நினைவில் வையுங்கள்!' : 'Remember this rhyme for the next exam question!'}</span>
         </span>
         <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
           Sri Lankan Syllabus Tip
