@@ -16,6 +16,11 @@ import {
 import { useStudent } from '../../state/studentContext';
 import { TutorAvatar } from '../avatar/TutorAvatar';
 import { getLessonStepsForTopic, MOCK_TOPICS } from '../../mocks/curriculumData';
+import { ElectricSwitchVisualizer } from '../../components/interactive/ElectricSwitchVisualizer';
+import { ResolutionVisualizer } from '../../components/interactive/ResolutionVisualizer';
+import { ScratchBlockVisualizer } from '../../components/interactive/ScratchBlockVisualizer';
+import { MicrocontrollerVisualizer } from '../../components/interactive/MicrocontrollerVisualizer';
+import { UrlAnatomyVisualizer } from '../../components/interactive/UrlAnatomyVisualizer';
 
 export const TeachMePage: React.FC = () => {
   const { topicId } = useParams<{ topicId: string }>();
@@ -145,6 +150,33 @@ export const TeachMePage: React.FC = () => {
             </div>
           )}
 
+          {/* Interactive Simulation & Visualizer */}
+          {topicId === 'number-systems' && (
+            <div className="rounded-2xl overflow-hidden border border-slate-200">
+              <ElectricSwitchVisualizer language={language} showByteBuilder={true} />
+            </div>
+          )}
+          {topicId === 'configuring-formatting-computer' && (
+            <div className="rounded-2xl overflow-hidden border border-slate-200">
+              <ResolutionVisualizer language={language} />
+            </div>
+          )}
+          {topicId === 'programming' && (
+            <div className="rounded-2xl overflow-hidden border border-slate-200">
+              <ScratchBlockVisualizer language={language} />
+            </div>
+          )}
+          {topicId === 'physical-computing' && (
+            <div className="rounded-2xl overflow-hidden border border-slate-200">
+              <MicrocontrollerVisualizer language={language} />
+            </div>
+          )}
+          {topicId === 'internet' && (
+            <div className="rounded-2xl overflow-hidden border border-slate-200">
+              <UrlAnatomyVisualizer language={language} />
+            </div>
+          )}
+
           {/* 3. Real-World Sri Lankan Context */}
           <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/70 text-slate-800">
             <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800 uppercase tracking-wider mb-1.5">
@@ -242,7 +274,9 @@ export const TeachMePage: React.FC = () => {
             <button
               type="button"
               onClick={() => {
-                navigate(`/tutor?q=${encodeURIComponent(`Can you explain more about ${currentStep.title.en}?`)}`);
+                const subId = currentTopic?.subjectId || 'ict';
+                const topId = currentTopic?.id || topicId || '';
+                navigate(`/tutor?subject=${encodeURIComponent(subId)}&topic=${encodeURIComponent(topId)}&q=${encodeURIComponent(`Can you explain more about ${currentStep.title.en}?`)}`);
               }}
               className="text-xs font-bold text-atlas-cyan hover:text-atlas-blue flex items-center gap-1.5"
             >

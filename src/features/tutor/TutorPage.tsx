@@ -13,8 +13,12 @@ import {
   Info,
   CheckCircle,
   HelpCircle,
-  AlertTriangle
+  AlertTriangle,
+  PanelRightClose,
+  PanelRightOpen,
+  MessageSquare
 } from 'lucide-react';
+import { CurriculumCompanionPane } from './CurriculumCompanionPane';
 import { useStudent } from '../../state/studentContext';
 import { TutorAvatar } from '../avatar/TutorAvatar';
 import { CitationDrawer } from './CitationDrawer';
@@ -41,9 +45,24 @@ export const TutorPage: React.FC = () => {
     learningContext, 
     tutorState, 
     setTutorState,
+    setCurriculumSubject,
     isAuthenticated,
     login,
   } = useStudent();
+
+  const paramSubject = searchParams.get('subject');
+  const paramTopic = searchParams.get('topic');
+  const activeSubjectId = paramSubject || learningContext.subjectId || 'ict';
+  const activeTopicId = paramTopic || learningContext.topicId || (activeSubjectId === 'ict' ? 'number-systems' : undefined);
+
+  const [isCompanionOpen, setIsCompanionOpen] = useState(true);
+  const [mobileView, setMobileView] = useState<'chat' | 'companion'>('chat');
+
+  useEffect(() => {
+    if (paramSubject || paramTopic) {
+      setCurriculumSubject(activeSubjectId, activeTopicId);
+    }
+  }, [paramSubject, paramTopic]);
 
   const [inputMessage, setInputMessage] = useState('');
   const [isAudioActive, setIsAudioActive] = useState(false);
@@ -70,44 +89,93 @@ export const TutorPage: React.FC = () => {
     return `msg-${Date.now()}-${messageCounterRef.current}-${Math.random().toString(36).substring(2, 7)}-${role}`;
   };
 
-  const starterTopicPills: TutorAction[] = language === 'si' ? [
-    { id: 'start-pythagoras', label: 'ගණිතය: පයිතගරස් ප්‍රමේයය', prompt: 'පයිතගරස් ප්‍රමේයයේ මූලික අදහස් පැහැදිලි කරන්න' },
-    { id: 'start-photo', label: 'විද්‍යාව: ප්‍රභාසංස්ලේෂණය', prompt: 'ප්‍රභාසංස්ලේෂණය ක්‍රියාවලිය පැහැදිලි කරන්න' },
-    { id: 'start-hydraulics', label: 'ඉතිහාසය: පුරාණ වාරි ශිෂ්ටාචාරය', prompt: 'ශ්‍රී ලංකාවේ පුරාණ වාරි ශිෂ්ටාචාරය ගැන කියාදෙන්න' },
-    { id: 'start-networks', label: 'තොරතුරු තාක්ෂණය: පරිගණක ජාල', prompt: 'පරිගණක ජාල පිළිබඳ මූලික සංකල්ප පහදන්න' },
-  ] : language === 'ta' ? [
-    { id: 'start-pythagoras', label: 'கணிதம்: பைதகரசு தேற்றம்', prompt: 'பைதகரசு தேற்றத்தின் முக்கிய கருத்துக்களை விளக்குங்கள்' },
-    { id: 'start-photo', label: 'அறிவியல்: ஒளித்தொகுப்பு', prompt: 'ஒளித்தொகுப்பு செயல்முறையை விளக்குங்கள்' },
-    { id: 'start-hydraulics', label: 'வரலாறு: பண்டைய நீரியல் நாகரிகம்', prompt: 'இலங்கையின் பண்டைய நீரியல் நாகரிகம் பற்றி கற்பியுங்கள்' },
-    { id: 'start-networks', label: 'தகவல் தொழில்நுட்பம்: கணினி வலையமைப்புகள்', prompt: 'கணினி வலையமைப்பின் அடிப்படைகளை விளக்குங்கள்' },
-  ] : [
-    { id: 'start-pythagoras', label: 'Maths: Pythagoras Theorem', prompt: 'Can you explain the main ideas of Pythagoras Theorem?' },
-    { id: 'start-photo', label: 'Science: Photosynthesis', prompt: 'Explain the process of photosynthesis in plants' },
-    { id: 'start-hydraulics', label: 'History: Hydraulic Civilization', prompt: 'Teach me about the ancient hydraulic civilization of Sri Lanka' },
-    { id: 'start-networks', label: 'ICT: Computer Networks', prompt: 'Explain the fundamentals of computer networks' },
-  ];
+  const getSubjectStarterPills = (subId: string): TutorAction[] => {
+    if (subId === 'ict') {
+      if (language === 'si') {
+        return [
+          { id: 'ict-num', label: '1 වන පාඩම: සංඛ්‍යා පද්ධති (ද්විමය)', prompt: 'සංඛ්‍යා පද්ධති සහ ද්විමය පරිවර්තනය පැහැදිලි කරන්න' },
+          { id: 'ict-cfg', label: '2 වන පාඩම: පරිගණක වින්‍යාසය සහ යතුරුපුවරු', prompt: 'Can you explain more about Desktop Customization & Display Settings?' },
+          { id: 'ict-prg', label: '4 වන පාඩම: Scratch ක්‍රමලේඛනය (Loops)', prompt: 'Scratch හි විචල්‍යයන් සහ පුනරාවර්තන loops ක්‍රියාකරන්නේ කෙසේද?' },
+          { id: 'ict-phy', label: '5 වන පාඩම: භෞතික පරිගණනය (micro:bit)', prompt: 'භෞතික පරිගණනයේ සංවේදක සහ ක්‍රියාකරවන අතර වෙනස කුමක්ද?' },
+        ];
+      }
+      if (language === 'ta') {
+        return [
+          { id: 'ict-num', label: 'பாடம் 1: எண் முறைகள் (இருமம்/தசமம்)', prompt: 'எண் முறைகள் மற்றும் இரும மாற்றங்களை விளக்குங்கள்' },
+          { id: 'ict-cfg', label: 'பாடம் 2: கணினி உள்ளமைவு & விசைப்பலகை', prompt: 'Can you explain more about Desktop Customization & Display Settings?' },
+          { id: 'ict-prg', label: 'பாடம் 4: Scratch நிரலாக்கம் (Loops)', prompt: 'Scratch இல் மாறிகள் மற்றும் சுழற்சிகள் எவ்வாறு செயல்படுகின்றன?' },
+          { id: 'ict-phy', label: 'பாடம் 5: பௌதீகக் கணினியியல் (micro:bit)', prompt: 'உணரிகள் மற்றும் இயங்கிகள் இடையிலான வேறுபாடு என்ன?' },
+        ];
+      }
+      return [
+        { id: 'ict-num', label: 'Ch 1: Number Systems (Binary & Decimal)', prompt: 'Can you explain the main concepts of Number Systems and binary conversions?' },
+        { id: 'ict-cfg', label: 'Ch 2: Desktop Configuration & Keyboards', prompt: 'Can you explain more about Desktop Customization & Display Settings?' },
+        { id: 'ict-prg', label: 'Ch 4: Scratch Programming & Loops', prompt: 'How do variables and repeat loops work in Scratch programming?' },
+        { id: 'ict-phy', label: 'Ch 5: Physical Computing & Sensors', prompt: 'What is the difference between sensors and actuators on a micro:bit?' },
+      ];
+    }
 
+    if (subId === 'science') {
+      return [
+        { id: 'sci-photo', label: 'Science: Photosynthesis', prompt: 'Explain the process of photosynthesis in plants' },
+        { id: 'sci-stomata', label: 'Science: Stomata & Gas Exchange', prompt: 'How do leaf stomata regulate gas exchange?' },
+        { id: 'sci-starch', label: 'Science: Plant Starch Testing', prompt: 'Explain the iodine test experiment for starch in leaves' },
+      ];
+    }
+
+    if (subId === 'history') {
+      return [
+        { id: 'hist-hydraulics', label: 'History: Hydraulic Civilization', prompt: 'Teach me about the ancient hydraulic civilization of Sri Lanka' },
+        { id: 'hist-parakrama', label: 'History: Parakrama Samudraya', prompt: 'How did King Parakramabahu develop dry zone irrigation?' },
+        { id: 'hist-sources', label: 'History: Epigraphy & Sources', prompt: 'What are the primary sources used to reconstruct Sri Lankan history?' },
+      ];
+    }
+
+    return [
+      { id: 'math-pyth', label: 'Maths: Pythagoras Theorem', prompt: 'Can you explain the main ideas of Pythagoras Theorem?' },
+      { id: 'math-triangles', label: 'Maths: Right-Angled Triangles', prompt: 'How to calculate the hypotenuse using a² + b² = c²?' },
+    ];
+  };
+
+  const starterTopicPills = getSubjectStarterPills(activeSubjectId);
+
+  const getInitialGreeting = (): string => {
+    if (activeSubjectId === 'ict') {
+      if (language === 'si') {
+        return `ආයුබෝවන් ${studentName}! මම ඔබගේ **තොරතුරු හා සන්නිවේදන තාක්ෂණය (ICT)** ගුරුතුමා. 
+ඔබගේ 8 ශ්‍රේණියේ නිල පෙළපොතෙහි පරිච්ඡේද 6 (සංඛ්‍යා පද්ධති, පරිගණක වින්‍යාසය, වදන් සැකසුම, Scratch ක්‍රමලේඛනය, භෞතික පරිගණනය සහ අන්තර්ජාලය) පිළිබඳ ඕනෑම කරුණක් මා සමඟ සාකච්ඡා කළ හැක.
+
+අද අපි කුමන ICT පාඩමෙන් පටන් ගනිමුද?`;
+      }
+      if (language === 'ta') {
+        return `வணக்கம் ${studentName}! நான் உங்கள் **தகவல் தொழில்நுட்ப (ICT)** ஆசிரியர். 
+உங்கள் தரம் 8 பாடநூலின் அத்தியாயங்கள் (எண் முறைகள், கணினி உள்ளமைவு, சொல் செயலாக்கம், Scratch நிரலாக்கம், பௌதீகக் கணினியியல் மற்றும் இணையம்) தொடர்பான உங்கள் சந்தேகங்களைக் கேளுங்கள்.
+
+நாம் இன்று எந்த ICT பாடத்திலிருந்து தொடங்கலாம்?`;
+      }
+      return `Ayubowan ${studentName}! I am your **ATLAS Tutor for Grade 8 ICT**. 
+I'm here to help you learn and master your official **Information & Communication Technology** curriculum: Number Systems, Configuring Computers, Word Processing, Scratch Programming, Physical Computing, and the Internet.
+
+What ICT topic would you like to explore together today?`;
+    }
+
+    if (activeSubjectId === 'science') {
+      return `Ayubowan ${studentName}! I am your **ATLAS Tutor for Science**. What science topic would you like to explore together today?`;
+    }
+
+    if (activeSubjectId === 'history') {
+      return `Ayubowan ${studentName}! I am your **ATLAS Tutor for History**. What history topic would you like to explore together today?`;
+    }
+
+    return `Ayubowan ${studentName}! I am your **ATLAS Tutor for ${grade.replace('-', ' ').toUpperCase()}**. What topic would you like to explore together today?`;
+  };
 
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    // Initial friendly greeting message from Tutor
     return [
       {
         id: 'msg-init-1',
         role: 'tutor',
-        content: language === 'si'
-          ? `ආයුබෝවන් ${studentName}! මම ඔබගේ **ATLAS ගුරුතුමා**. 
-ඔබගේ ${grade.replace('-', ' ')} විෂය නිර්දේශයේ පාඩම්, ගෙදර වැඩ හෝ විභාග ගැටළු ඕනෑම දෙයක් මා සමඟ සාකච්ඡා කළ හැක.
-
-අද අපි කුමන පාඩමෙන් පටන් ගනිමුද?`
-          : language === 'ta'
-          ? `வணக்கம் ${studentName}! நான் உங்கள் **ATLAS ஆசிரியர்**. 
-உங்கள் ${grade.replace('-', ' ')} பாடங்கள், வீட்டுப்பாடங்கள் அல்லது பரீட்சை சந்தேகங்கள் எதுவாக இருந்தாலும் என்னிடம் கேளுங்கள்.
-
-நாம் இன்று எதிலிருந்து தொடங்கலாம்?`
-          : `Ayubowan ${studentName}! I am your **ATLAS Tutor**. 
-I'm here to help you learn and master your **${grade.replace('-', ' ').toUpperCase()}** subjects, solve homework questions, or prepare for exams.
-
-What topic would you like to explore together today?`,
+        content: getInitialGreeting(),
         timestamp: new Date().toISOString(),
         suggestedActions: starterTopicPills,
       },
@@ -241,7 +309,11 @@ What topic would you like to explore together today?`,
     setTutorState('thinking');
 
     try {
-      const response = await tutorService.askTutor(text, learningContext);
+      const response = await tutorService.askTutor(text, {
+        ...learningContext,
+        subjectId: activeSubjectId,
+        topicId: activeTopicId,
+      });
 
       // Determine emotional reaction based on student question
       let nextState: 'speaking' | 'celebrating' | 'encouraging' = 'speaking';
@@ -412,8 +484,44 @@ What topic would you like to explore together today?`,
   };
 
   return (
-    <div className="flex flex-col flex-1 h-full min-h-0 max-w-4xl w-full mx-auto bg-white rounded-3xl border border-slate-200 shadow-soft overflow-hidden">
-      {/* 1. Tutor Header Bar */}
+    <div className="flex flex-col flex-1 h-full min-h-0 w-full max-w-[1600px] mx-auto space-y-3">
+      {/* Mobile / Tablet Tab Switcher */}
+      <div className="flex lg:hidden items-center justify-center p-1 bg-slate-200/80 rounded-2xl w-full max-w-md mx-auto">
+        <button
+          type="button"
+          onClick={() => setMobileView('chat')}
+          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+            mobileView === 'chat'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <MessageSquare className="w-3.5 h-3.5" />
+          <span>AI Tutor Chat</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileView('companion')}
+          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+            mobileView === 'companion'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <BookOpen className="w-3.5 h-3.5 text-cyan-600" />
+          <span>Lesson Notes & Visualizer</span>
+        </button>
+      </div>
+
+      {/* Main Dual-Pane Workspace */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 min-h-0 items-stretch">
+        {/* Left / Center: Main Chat Conversation Card */}
+        <div
+          className={`flex flex-col h-full min-h-0 bg-white rounded-3xl border border-slate-200 shadow-soft overflow-hidden transition-all duration-300 ${
+            mobileView === 'companion' ? 'hidden lg:flex' : 'flex'
+          } ${isCompanionOpen ? 'lg:col-span-7 xl:col-span-7' : 'lg:col-span-12'}`}
+        >
+          {/* 1. Tutor Header Bar */}
       <div className="px-3.5 sm:px-6 py-3 sm:py-3.5 bg-gradient-to-r from-slate-900 via-atlas-navy to-atlas-deep text-white flex items-center justify-between flex-shrink-0 gap-2 min-h-[58px]">
         <div className="flex items-center gap-2.5 min-w-0">
           <TutorAvatar state={tutorState} size="sm" className="pt-0.5" />
@@ -483,6 +591,20 @@ What topic would you like to explore together today?`,
             title="Start New Topic / Clear History"
           >
             <RotateCcw className="w-4 h-4" />
+          </button>
+
+          {/* Desktop Companion Pane Toggle */}
+          <button
+            type="button"
+            onClick={() => setIsCompanionOpen(!isCompanionOpen)}
+            className={`hidden lg:flex p-2 rounded-xl text-xs transition-all ${
+              isCompanionOpen
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
+                : 'bg-white/10 text-slate-300 hover:bg-white/20'
+            }`}
+            title={isCompanionOpen ? 'Collapse Lesson Notes Pane' : 'Expand Lesson Notes Pane'}
+          >
+            {isCompanionOpen ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4" />}
           </button>
         </div>
       </div>
@@ -690,6 +812,29 @@ What topic would you like to explore together today?`,
             {t('tutor.disclaimer')}
           </span>
         </div>
+      </div>
+      </div>
+
+      {/* Right: Curriculum Companion Pane */}
+      <div
+        className={`h-full min-h-0 overflow-hidden ${
+          mobileView === 'chat' ? 'hidden lg:block' : 'block'
+        } ${isCompanionOpen ? 'lg:col-span-5 xl:col-span-5' : 'hidden'}`}
+      >
+        <CurriculumCompanionPane
+          subjectId={activeSubjectId}
+          topicId={activeTopicId}
+          language={language}
+          onAskQuestion={(query) => handleSendMessage(query)}
+          onSelectTopic={(newTopicId) => {
+            setCurriculumSubject(activeSubjectId, newTopicId);
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.set('subject', activeSubjectId);
+            nextParams.set('topic', newTopicId);
+            setSearchParams(nextParams, { replace: true });
+          }}
+        />
+      </div>
       </div>
 
       {/* Concurrency Takeover Modal */}

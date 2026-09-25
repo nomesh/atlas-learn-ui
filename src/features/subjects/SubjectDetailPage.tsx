@@ -95,7 +95,7 @@ export const SubjectDetailPage: React.FC = () => {
           type="button"
           onClick={() => {
             setCurriculumSubject(subject.id);
-            navigate(`/tutor?q=${encodeURIComponent(`I would like to ask questions about ${subject.name.en}`)}`);
+            navigate(`/tutor?subject=${encodeURIComponent(subject.id)}&q=${encodeURIComponent(`I would like to ask questions about ${subject.name.en}`)}`);
           }}
           className="px-5 py-3 rounded-2xl bg-slate-900 hover:bg-atlas-blue text-white font-bold text-xs shadow-md flex items-center gap-2 transition-all flex-shrink-0"
         >
@@ -134,7 +134,7 @@ export const SubjectDetailPage: React.FC = () => {
             const q = primaryBook
               ? `Can you explain the main concepts from the ${primaryBook.originalTitle} (Grade ${primaryBook.grade} ${subject.name.en}) textbook?`
               : `What are the core concepts of ${subject.name.en}?`;
-            navigate(`/tutor?q=${encodeURIComponent(q)}`);
+            navigate(`/tutor?subject=${encodeURIComponent(subject.id)}&q=${encodeURIComponent(q)}`);
           }}
           className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition-all flex-shrink-0 self-stretch sm:self-auto justify-center"
         >
@@ -189,7 +189,7 @@ export const SubjectDetailPage: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setCurriculumSubject(subject.id);
-                    navigate(`/tutor?q=${encodeURIComponent(`Can you explain the main concepts from the Grade ${book.grade} ${subject.name.en} textbook (${book.originalTitle})?`)}`);
+                    navigate(`/tutor?subject=${encodeURIComponent(subject.id)}&q=${encodeURIComponent(`Can you explain the main concepts from the Grade ${book.grade} ${subject.name.en} textbook (${book.originalTitle})?`)}`);
                   }}
                   className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-atlas-blue text-white font-bold text-xs shadow-md flex items-center gap-2 transition-all flex-shrink-0 self-stretch sm:self-auto justify-center"
                 >
@@ -257,7 +257,7 @@ export const SubjectDetailPage: React.FC = () => {
                     type="button"
                     onClick={() => {
                       setCurriculumSubject(subject.id, topic.id);
-                      navigate(`/tutor?q=${encodeURIComponent(`Can you explain the main ideas of ${topic.title.en}?`)}`);
+                      navigate(`/tutor?subject=${encodeURIComponent(subject.id)}&topic=${encodeURIComponent(topic.id)}&q=${encodeURIComponent(`Can you explain the main ideas of ${topic.title.en}?`)}`);
                     }}
                     className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors"
                     title="Ask Tutor about this topic"
