@@ -35,6 +35,9 @@ interface StudentContextValue {
   // Real Authentication & Session fields
   session: LearnSessionData | null;
   isAuthenticated: boolean;
+  isGuestPreview: boolean;
+  enableGuestPreview: () => void;
+  disableGuestPreview: () => void;
   currentUser: { id: string; email: string; displayName: string } | null;
   accountType: 'GUARDIAN' | 'INDEPENDENT_STUDENT' | null;
   learners: LearnerProfile[];
@@ -52,7 +55,20 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const [session, setSession] = useState<LearnSessionData | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isGuestPreview, setIsGuestPreview] = useState<boolean>(() => {
+    return sessionStorage.getItem('atlas_guest_preview') === 'true';
+  });
   const [isDeviceModalOpen, setIsDeviceModalOpen] = useState<boolean>(false);
+
+  const enableGuestPreview = useCallback(() => {
+    sessionStorage.setItem('atlas_guest_preview', 'true');
+    setIsGuestPreview(true);
+  }, []);
+
+  const disableGuestPreview = useCallback(() => {
+    sessionStorage.removeItem('atlas_guest_preview');
+    setIsGuestPreview(false);
+  }, []);
 
   const [studentName, setStudentNameState] = useState<string>(() => {
     return localStorage.getItem('atlas_student_name') || 'Nimali';
@@ -273,6 +289,9 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
         session,
         isAuthenticated,
+        isGuestPreview,
+        enableGuestPreview,
+        disableGuestPreview,
         currentUser,
         accountType: session?.accountType || null,
         learners: session?.learners || [],

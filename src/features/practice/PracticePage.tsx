@@ -15,12 +15,13 @@ import {
 import { useStudent } from '../../state/studentContext';
 import { TutorAvatar } from '../avatar/TutorAvatar';
 import { MOCK_PRACTICE_QUESTIONS } from '../../mocks/curriculumData';
+import { AuthGate, GuestBanner } from '../../components/auth/AuthGate';
 import type { QuizQuestion } from '../../types';
 
 export const PracticePage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { language, setTutorState } = useStudent();
+  const { language, setTutorState, isAuthenticated, isGuestPreview } = useStudent();
 
   const [activeCategory, setActiveCategory] = useState<'all' | 'ol' | 'general'>('all');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -68,8 +69,14 @@ export const PracticePage: React.FC = () => {
     navigate(`/tutor?q=${encodeURIComponent(prompt)}`);
   };
 
+  if (!isAuthenticated && !isGuestPreview) {
+    return <AuthGate featureName="National Examination Practice & Past Paper Generator" />;
+  }
+
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in duration-300">
+      <GuestBanner />
+
       {/* Page Header */}
       <div>
         <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">

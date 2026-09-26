@@ -31,6 +31,7 @@ import { CitationDrawer } from './CitationDrawer';
 import { RichContentRenderer } from './RichContentRenderer';
 import { tutorService } from '../../api/tutorApi';
 import { setTutorLeaseToken } from '../../api/client';
+import { AuthGate, GuestBanner } from '../../components/auth/AuthGate';
 import {
   acquireTutorLease,
   sendTutorHeartbeat,
@@ -53,6 +54,7 @@ export const TutorPage: React.FC = () => {
     setTutorState,
     setCurriculumSubject,
     isAuthenticated,
+    isGuestPreview,
     login,
   } = useStudent();
 
@@ -635,8 +637,15 @@ Would you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore an
     }
   };
 
+  if (!isAuthenticated && !isGuestPreview) {
+    return <AuthGate featureName="ATLAS AI Tutor & Curriculum Companion" />;
+  }
+
   return (
     <div className="flex flex-col flex-1 h-full min-h-0 w-full max-w-none 2xl:max-w-[2400px] mx-auto space-y-3">
+      {/* Guest Evaluation Banner */}
+      <GuestBanner />
+
       {/* Mobile / Tablet Tab Switcher */}
       <div className="flex lg:hidden items-center justify-center p-1 bg-slate-200/80 rounded-2xl w-full max-w-md mx-auto">
         <button

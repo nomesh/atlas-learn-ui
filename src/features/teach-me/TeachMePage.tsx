@@ -25,12 +25,13 @@ import { WordProcessingVisualizer } from '../../components/interactive/WordProce
 import { ReactionRateVisualizer } from '../../components/interactive/ReactionRateVisualizer';
 import { SubjectConceptVisualizer } from '../../components/interactive/SubjectConceptVisualizer';
 import { RichContentRenderer, MathView } from '../tutor/RichContentRenderer';
+import { AuthGate, GuestBanner } from '../../components/auth/AuthGate';
 
 export const TeachMePage: React.FC = () => {
   const { topicId } = useParams<{ topicId: string }>();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { language, setTutorState, tutorState, setCurriculumSubject } = useStudent();
+  const { language, setTutorState, tutorState, setCurriculumSubject, isAuthenticated, isGuestPreview } = useStudent();
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
@@ -90,8 +91,14 @@ export const TeachMePage: React.FC = () => {
     }
   };
 
+  if (!isAuthenticated && !isGuestPreview) {
+    return <AuthGate featureName="Interactive Guided Curriculum Lessons" />;
+  }
+
   return (
     <div className="max-w-4xl lg:max-w-5xl mx-auto space-y-6 animate-in fade-in duration-300">
+      <GuestBanner />
+
       {/* Header bar with Back button and Progress indicator */}
       <div className="flex items-center justify-between">
         <button
@@ -301,7 +308,15 @@ export const TeachMePage: React.FC = () => {
               onClick={() => {
                 const subId = currentTopic?.subjectId || 'ict';
                 const topId = currentTopic?.id || topicId || '';
-                navigate(`/tutor?subject=${encodeURIComponent(subId)}&topic=${encodeURIComponent(topId)}&q=${encodeURIComponent(`Can you explain more about ${currentStep.title.en}?`)}`);
+                const topicTitle = currentTopic?.title?.[language] || currentTopic?.title?.en || '';
+                const stepTitle = currentStep?.title?.[language] || currentStep?.title?.en || '';
+                const chapterPrefix = currentTopic?.chapterNumber ? `Chapter ${currentTopic.chapterNumber}` : '';
+                const queryText = language === 'si'
+                  ? `${topicTitle} (${stepTitle}) ${chapterPrefix ? `${chapterPrefix} ගැන විස්තර කරන්න` : 'ගැන විස්තර කරන්න'}`
+                  : language === 'ta'
+                  ? `${topicTitle} (${stepTitle}) ${chapterPrefix ? `${chapterPrefix} பற்றி விளக்குக` : 'பற்றி விளக்குக'}`
+                  : `Can you explain ${topicTitle} (${stepTitle}) ${chapterPrefix ? `in ${chapterPrefix}` : ''}?`;
+                navigate(`/tutor?subject=${encodeURIComponent(subId)}&topic=${encodeURIComponent(topId)}&q=${encodeURIComponent(queryText)}`);
               }}
               className="text-xs font-bold text-atlas-cyan hover:text-atlas-blue flex items-center gap-1.5"
             >

@@ -13,10 +13,20 @@ import {
 } from 'lucide-react';
 import { useStudent } from '../../state/studentContext';
 import { MOCK_SUBJECTS } from '../../mocks/curriculumData';
+import { AuthGate, GuestBanner } from '../../components/auth/AuthGate';
 
 export const ProgressPage: React.FC = () => {
   const { t } = useTranslation();
-  const { studentName, streakDays, topicsMastered, questionsAnswered, accuracyPercent, language } = useStudent();
+  const { 
+    studentName, 
+    streakDays, 
+    topicsMastered, 
+    questionsAnswered, 
+    accuracyPercent, 
+    language,
+    isAuthenticated,
+    isGuestPreview
+  } = useStudent();
 
   const achievements = [
     {
@@ -49,8 +59,14 @@ export const ProgressPage: React.FC = () => {
     },
   ];
 
+  if (!isAuthenticated && !isGuestPreview) {
+    return <AuthGate featureName="Learning Analytics & Mastery Progress" />;
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-300">
+      <GuestBanner />
+
       {/* Page Header */}
       <div>
         <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">

@@ -283,7 +283,13 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
 
                 <button
                   type="button"
-                  onClick={() => onAskQuestion(`Can you explain more about ${currentStep.title.en} in Chapter ${activeTopic.chapterNumber}?`)}
+                  onClick={() => onAskQuestion(
+                    language === 'si'
+                      ? `${currentSubject.name.si} ${activeTopic.chapterNumber} වන පරිච්ඡේදය (${activeTopic.title.si} - ${currentStep.title.si}) ගැන විස්තර කරන්න`
+                      : language === 'ta'
+                      ? `${currentSubject.name.ta} அத்தியாயம் ${activeTopic.chapterNumber} (${activeTopic.title.ta} - ${currentStep.title.ta}) பற்றி விளக்குக`
+                      : `Can you explain ${activeTopic.title.en} (${currentStep.title.en}) in Grade 10 ${currentSubject.name.en} Chapter ${activeTopic.chapterNumber}?`
+                  )}
                   className="px-2.5 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-bold flex items-center gap-1 transition-all flex-shrink-0"
                   title="Ask Tutor about this specific concept"
                 >
@@ -317,9 +323,9 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {[
-                    `Give me a simple example of ${currentStep.title.en}`,
-                    `Why is this important for G.C.E. O/L exams?`,
-                    `Quiz me with an exam question on this step`
+                    `Give me a simple example of ${activeTopic.title.en} (${currentStep.title.en})`,
+                    `Why is ${activeTopic.title.en} important for G.C.E. O/L exams?`,
+                    `Quiz me with an exam question on ${activeTopic.title.en}`
                   ].map((promptText) => (
                     <button
                       key={promptText}

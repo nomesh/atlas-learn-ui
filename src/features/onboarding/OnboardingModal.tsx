@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, Sparkles, User, GraduationCap, Globe } from 'lucide-react';
+import { Check, Sparkles, User, GraduationCap, Globe, LogIn } from 'lucide-react';
 import { useStudent } from '../../state/studentContext';
 import { ATLAS_MARK, NEURAL_WORKS_LOGO } from '../../brand/assets';
 import type { Grade, Language } from '../../types';
@@ -17,6 +17,9 @@ export const OnboardingModal: React.FC = () => {
     isOnboardingOpen,
     setIsOnboardingOpen,
     saveProfileToServer,
+    isAuthenticated,
+    login,
+    enableGuestPreview,
   } = useStudent();
 
   const [localName, setLocalName] = useState(studentName);
@@ -45,6 +48,9 @@ export const OnboardingModal: React.FC = () => {
   const handleComplete = async () => {
     const finalName = localName.trim() || studentName;
     await saveProfileToServer(finalName, selectedGrade, selectedLang);
+    if (!isAuthenticated) {
+      enableGuestPreview();
+    }
     setIsOnboardingOpen(false);
   };
 
@@ -89,8 +95,37 @@ export const OnboardingModal: React.FC = () => {
           </div>
         </div>
 
+        {/* If unauthenticated, offer direct Student Sign In */}
+        {!isAuthenticated && (
+          <div className="mx-6 mt-6 p-4 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md border border-slate-800">
+            <div>
+              <div className="flex items-center gap-1.5 text-xs font-bold text-cyan-300">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Existing Student or School Account?</span>
+              </div>
+              <p className="text-[11px] text-slate-300 mt-0.5">
+                Sign in to save your learning progress, streak, and access full AI Tutoring.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={login}
+              className="px-4 py-2 bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-sm transition-all flex-shrink-0"
+            >
+              <LogIn className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Sign In</span>
+            </button>
+          </div>
+        )}
+
         {/* Content Body */}
         <div className="p-6 space-y-6">
+          {!isAuthenticated && (
+            <div className="text-xs font-bold uppercase tracking-wider text-slate-400 pb-1 border-b border-slate-100">
+              Or Configure Guest Student Profile (Evaluation Mode)
+            </div>
+          )}
+
           {/* Student Name */}
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
@@ -172,14 +207,21 @@ export const OnboardingModal: React.FC = () => {
           </p>
 
           {/* Action Button */}
-          <button
-            type="button"
-            onClick={handleComplete}
-            className="w-full py-4 px-6 bg-gradient-to-r from-atlas-deep to-atlas-blue hover:from-slate-900 hover:to-atlas-deep text-white font-bold rounded-2xl shadow-lg shadow-atlas-blue/20 flex items-center justify-center gap-2 transition-all transform active:scale-[0.99]"
-          >
-            <Sparkles className="w-5 h-5 text-cyan-300" />
-            <span>{t('onboarding.getStarted')}</span>
-          </button>
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={handleComplete}
+              className="w-full py-3.5 px-6 bg-gradient-to-r from-atlas-deep to-atlas-blue hover:from-slate-900 hover:to-atlas-deep text-white font-bold rounded-2xl shadow-lg shadow-atlas-blue/20 flex items-center justify-center gap-2 transition-all transform active:scale-[0.99]"
+            >
+              <Sparkles className="w-4 h-4 text-cyan-300" />
+              <span>{isAuthenticated ? t('onboarding.getStarted') : 'Continue with Guest Preview'}</span>
+            </button>
+            {!isAuthenticated && (
+              <p className="text-[11px] text-slate-500 text-center">
+                Guest sessions operate in evaluation mode. Sign in anytime from the top bar to permanently link your account.
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>

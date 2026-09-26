@@ -180,7 +180,33 @@ export function isGenericContextualPrompt(text: string): boolean {
     'விளக்கவும்',
     'சுருக்கம்'
   ];
-  return genericPhrases.some((p) => trimmed === p || trimmed === `${p}?` || trimmed === `${p}.`);
+  if (genericPhrases.some((p) => trimmed === p || trimmed === `${p}?` || trimmed === `${p}.`)) {
+    return true;
+  }
+
+  // Also match general step inquiries and chapter overview requests
+  if (
+    trimmed.includes('step 1') ||
+    trimmed.includes('step 2') ||
+    trimmed.includes('step 3') ||
+    trimmed.includes('step 4') ||
+    trimmed.includes('real-world intuition') ||
+    trimmed.includes('core principles') ||
+    trimmed.includes('practical case') ||
+    trimmed.includes('exam mastery') ||
+    trimmed.includes('1 වන පියවර') ||
+    trimmed.includes('2 වන පියවර') ||
+    trimmed.includes('3 වන පියවර') ||
+    trimmed.includes('4 වන පියවර') ||
+    trimmed.includes('படி 1') ||
+    trimmed.includes('படி 2') ||
+    trimmed.includes('படி 3') ||
+    trimmed.includes('படி 4')
+  ) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -265,6 +291,14 @@ export class MockTutorAdapter implements TutorAdapter {
 
     // Chapter 3: Evolution of Political Power (Parumaka, Gamika, Aya, Raja)
     if (
+      (context.subjectId === 'history' && (
+        context.topicId === 'history-gr10-political-power' ||
+        lowerQ.includes('chapter 3') ||
+        lowerQ.includes('lesson 3') ||
+        lowerQ.includes('ch 3') ||
+        lowerQ.includes('3 වන') ||
+        lowerQ.includes('3 ஆம்')
+      )) ||
       lowerQ.includes('parumaka') ||
       lowerQ.includes('පරුමක') ||
       lowerQ.includes('gamika') ||
@@ -283,6 +317,15 @@ export class MockTutorAdapter implements TutorAdapter {
 
     // Chapter 1: Inscriptions & Sources of Studying History (Sellipi / Shilalipi)
     if (
+      (context.subjectId === 'history' && (
+        context.topicId === 'history-gr10-sources' ||
+        context.topicId === 'history-gr10-ancient-heritage' ||
+        lowerQ.includes('chapter 1') ||
+        lowerQ.includes('lesson 1') ||
+        lowerQ.includes('ch 1') ||
+        lowerQ.includes('1 වන') ||
+        lowerQ.includes('1 ஆம்')
+      )) ||
       lowerQ.includes('sellipi') ||
       lowerQ.includes('සෙල්ලිපි') ||
       lowerQ.includes('ශිලා ලේඛන') ||
@@ -307,15 +350,28 @@ export class MockTutorAdapter implements TutorAdapter {
 
     // Chapter 2: Ancient Settlements (Pre-historic, Proto-historic, Ibbankatuwa)
     if (
+      (context.subjectId === 'history' && (
+        context.topicId === 'history-gr10-settlements' ||
+        lowerQ.includes('chapter 2') ||
+        lowerQ.includes('lesson 2') ||
+        lowerQ.includes('ch 2') ||
+        lowerQ.includes('2 වන') ||
+        lowerQ.includes('2 ஆம்')
+      )) ||
       lowerQ.includes('settlement') ||
+      lowerQ.includes('ancient settlement') ||
       lowerQ.includes('ජනාවාස') ||
       lowerQ.includes('ibbankatuwa') ||
       lowerQ.includes('ඉබ්බන්කටුව') ||
       lowerQ.includes('bellanbandi') ||
       lowerQ.includes('බෙල්ලන්බැඳි') ||
       lowerQ.includes('fa-hien') ||
+      lowerQ.includes('fahien') ||
       lowerQ.includes('පාහියන්ගල') ||
+      lowerQ.includes('batadombalena') ||
+      lowerQ.includes('බටදොඹලෙන') ||
       lowerQ.includes('proto-historic') ||
+      lowerQ.includes('pre-historic') ||
       lowerQ.includes('පූර්ව ඓතිහාසික') ||
       lowerQ.includes('ප්‍රාග් ඓතිහාසික') ||
       lowerQ.includes('குடியேற்றங்கள்')
@@ -325,6 +381,14 @@ export class MockTutorAdapter implements TutorAdapter {
 
     // Chapter 4: Ancient Society of Sri Lanka
     if (
+      (context.subjectId === 'history' && (
+        context.topicId === 'history-gr10-ancient-society' ||
+        lowerQ.includes('chapter 4') ||
+        lowerQ.includes('lesson 4') ||
+        lowerQ.includes('ch 4') ||
+        lowerQ.includes('4 වන') ||
+        lowerQ.includes('4 ஆம்')
+      )) ||
       lowerQ.includes('ancient society') ||
       lowerQ.includes('පුරාණ සමාජය') ||
       lowerQ.includes('කුල ක්‍රමය') ||
@@ -336,6 +400,14 @@ export class MockTutorAdapter implements TutorAdapter {
 
     // Chapter 5: Ancient Science & Technology / Hydraulic Civilization
     if (
+      (context.subjectId === 'history' && (
+        context.topicId === 'history-gr10-science-tech' ||
+        lowerQ.includes('chapter 5') ||
+        lowerQ.includes('lesson 5') ||
+        lowerQ.includes('ch 5') ||
+        lowerQ.includes('5 වන') ||
+        lowerQ.includes('5 ஆம்')
+      )) ||
       lowerQ.includes('bisokotuwa') ||
       lowerQ.includes('බිසෝකොටුව') ||
       lowerQ.includes('hydraulic') ||
@@ -353,6 +425,14 @@ export class MockTutorAdapter implements TutorAdapter {
 
     // Chapter 7: Decline of Dry Zone Cities & South West Kingdoms
     if (
+      (context.subjectId === 'history' && (
+        context.topicId === 'history-gr10-decline-new-kingdoms' ||
+        lowerQ.includes('chapter 7') ||
+        lowerQ.includes('lesson 7') ||
+        lowerQ.includes('ch 7') ||
+        lowerQ.includes('7 වන') ||
+        lowerQ.includes('7 ஆம்')
+      )) ||
       lowerQ.includes('decline of dry zone') ||
       lowerQ.includes('වියළි කලාපයේ නගර පරිහානිය') ||
       lowerQ.includes('dambadeniya') ||
@@ -371,6 +451,14 @@ export class MockTutorAdapter implements TutorAdapter {
 
     // Chapter 8: Kandyan Kingdom (Vimaladharmasuriya I, Danture, Gannoruwa)
     if (
+      (context.subjectId === 'history' && (
+        context.topicId === 'history-gr10-kandyan-kingdom' ||
+        lowerQ.includes('chapter 8') ||
+        lowerQ.includes('lesson 8') ||
+        lowerQ.includes('ch 8') ||
+        lowerQ.includes('8 වන') ||
+        lowerQ.includes('8 ஆம்')
+      )) ||
       lowerQ.includes('kandyan') ||
       lowerQ.includes('උඩරට') ||
       lowerQ.includes('vimaladharmasuriya') ||
@@ -388,6 +476,14 @@ export class MockTutorAdapter implements TutorAdapter {
 
     // Chapter 9: Renaissance
     if (
+      (context.subjectId === 'history' && (
+        context.topicId === 'history-gr10-renaissance' ||
+        lowerQ.includes('chapter 9') ||
+        lowerQ.includes('lesson 9') ||
+        lowerQ.includes('ch 9') ||
+        lowerQ.includes('9 වන') ||
+        lowerQ.includes('9 ஆம்')
+      )) ||
       lowerQ.includes('renaissance') ||
       lowerQ.includes('පුනරුදය') ||
       lowerQ.includes('da vinci') ||
@@ -401,6 +497,14 @@ export class MockTutorAdapter implements TutorAdapter {
 
     // Chapter 10: Western World (Portuguese 1505, Dutch 1658, British)
     if (
+      (context.subjectId === 'history' && (
+        context.topicId === 'history-gr10-western-world' ||
+        lowerQ.includes('chapter 10') ||
+        lowerQ.includes('lesson 10') ||
+        lowerQ.includes('ch 10') ||
+        lowerQ.includes('10 වන') ||
+        lowerQ.includes('10 ஆம்')
+      )) ||
       lowerQ.includes('western world') ||
       lowerQ.includes('බටහිර ලෝකය') ||
       lowerQ.includes('portuguese') ||
@@ -584,7 +688,24 @@ export class MockTutorAdapter implements TutorAdapter {
     }
 
     // Generic math arithmetic / expression
-    if (/[0-9]/.test(lowerQ) && (/[-+*/=]/.test(lowerQ) || lowerQ.includes('solve') || lowerQ.includes('calculate') || lowerQ.includes('find x') || lowerQ.includes('විසඳන්න') || lowerQ.includes('අගය'))) {
+    const isMathSubject = context.subjectId === 'maths';
+    const isNonMathSubject = context.subjectId === 'history' || context.subjectId === 'science' || context.subjectId === 'ict';
+    const hasExplicitMathCommand = lowerQ.includes('solve for') ||
+      lowerQ.includes('calculate') ||
+      lowerQ.includes('find x') ||
+      lowerQ.includes('විසඳන්න') ||
+      lowerQ.includes('අගය ගණනය') ||
+      lowerQ.includes('ගණනය කරන්න') ||
+      lowerQ.includes('கணக்கிடு');
+
+    // Strict arithmetic operation: digits on both sides of operator (+, *, /, =) or minus (-)
+    // Ordinary English hyphens in words like "Real-World" or "Pre-historic" must NEVER match!
+    const hasStrictArithmeticOp = /\d+\s*[\+\*\/=]\s*\d+/.test(lowerQ) || /\d+\s*-\s*\d+/.test(lowerQ);
+
+    if (!isNonMathSubject && (
+      (isMathSubject && (hasStrictArithmeticOp || hasExplicitMathCommand)) ||
+      (hasExplicitMathCommand && hasStrictArithmeticOp)
+    )) {
       return this.solveGenericMathStepByStep(question, lang, context);
     }
 
