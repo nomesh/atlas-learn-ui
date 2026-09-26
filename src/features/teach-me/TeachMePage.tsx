@@ -91,7 +91,7 @@ export const TeachMePage: React.FC = () => {
     }
   };
 
-  if (!isAuthenticated && !isGuestPreview) {
+  if (!isAuthenticated) {
     return <AuthGate featureName="Interactive Guided Curriculum Lessons" />;
   }
 

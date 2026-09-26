@@ -637,7 +637,7 @@ Would you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore an
     }
   };
 
-  if (!isAuthenticated && !isGuestPreview) {
+  if (!isAuthenticated) {
     return <AuthGate featureName="ATLAS AI Tutor & Curriculum Companion" />;
   }
 

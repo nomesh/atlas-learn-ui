@@ -5,6 +5,7 @@ import { Globe, GraduationCap, Flame, Menu, X, Sparkles, LogIn, LogOut, Shield, 
 import { useStudent } from '../../state/studentContext';
 import { ATLAS_MARK, NEURAL_WORKS_LOGO } from '../../brand/assets';
 import { DeviceManagementModal } from '../../features/account/DeviceManagementModal';
+import { StudentSignInModal } from '../auth/StudentSignInModal';
 import type { Grade, Language } from '../../types';
 
 export const Header: React.FC = () => {
@@ -308,6 +309,9 @@ export const Header: React.FC = () => {
         isOpen={isDeviceModalOpen}
         onClose={() => setIsDeviceModalOpen(false)}
       />
+
+      {/* Student Authentication Modal */}
+      <StudentSignInModal />
     </>
   );
 };

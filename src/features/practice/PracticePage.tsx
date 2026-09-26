@@ -69,7 +69,7 @@ export const PracticePage: React.FC = () => {
     navigate(`/tutor?q=${encodeURIComponent(prompt)}`);
   };
 
-  if (!isAuthenticated && !isGuestPreview) {
+  if (!isAuthenticated) {
     return <AuthGate featureName="National Examination Practice & Past Paper Generator" />;
   }
 

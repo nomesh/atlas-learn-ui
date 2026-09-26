@@ -11,6 +11,16 @@ import {
   type LearnerProfile,
 } from '../api/authApi';
 
+export interface StudentSignInData {
+  id: string;
+  displayName: string;
+  grade: Grade;
+  language: Language;
+  school?: string;
+  curriculumCode?: string;
+  enrolledSubjects?: string[];
+}
+
 interface StudentContextValue {
   studentName: string;
   setStudentName: (name: string) => void;
@@ -24,6 +34,9 @@ interface StudentContextValue {
   accuracyPercent: number;
   isOnboardingOpen: boolean;
   setIsOnboardingOpen: (open: boolean) => void;
+  isSignInModalOpen: boolean;
+  setIsSignInModalOpen: (open: boolean) => void;
+  signInStudent: (data: StudentSignInData) => void;
   isDeviceModalOpen: boolean;
   setIsDeviceModalOpen: (open: boolean) => void;
   conversationId: string;
@@ -54,7 +67,32 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const { i18n } = useTranslation();
 
   const [session, setSession] = useState<LearnSessionData | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  const [localStudentSession, setLocalStudentSession] = useState<StudentSignInData | null>(() => {
+    try {
+      const saved = localStorage.getItem('atlas_student_session');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.warn('[studentContext] Parse session error:', e);
+    }
+    return null;
+  });
+
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('atlas_student_session');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return !!parsed && !!parsed.id;
+      }
+    } catch (e) {
+      // ignore
+    }
+    return false;
+  });
+
+  const [isSignInModalOpen, setIsSignInModalOpen] = useState<boolean>(false);
+
   const [isGuestPreview, setIsGuestPreview] = useState<boolean>(() => {
     return sessionStorage.getItem('atlas_guest_preview') === 'true';
   });
@@ -71,15 +109,27 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   const [studentName, setStudentNameState] = useState<string>(() => {
-    return localStorage.getItem('atlas_student_name') || 'Nimali';
+    return (
+      localStudentSession?.displayName ||
+      localStorage.getItem('atlas_student_name') ||
+      'Nimali'
+    );
   });
 
   const [grade, setGradeState] = useState<Grade>(() => {
-    return (localStorage.getItem('atlas_student_grade') as Grade) || 'grade-8';
+    return (
+      (localStudentSession?.grade as Grade) ||
+      (localStorage.getItem('atlas_student_grade') as Grade) ||
+      'grade-10'
+    );
   });
 
   const [language, setLanguageState] = useState<Language>(() => {
-    return (localStorage.getItem('atlas_learn_lang') as Language) || 'en';
+    return (
+      (localStudentSession?.language as Language) ||
+      (localStorage.getItem('atlas_learn_lang') as Language) ||
+      'en'
+    );
   });
 
   const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(() => {
@@ -207,19 +257,32 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setActiveLessonId(newLessonId);
   };
 
+  const signInStudent = useCallback((data: StudentSignInData) => {
+    setLocalStudentSession(data);
+    localStorage.setItem('atlas_student_session', JSON.stringify(data));
+    localStorage.setItem('atlas_student_name', data.displayName);
+    localStorage.setItem('atlas_student_grade', data.grade);
+    localStorage.setItem('atlas_learn_lang', data.language);
+    setStudentNameState(data.displayName);
+    setGradeState(data.grade);
+    setLanguageState(data.language);
+    setIsAuthenticated(true);
+    i18n.changeLanguage(data.language);
+  }, [i18n]);
+
   const login = () => {
-    redirectToLogin(window.location.pathname);
+    setIsSignInModalOpen(true);
   };
 
   const logout = async () => {
     try {
-      const logoutUrl = await apiLogout();
-      setIsAuthenticated(false);
-      setSession(null);
-      localStorage.removeItem('atlas_student_name');
-      localStorage.removeItem('atlas_student_grade');
-      localStorage.removeItem('atlas_learn_lang');
+      localStorage.removeItem('atlas_student_session');
+      localStorage.removeItem('atlas_guest_preview');
+      sessionStorage.removeItem('atlas_guest_preview');
       sessionStorage.removeItem('atlas_tutor_lease_token');
+      setLocalStudentSession(null);
+      setIsAuthenticated(false);
+      const logoutUrl = await apiLogout();
       if (logoutUrl) {
         window.location.href = logoutUrl;
         return;
@@ -229,14 +292,14 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } finally {
       setIsAuthenticated(false);
       setSession(null);
-      localStorage.removeItem('atlas_student_name');
-      localStorage.removeItem('atlas_student_grade');
-      localStorage.removeItem('atlas_learn_lang');
+      setLocalStudentSession(null);
+      localStorage.removeItem('atlas_student_session');
+      localStorage.removeItem('atlas_guest_preview');
+      sessionStorage.removeItem('atlas_guest_preview');
       sessionStorage.removeItem('atlas_tutor_lease_token');
       window.location.href = '/';
     }
   };
-
 
   useEffect(() => {
     if (i18n.language !== language) {
@@ -257,7 +320,22 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     id: session.userId,
     email: session.email || '',
     displayName: session.displayName || studentName,
+  } : localStudentSession ? {
+    id: localStudentSession.id,
+    email: `${localStudentSession.id}@student.atlas.learn`,
+    displayName: localStudentSession.displayName,
   } : null;
+
+  const activeLearner: LearnerProfile | null = session?.activeLearner || (localStudentSession ? {
+    id: localStudentSession.id,
+    displayName: localStudentSession.displayName,
+    grade: localStudentSession.grade,
+    curriculumCode: localStudentSession.curriculumCode || 'SL-MOE',
+    preferredLanguage: localStudentSession.language,
+    enrolledSubjects: localStudentSession.enrolledSubjects || ['History', 'Science', 'Mathematics', 'ICT'],
+    isPrimary: true,
+    status: 'ACTIVE',
+  } : null);
 
   return (
     <StudentContext.Provider
@@ -279,6 +357,9 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
             localStorage.setItem('atlas_onboarding_completed', 'true');
           }
         },
+        isSignInModalOpen,
+        setIsSignInModalOpen,
+        signInStudent,
         isDeviceModalOpen,
         setIsDeviceModalOpen,
         conversationId,
@@ -293,9 +374,9 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         enableGuestPreview,
         disableGuestPreview,
         currentUser,
-        accountType: session?.accountType || null,
-        learners: session?.learners || [],
-        activeLearner: session?.activeLearner || null,
+        accountType: session?.accountType || (localStudentSession ? 'INDEPENDENT_STUDENT' : null),
+        learners: session?.learners || (activeLearner ? [activeLearner] : []),
+        activeLearner,
         login,
         logout,
         refreshSession,

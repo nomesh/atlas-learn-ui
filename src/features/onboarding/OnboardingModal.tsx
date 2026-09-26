@@ -48,9 +48,6 @@ export const OnboardingModal: React.FC = () => {
   const handleComplete = async () => {
     const finalName = localName.trim() || studentName;
     await saveProfileToServer(finalName, selectedGrade, selectedLang);
-    if (!isAuthenticated) {
-      enableGuestPreview();
-    }
     setIsOnboardingOpen(false);
   };
 
@@ -214,11 +211,11 @@ export const OnboardingModal: React.FC = () => {
               className="w-full py-3.5 px-6 bg-gradient-to-r from-atlas-deep to-atlas-blue hover:from-slate-900 hover:to-atlas-deep text-white font-bold rounded-2xl shadow-lg shadow-atlas-blue/20 flex items-center justify-center gap-2 transition-all transform active:scale-[0.99]"
             >
               <Sparkles className="w-4 h-4 text-cyan-300" />
-              <span>{isAuthenticated ? t('onboarding.getStarted') : 'Continue with Guest Preview'}</span>
+              <span>{isAuthenticated ? t('onboarding.getStarted') : 'Save Preferences & Browse Curriculum'}</span>
             </button>
             {!isAuthenticated && (
               <p className="text-[11px] text-slate-500 text-center">
-                Guest sessions operate in evaluation mode. Sign in anytime from the top bar to permanently link your account.
+                Interactive AI Tutoring and Exam Practice require student authentication. You can sign in anytime from the top bar.
               </p>
             )}
           </div>

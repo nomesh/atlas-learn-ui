@@ -15,6 +15,10 @@ export const CitationDrawer: React.FC<CitationDrawerProps> = ({ citations }) => 
     documentId: string;
     documentName: string;
     pageNumber: number;
+    excerpt?: string | null;
+    chunkNumber?: number | null;
+    relevance?: number | null;
+    fileType?: string | null;
   } | null>(null);
 
   if (!citations || citations.length === 0) return null;
@@ -98,6 +102,10 @@ export const CitationDrawer: React.FC<CitationDrawerProps> = ({ citations }) => 
                       documentId: cite.documentId!,
                       documentName: cite.source,
                       pageNumber: cite.pageNumber!,
+                      excerpt: cite.excerpt,
+                      chunkNumber: cite.chunkNumber,
+                      relevance: cite.distance != null ? Math.round((1 - cite.distance) * 100) : undefined,
+                      fileType: cite.fileType,
                     })}
                     className="mt-1 self-start inline-flex items-center gap-1.5 px-2.5 py-1 bg-white hover:bg-sky-50 text-atlas-blue text-[11px] font-bold rounded-lg border border-sky-200/80 shadow-xs hover:border-sky-300 transition-all"
                   >
@@ -118,6 +126,10 @@ export const CitationDrawer: React.FC<CitationDrawerProps> = ({ citations }) => 
           documentId={selectedPreview.documentId}
           documentName={selectedPreview.documentName}
           pageNumber={selectedPreview.pageNumber}
+          excerpt={selectedPreview.excerpt}
+          chunkNumber={selectedPreview.chunkNumber}
+          relevance={selectedPreview.relevance}
+          fileType={selectedPreview.fileType}
         />
       )}
     </div>

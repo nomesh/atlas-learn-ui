@@ -59,7 +59,7 @@ export const ProgressPage: React.FC = () => {
     },
   ];
 
-  if (!isAuthenticated && !isGuestPreview) {
+  if (!isAuthenticated) {
     return <AuthGate featureName="Learning Analytics & Mastery Progress" />;
   }
 

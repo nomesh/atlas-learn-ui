@@ -143,18 +143,9 @@ export const AuthGate: React.FC<AuthGateProps> = ({
               </button>
             </div>
 
-            {/* Guest Preview Option (for Evaluators / Testing) */}
             <div className="text-center pt-2">
-              <button
-                type="button"
-                onClick={enableGuestPreview}
-                className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 font-medium underline underline-offset-4 transition-colors"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                <span>Continue with Limited Guest Preview (Evaluation Mode)</span>
-              </button>
-              <p className="text-[10px] text-slate-400 mt-1">
-                Note: In guest preview, chat history and topic mastery are temporary and not saved to cloud PostgreSQL.
+              <p className="text-[11px] text-slate-500 font-medium">
+                Instant one-click student authentication is available for pilot candidates (Grade 8 &amp; Grade 10 O/L).
               </p>
             </div>
           </div>
