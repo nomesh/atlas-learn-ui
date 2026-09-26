@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -17,7 +17,8 @@ import {
   PanelRightClose,
   PanelRightOpen,
   MessageSquare,
-  Globe
+  Globe,
+  X
 } from 'lucide-react';
 import { CurriculumCompanionPane } from './CurriculumCompanionPane';
 import { TutorTeachingHighlighter } from './TutorTeachingHighlighter';
@@ -57,8 +58,16 @@ export const TutorPage: React.FC = () => {
 
   const paramSubject = searchParams.get('subject');
   const paramTopic = searchParams.get('topic');
-  const activeSubjectId = paramSubject || learningContext.subjectId || 'ict';
-  const activeTopicId = paramTopic || learningContext.topicId || (activeSubjectId === 'ict' ? 'number-systems' : undefined);
+  const activeSubjectId = paramSubject || learningContext.subjectId || (grade === 'grade-10' ? 'history' : 'science');
+  const defaultTopicForSubject = (sub?: string) => {
+    if (sub === 'ict') return 'number-systems';
+    if (sub === 'history') return 'history-gr10-sources';
+    if (sub === 'maths') return 'maths-gr10-ch08-pythagoras';
+    if (sub === 'science') return 'science-gr10-ch1-chemical-basis';
+    return undefined;
+  };
+  const activeTopicId = paramTopic || learningContext.topicId;
+  const companionTopicId = activeTopicId || defaultTopicForSubject(activeSubjectId);
 
   const [isCompanionOpen, setIsCompanionOpen] = useState(true);
   const [mobileView, setMobileView] = useState<'chat' | 'companion'>('chat');
@@ -79,6 +88,49 @@ export const TutorPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachedImage, setAttachedImage] = useState<{ file?: File; previewUrl: string; name: string } | null>(null);
+
+  // File picker handler for textbook screenshots and homework photos
+  const handleImageFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file (PNG, JPG, JPEG, WebP).');
+        return;
+      }
+      const previewUrl = URL.createObjectURL(file);
+      setAttachedImage({ file, previewUrl, name: file.name });
+    }
+    if (e.target) e.target.value = '';
+  };
+
+  // Clipboard paste listener: Allows student to paste screenshots directly via Ctrl+V
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.indexOf('image') !== -1) {
+          const file = item.getAsFile();
+          if (file) {
+            const previewUrl = URL.createObjectURL(file);
+            setAttachedImage({
+              file,
+              previewUrl,
+              name: `Screenshot_${new Date().toLocaleTimeString().replace(/:/g, '-')}.png`,
+            });
+            e.preventDefault();
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, []);
 
   // Lease concurrency state
   const [leaseToken, setLeaseToken] = useState<string | null>(null);
@@ -149,10 +201,24 @@ export const TutorPage: React.FC = () => {
     }
 
     if (subId === 'history') {
+      if (language === 'si') {
+        return [
+          { id: 'hist-sellipi', label: '1 වන පාඩම: සෙල්ලිපි වර්ග 5 (Sellipi)', prompt: 'ඉතිහාසය හැදෑරීමේ මූලාශ්‍ර වල සෙල්ලිපි (Sellipi) වර්ග සහ බ්‍රාහ්මී ලේඛන ගැන විස්තර කරන්න' },
+          { id: 'hist-media', label: 'ශිලා ලේඛන මාධ්‍ය (ගල්පොත, පනාකඩුව)', prompt: 'ලංකාවේ ශිලා ලේඛන සහ වෙනත් ලේඛන මාධ්‍ය (ගල්පොත, සීගිරි කුරුටු ගී, පනාකඩුව තඹ සන්නස) මොනවාද?' },
+          { id: 'hist-curriculum', label: '10 ශ්‍රේණිය ඉතිහාසය පරිච්ඡේද 10', prompt: '10 ශ්‍රේණිය ඉතිහාසය විෂය නිර්දේශයේ පරිච්ඡේද 10 මොනවාද?' },
+        ];
+      }
+      if (language === 'ta') {
+        return [
+          { id: 'hist-sellipi', label: 'பாடம் 1: கல்வெட்டுகள் (Sellipi) & பிராமி', prompt: 'இலங்கையின் வரலாற்று ஆதாரங்களான கல்வெட்டுகள் மற்றும் பிராமி எழுத்துக்கள் பற்றி விளக்குக' },
+          { id: 'hist-media', label: 'சாசன ஊடகங்கள் (கற்பொத்த, பனாகடுவ)', prompt: 'இலங்கையின் சாசன ஊடகங்கள் (கற்பொத்த, பனாகடுவ செப்புப்பட்டயம்) எவை?' },
+          { id: 'hist-curriculum', label: 'தரம் 10 வரலாறு 10 அத்தியாயங்கள்', prompt: 'தரம் 10 வரலாற்றுப் பாடநூலின் 10 அத்தியாயங்கள் எவை?' },
+        ];
+      }
       return [
-        { id: 'hist-hydraulics', label: 'History: Hydraulic Civilization', prompt: 'Teach me about the ancient hydraulic civilization of Sri Lanka' },
-        { id: 'hist-parakrama', label: 'History: Parakrama Samudraya', prompt: 'How did King Parakramabahu develop dry zone irrigation?' },
-        { id: 'hist-sources', label: 'History: Epigraphy & Sources', prompt: 'What are the primary sources used to reconstruct Sri Lankan history?' },
+        { id: 'hist-sellipi', label: 'Ch 1: 5 Types of Inscriptions (Sellipi)', prompt: 'Explain the 5 types of Inscriptions (Sellipi) and Brahmi cave records from Chapter 1' },
+        { id: 'hist-media', label: 'Epigraphical Media (Panakaduwa, Galpotha)', prompt: 'What are the key epigraphical media like Galpotha, Sigiriya Kurutu Gee, and Panakaduwa copper plate?' },
+        { id: 'hist-curriculum', label: 'Grade 10 History: All 10 Chapters', prompt: 'What are the 10 chapters in the Grade 10 History curriculum?' },
       ];
     }
 
@@ -189,7 +255,22 @@ What ICT topic would you like to explore together today?`;
     }
 
     if (activeSubjectId === 'history') {
-      return `Ayubowan ${studentName}! I am your **ATLAS Tutor for History**. What history topic would you like to explore together today?`;
+      if (language === 'si') {
+        return `ආයුබෝවන් ${studentName}! මම ඔබගේ **10 ශ්‍රේණිය ඉතිහාසය** ගුරුතුමා. 
+ඔබගේ 10 ශ්‍රේණියේ නිල ඉතිහාසය පෙළපොතෙහි පරිච්ඡේද 10 (ඉතිහාසය හැදෑරීමේ මූලාශ්‍ර - සෙල්ලිපි/සාහිත්‍ය මූලාශ්‍ර, මුල් ජනාවාස, දේශපාලන බලය, සමාජය, විද්‍යාව හා තාක්ෂණය, ඓතිහාසික දැනුම, නිරිතදිග රාජධානි, උඩරට රාජධානිය, පුනරුදය, ලංකාව හා යුරෝපා ලෝකය) පිළිබඳ ඕනෑම කරුණක් මා සමඟ සාකච්ඡා කළ හැක.
+
+අද අපි 1 වන පරිච්ඡේදයේ **සෙල්ලිපි (Inscriptions)** හෝ වෙනත් පාඩමකින් පටන් ගනිමුද?`;
+      }
+      if (language === 'ta') {
+        return `வணக்கம் ${studentName}! நான் உங்கள் **தரம் 10 வரலாறு** ஆசிரியர். 
+உங்கள் தரம் 10 வரலாற்றுப் பாடநூலின் 10 அத்தியாயங்கள் (வரலாற்று ஆதாரங்கள் - கல்வெட்டுகள், ஆரம்பகாலக் குடியேற்றங்கள், அரசியல் அதிகாரம், சமூகம், அறிவியல் & தொழில்நுட்பம், வரலாற்று அறிவு, தென்மேற்கு அரசுகள், கண்டி இராச்சியம், மறுமலர்ச்சி, மற்றும் மேலை உலகம்) தொடர்பான எந்தவொரு கேள்வியையும் கேட்கலாம்.
+
+நாம் இன்று அத்தியாயம் 1 இன் **கல்வெட்டுகள் (Sellipi)** பற்றித் தொடங்கலாமா?`;
+      }
+      return `Ayubowan ${studentName}! I am your **ATLAS Tutor for Grade 10 History**. 
+I'm here to guide you through your official 10 chapters: Sources of Studying History (Inscriptions & Epigraphy), Ancient Settlements, Political Power, Ancient Society, Science & Technology, Historical Knowledge, Decline of Dry Zone & South-West Kingdoms, Kandyan Kingdom, Renaissance, and Sri Lanka & the Western World.
+
+Would you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore another topic?`;
     }
 
     return `Ayubowan ${studentName}! I am your **ATLAS Tutor for ${grade.replace('-', ' ').toUpperCase()}**. What topic would you like to explore together today?`;
@@ -204,19 +285,31 @@ What ICT topic would you like to explore together today?`;
         timestamp: new Date().toISOString(),
         suggestedActions: starterTopicPills,
         languageVersions: {
-          en: getInitialGreeting(),
-          si: activeSubjectId === 'ict' ? `ආයුබෝවන් ${studentName}! මම ඔබගේ **තොරතුරු හා සන්නිවේදන තාක්ෂණය (ICT)** ගුරුතුමා. ඔබගේ 8 ශ්‍රේණියේ නිල පෙළපොතෙහි පරිච්ඡේද 6 (සංඛ්‍යා පද්ධති, පරිගණක වින්‍යාසය, වදන් සැකසුම, Scratch ක්‍රමලේඛනය, භෞතික පරිගණනය සහ අන්තර්ජාලය) පිළිබඳ ඕනෑම කරුණක් මා සමඟ සාකච්ඡා කළ හැක.\n\nඅද අපි කුමන ICT පාඩමෙන් පටන් ගනිමුද?` : getInitialGreeting(),
-          ta: activeSubjectId === 'ict' ? `வணக்கம் ${studentName}! நான் உங்கள் **தகவல் தொழில்நுட்ப (ICT)** ஆசிரியர். உங்கள் தரம் 8 பாடநூலின் அத்தியாயங்கள் (எண் முறைகள், கணினி உள்ளமைவு, சொல் செயலாக்கம், Scratch நிரலாக்கம், பௌதீகக் கணினியியல் மற்றும் இணையம்) தொடர்பான உங்கள் சந்தேகங்களைக் கேளுங்கள்.\n\nநாம் இன்று எந்த ICT பாடத்திலிருந்து தொடங்கலாம்?` : getInitialGreeting(),
+          en: activeSubjectId === 'history'
+            ? `Ayubowan ${studentName}! I am your **ATLAS Tutor for Grade 10 History**. I'm here to guide you through your official 10 chapters: Sources of Studying History (Inscriptions & Epigraphy), Ancient Settlements, Political Power, Ancient Society, Science & Technology, Historical Knowledge, Decline of Dry Zone & South-West Kingdoms, Kandyan Kingdom, Renaissance, and Sri Lanka & the Western World.\n\nWould you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore another topic?`
+            : (activeSubjectId === 'ict' ? `Ayubowan ${studentName}! I am your **ATLAS Tutor for Grade 8 ICT**. I'm here to help you learn and master your official Information & Communication Technology curriculum: Number Systems, Configuring Computers, Word Processing, Scratch Programming, Physical Computing, and the Internet.\n\nWhat ICT topic would you like to explore together today?` : getInitialGreeting()),
+          si: activeSubjectId === 'history'
+            ? `ආයුබෝවන් ${studentName}! මම ඔබගේ **10 ශ්‍රේණිය ඉතිහාසය** ගුරුතුමා. ඔබගේ 10 ශ්‍රේණියේ නිල ඉතිහාසය පෙළපොතෙහි පරිච්ඡේද 10 (ඉතිහාසය හැදෑරීමේ මූලාශ්‍ර - සෙල්ලිපි/සාහිත්‍ය මූලාශ්‍ර, මුල් ජනාවාස, දේශපාලන බලය, සමාජය, විද්‍යාව හා තාක්ෂණය, ඓතිහාසික දැනුම, නිරිතදිග රාජධානි, උඩරට රාජධානිය, පුනරුදය, ලංකාව හා යුරෝපා ලෝකය) පිළිබඳ ඕනෑම කරුණක් මා සමඟ සාකච්ඡා කළ හැක.\n\nඅද අපි 1 වන පරිච්ඡේදයේ **සෙල්ලිපි (Inscriptions)** හෝ වෙනත් පාඩමකින් පටන් ගනිමුද?`
+            : (activeSubjectId === 'ict' ? `ආයුබෝවන් ${studentName}! මම ඔබගේ **තොරතුරු හා සන්නිවේදන තාක්ෂණය (ICT)** ගුරුතුමා. ඔබගේ 8 ශ්‍රේණියේ නිල පෙළපොතෙහි පරිච්ඡේද 6 (සංඛ්‍යා පද්ධති, පරිගණක වින්‍යාසය, වදන් සැකසුම, Scratch ක්‍රමලේඛනය, භෞතික පරිගණනය සහ අන්තර්ජාලය) පිළිබඳ ඕනෑම කරුණක් මා සමඟ සාකච්ඡා කළ හැක.\n\nඅද අපි කුමන ICT පාඩමෙන් පටන් ගනිමුද?` : getInitialGreeting()),
+          ta: activeSubjectId === 'history'
+            ? `வணக்கம் ${studentName}! நான் உங்கள் **தரம் 10 வரலாறு** ஆசிரியர். உங்கள் தரம் 10 வரலாற்றுப் பாடநூலின் 10 அத்தியாயங்கள் (வரலாற்று ஆதாரங்கள் - கல்வெட்டுகள், ஆரம்பகாலக் குடியேற்றங்கள், அரசியல் அதிகாரம், சமூகம், அறிவியல் & தொழில்நுட்பம், வரலாற்று அறிவு, தென்மேற்கு அரசுகள், கண்டி இராச்சியம், மறுமலர்ச்சி, மற்றும் மேலை உலகம்) தொடர்பான எந்தவொரு கேள்வியையும் கேட்கலாம்.\n\nநாம் இன்று அத்தியாயம் 1 இன் **கல்வெட்டுகள் (Sellipi)** பற்றித் தொடங்கலாமா?`
+            : (activeSubjectId === 'ict' ? `வணக்கம் ${studentName}! நான் உங்கள் **தகவல் தொழில்நுட்ப (ICT)** ஆசிரியர். உங்கள் தரம் 8 பாடநூலின் அத்தியாயங்கள் (எண் முறைகள், கணினி உள்ளமைவு, சொல் செயலாக்கம், Scratch நிரலாக்கம், பௌதீகக் கணினியியல் மற்றும் இணையம்) தொடர்பான உங்கள் சந்தேகங்களைக் கேளுங்கள்.\n\nநாம் இன்று எந்த ICT பாடத்திலிருந்து தொடங்கலாம்?` : getInitialGreeting()),
         },
         activeLang: language,
-        keyPoints: activeSubjectId === 'ict' ? [
+        keyPoints: activeSubjectId === 'history' ? [
+          'Ch 1: Sources of Studying History (Inscriptions & Epigraphy)',
+          'Ch 2: Early Settlements (Mesolithic to Proto-historic)',
+          'Ch 3: Evolution of Political Power (Monarchy & Anuradhapura)',
+          'Ch 4: Ancient Sri Lankan Society & Culture',
+          'Ch 5: Science & Technology (Irrigation & Architecture)'
+        ] : (activeSubjectId === 'ict' ? [
           'Ch 1: Number Systems (Binary & Switches)',
           'Ch 2: Configuring Computers (Resolution)',
           'Ch 3: Word Processing (Justify Margins)',
           'Ch 4: Programming (Scratch Loops)',
           'Ch 5: Physical Computing (micro:bit)',
           'Ch 6: Internet (URL & Email Privacy)'
-        ] : undefined,
+        ] : undefined),
       },
     ];
   });
@@ -251,6 +344,13 @@ What ICT topic would you like to explore together today?`;
       });
     }
   }, [messages, tutorState]);
+
+  // Derive visualizer hint from the most recent student message or question
+  const activeModeHint = useMemo(() => {
+    const lastStudentMsg = [...messages].reverse().find((m) => m.role === 'student');
+    if (!lastStudentMsg) return undefined;
+    return lastStudentMsg.content;
+  }, [messages]);
 
   const tryAcquireLease = async (forceTakeover: boolean = false) => {
     if (!isAuthenticated) return;
@@ -331,16 +431,24 @@ What ICT topic would you like to explore together today?`;
       return;
     }
 
-    const text = (textToSend || inputMessage).trim();
-    if (!text || isSendingRef.current) return;
+    const currentImg = attachedImage;
+    if (currentImg) {
+      setAttachedImage(null);
+    }
+
+    const text = (textToSend !== undefined ? textToSend : inputMessage).trim();
+    if ((!text && !currentImg) || isSendingRef.current) return;
 
     isSendingRef.current = true;
+
+    const studentMessageText = text || (language === 'si' ? 'කරුණාකර මෙම පෙළපොත් ප්‍රශ්නය හෝ රූප සටහන පියවරෙන් පියවර විසඳා පෙන්වන්න' : language === 'ta' ? 'தயவுசெய்து இந்த பாடநூல் வினா அல்லது வரைபடத்தை படிப்படியாக விளக்குக' : 'Please analyze and solve this textbook question/diagram step by step');
 
     const studentMsg: ChatMessage = {
       id: generateMsgId('student'),
       role: 'student',
-      content: text,
+      content: studentMessageText,
       timestamp: new Date().toISOString(),
+      imageUrl: currentImg?.previewUrl,
     };
 
     setMessages((prev) => [...prev, studentMsg]);
@@ -348,10 +456,11 @@ What ICT topic would you like to explore together today?`;
     setTutorState('thinking');
 
     try {
-      const response = await tutorService.askTutor(text, {
+      const response = await tutorService.askTutor(studentMessageText, {
         ...learningContext,
         subjectId: activeSubjectId,
         topicId: activeTopicId,
+        imageUrl: currentImg?.previewUrl,
       });
 
       // Determine emotional reaction based on student question
@@ -527,7 +636,7 @@ What ICT topic would you like to explore together today?`;
   };
 
   return (
-    <div className="flex flex-col flex-1 h-full min-h-0 w-full max-w-[1600px] mx-auto space-y-3">
+    <div className="flex flex-col flex-1 h-full min-h-0 w-full max-w-none 2xl:max-w-[2400px] mx-auto space-y-3">
       {/* Mobile / Tablet Tab Switcher */}
       <div className="flex lg:hidden items-center justify-center p-1 bg-slate-200/80 rounded-2xl w-full max-w-md mx-auto">
         <button
@@ -692,9 +801,20 @@ What ICT topic would you like to explore together today?`;
               >
                 {/* Message Content */}
                 {isStudent ? (
-                  <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap">
-                    {msg.content}
-                  </p>
+                  <div>
+                    {msg.imageUrl && (
+                      <div className="rounded-2xl overflow-hidden border border-white/20 max-w-xs shadow-md bg-slate-800/80 mb-2.5 p-1">
+                        <img
+                          src={msg.imageUrl}
+                          alt="Textbook question"
+                          className="w-full h-auto max-h-56 object-contain rounded-xl"
+                        />
+                      </div>
+                    )}
+                    <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap">
+                      {msg.content}
+                    </p>
+                  </div>
                 ) : (
                   <div>
                     {/* Trilingual Answer Switcher & Voice Audio Action */}
@@ -898,10 +1018,48 @@ What ICT topic would you like to explore together today?`;
 
       {/* 3. Input & Attachment Tool Bar */}
       <div className="p-3 sm:p-4 bg-white border-t border-slate-200 flex-shrink-0">
+        {/* Hidden file input for textbook screenshots / exercise photos */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageFileSelect}
+        />
+
+        {/* Attached image preview pill */}
+        {attachedImage && (
+          <div className="mb-2.5 flex items-center gap-2.5 p-1.5 px-3 bg-slate-100/90 border border-slate-200 rounded-2xl w-fit shadow-xs animate-in fade-in">
+            <div className="w-9 h-9 rounded-xl overflow-hidden border border-slate-300 bg-white flex-shrink-0 shadow-xs">
+              <img
+                src={attachedImage.previewUrl}
+                alt="Upload preview"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="flex flex-col min-w-0 pr-1">
+              <span className="text-xs font-semibold text-slate-800 max-w-[200px] truncate">
+                {attachedImage.name}
+              </span>
+              <span className="text-[10px] text-emerald-600 font-medium">
+                {language === 'si' ? 'පින්තූරය සූදානම් (Ctrl+V හෝ Upload)' : language === 'ta' ? 'படம் இணைக்கப்பட்டது' : 'Screenshot ready to solve'}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAttachedImage(null)}
+              className="p-1 hover:bg-slate-200 text-slate-400 hover:text-slate-700 rounded-xl transition-colors"
+              title="Remove attachment"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         <div className="flex items-end gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-1.5 focus-within:ring-2 focus-within:ring-atlas-cyan/40 focus-within:border-atlas-cyan focus-within:bg-white transition-all">
-          {/* Action Placeholders: Mic, Camera, Attachment */}
+          {/* Action Tools: Mic, Camera Scanner, Attachment */}
           <div className="flex items-center gap-1 pb-1 pl-1 text-slate-400">
-            {/* Mic / Voice Input Placeholder */}
+            {/* Mic / Voice Input */}
             <button
               type="button"
               onClick={handleSimulatedMic}
@@ -915,26 +1073,22 @@ What ICT topic would you like to explore together today?`;
               <Mic className="w-4 h-4" />
             </button>
 
-            {/* Homework Photo Upload Placeholder */}
+            {/* Homework Photo Upload / Camera */}
             <button
               type="button"
-              onClick={() => {
-                alert('Camera Homework Scanner (Prototype feature placeholder: will support uploading textbook exercises and diagram questions).');
-              }}
-              className="p-2 rounded-xl hover:text-slate-600 hover:bg-slate-200/60 transition-all hidden sm:flex"
-              title={t('tutor.cameraInput')}
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2 rounded-xl hover:text-cyan-600 hover:bg-cyan-50 text-slate-400 transition-all flex items-center justify-center"
+              title={language === 'si' ? 'පෙළපොත් ඡායාරූපයක් / Screenshot එකක් එක් කරන්න' : language === 'ta' ? 'பாடநூல் படம் / ஸ்கிரீன்ஷாட் சேர்க்க' : 'Upload textbook screenshot / photo'}
             >
               <Camera className="w-4 h-4" />
             </button>
 
-            {/* Document Note Attachment Placeholder */}
+            {/* Document Note Attachment / File Picker */}
             <button
               type="button"
-              onClick={() => {
-                alert('Curriculum Note Attachment (Prototype feature placeholder).');
-              }}
-              className="p-2 rounded-xl hover:text-slate-600 hover:bg-slate-200/60 transition-all hidden sm:flex"
-              title={t('tutor.attachFile')}
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2 rounded-xl hover:text-cyan-600 hover:bg-cyan-50 text-slate-400 transition-all hidden sm:flex items-center justify-center"
+              title={language === 'si' ? 'ගොනුවක් හෝ රූපයක් අමුණන්න' : language === 'ta' ? 'கோப்பு அல்லது படம் இணைக்கவும்' : 'Attach problem image'}
             >
               <Paperclip className="w-4 h-4" />
             </button>
@@ -1006,8 +1160,9 @@ What ICT topic would you like to explore together today?`;
       >
         <CurriculumCompanionPane
           subjectId={activeSubjectId}
-          topicId={activeTopicId}
+          topicId={companionTopicId}
           language={language}
+          activeModeHint={activeModeHint}
           onAskQuestion={(query) => handleSendMessage(query)}
           onSelectTopic={(newTopicId) => {
             setCurriculumSubject(activeSubjectId, newTopicId);

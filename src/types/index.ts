@@ -25,6 +25,7 @@ export interface LearningContext {
   language: Language;
   activeLessonId?: string;
   conversationId: string;
+  imageUrl?: string;
 }
 
 // Exact wire citation structure from ATLAS backend
@@ -110,6 +111,7 @@ export interface ChatMessage {
   activeLang?: Language;
   memoryTrick?: MemoryTrick;
   keyPoints?: string[];
+  imageUrl?: string;
 }
 
 export interface Subject {

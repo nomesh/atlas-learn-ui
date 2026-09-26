@@ -13,9 +13,10 @@ import {
   Layers,
   Database
 } from 'lucide-react';
+import { Topic } from '../../types';
 import { useStudent } from '../../state/studentContext';
 import { MOCK_SUBJECTS, MOCK_TOPICS } from '../../mocks/curriculumData';
-import { fetchCurriculumResources, CurriculumResourceItem } from '../../api/curriculumApi';
+import { fetchCurriculumResources, fetchCurriculumTopics, CurriculumResourceItem } from '../../api/curriculumApi';
 
 function isSubjectMatch(book: CurriculumResourceItem, subjectId: string, subjectCode: string): boolean {
   const bCode = (book.subjectCode || '').toUpperCase();
@@ -38,10 +39,11 @@ function isSubjectMatch(book: CurriculumResourceItem, subjectId: string, subject
 export const SubjectDetailPage: React.FC = () => {
   const { subjectId } = useParams<{ subjectId: string }>();
   const navigate = useNavigate();
-  const { language, setCurriculumSubject } = useStudent();
+  const { language, grade, setCurriculumSubject } = useStudent();
 
   const [uploadedBooks, setUploadedBooks] = useState<CurriculumResourceItem[]>([]);
   const [isLoadingBooks, setIsLoadingBooks] = useState(true);
+  const [remoteTopics, setRemoteTopics] = useState<Topic[] | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -51,15 +53,32 @@ export const SubjectDetailPage: React.FC = () => {
         setIsLoadingBooks(false);
       }
     });
+
+    if (subjectId) {
+      fetchCurriculumTopics(subjectId, grade).then((topics) => {
+        if (isMounted && topics && topics.length > 0) {
+          setRemoteTopics(topics);
+        }
+      });
+    }
+
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [subjectId, grade]);
 
   const subject = MOCK_SUBJECTS.find((s) => s.id === subjectId) || MOCK_SUBJECTS[0];
-  const topics = MOCK_TOPICS.filter((t) => t.subjectId === subject.id);
+  const gradeFilteredTopics = MOCK_TOPICS.filter(
+    (t) => t.subjectId === subject.id && (!t.grade || t.grade === grade)
+  );
+  const topics = (remoteTopics && remoteTopics.length > 0)
+    ? remoteTopics
+    : gradeFilteredTopics;
+  const primaryTopic = topics[0];
+  const studentGradeNum = grade ? parseInt(grade.replace(/\D/g, ''), 10) : undefined;
   const matchingBooks = uploadedBooks.filter((book) =>
-    isSubjectMatch(book, subject.id, subject.code)
+    isSubjectMatch(book, subject.id, subject.code) &&
+    (!studentGradeNum || book.grade === studentGradeNum)
   );
 
   const totalChunks = matchingBooks.reduce((sum, b) => sum + (b.indexedChunks || 0), 0);
@@ -81,7 +100,7 @@ export const SubjectDetailPage: React.FC = () => {
       <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-soft flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-atlas-blue">
-            {subject.code} • {subject.gradeLevel}
+            {subject.code} • {grade ? grade.replace('-', ' ').toUpperCase() : subject.gradeLevel}
           </span>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
             {subject.name[language]}
@@ -94,8 +113,10 @@ export const SubjectDetailPage: React.FC = () => {
         <button
           type="button"
           onClick={() => {
-            setCurriculumSubject(subject.id);
-            navigate(`/tutor?subject=${encodeURIComponent(subject.id)}&q=${encodeURIComponent(`I would like to ask questions about ${subject.name.en}`)}`);
+            const firstTopicId = primaryTopic?.id;
+            setCurriculumSubject(subject.id, firstTopicId);
+            const topicParam = firstTopicId ? `&topic=${encodeURIComponent(firstTopicId)}` : '';
+            navigate(`/tutor?subject=${encodeURIComponent(subject.id)}${topicParam}&q=${encodeURIComponent(`I would like to ask questions about ${subject.name.en}`)}`);
           }}
           className="px-5 py-3 rounded-2xl bg-slate-900 hover:bg-atlas-blue text-white font-bold text-xs shadow-md flex items-center gap-2 transition-all flex-shrink-0"
         >
@@ -113,7 +134,7 @@ export const SubjectDetailPage: React.FC = () => {
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-bold text-emerald-950 uppercase tracking-wide">
-                Official Ministry Textbook Grounded
+                {primaryBook ? 'Official Ministry Textbook Grounded' : `Grade ${studentGradeNum || 10} Syllabus Grounded`}
               </span>
               <span className="px-2 py-0.5 rounded-full bg-emerald-200/70 text-emerald-800 text-[10px] font-extrabold">
                 {totalChunks > 0 ? `${totalChunks} Chunks Active` : 'Syllabus Grounded'}
@@ -122,7 +143,7 @@ export const SubjectDetailPage: React.FC = () => {
             <p className="text-xs text-emerald-800/80 mt-1 font-medium leading-relaxed">
               {primaryBook
                 ? `${primaryBook.originalTitle} (Grade ${primaryBook.grade} ${primaryBook.languageCode === 'EN' ? 'English Medium' : ''}) is indexed in PGVector and actively grounds the Atlas AI Tutor.`
-                : `${subject.name[language]} syllabus materials are indexed in PGVector and eligible for AI Tutor semantic search.`}
+                : `${subject.name[language]} Grade ${studentGradeNum || 10} syllabus materials and learning outcomes actively ground the Atlas AI Tutor.`}
             </p>
           </div>
         </div>
@@ -130,16 +151,18 @@ export const SubjectDetailPage: React.FC = () => {
         <button
           type="button"
           onClick={() => {
-            setCurriculumSubject(subject.id);
+            const firstTopicId = primaryTopic?.id;
+            setCurriculumSubject(subject.id, firstTopicId);
+            const topicParam = firstTopicId ? `&topic=${encodeURIComponent(firstTopicId)}` : '';
             const q = primaryBook
               ? `Can you explain the main concepts from the ${primaryBook.originalTitle} (Grade ${primaryBook.grade} ${subject.name.en}) textbook?`
-              : `What are the core concepts of ${subject.name.en}?`;
-            navigate(`/tutor?subject=${encodeURIComponent(subject.id)}&q=${encodeURIComponent(q)}`);
+              : `Can you explain the core concepts of Grade ${studentGradeNum || 10} ${subject.name.en}?`;
+            navigate(`/tutor?subject=${encodeURIComponent(subject.id)}${topicParam}&q=${encodeURIComponent(q)}`);
           }}
           className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition-all flex-shrink-0 self-stretch sm:self-auto justify-center"
         >
           <Sparkles className="w-3.5 h-3.5 text-emerald-200" />
-          <span>Ask Questions from Book</span>
+          <span>{primaryBook ? 'Ask Questions from Book' : `Ask Tutor About Grade ${studentGradeNum || 10}`}</span>
         </button>
       </div>
 
@@ -188,8 +211,10 @@ export const SubjectDetailPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    setCurriculumSubject(subject.id);
-                    navigate(`/tutor?subject=${encodeURIComponent(subject.id)}&q=${encodeURIComponent(`Can you explain the main concepts from the Grade ${book.grade} ${subject.name.en} textbook (${book.originalTitle})?`)}`);
+                    const firstTopicId = primaryTopic?.id;
+                    setCurriculumSubject(subject.id, firstTopicId);
+                    const topicParam = firstTopicId ? `&topic=${encodeURIComponent(firstTopicId)}` : '';
+                    navigate(`/tutor?subject=${encodeURIComponent(subject.id)}${topicParam}&q=${encodeURIComponent(`Can you explain the main concepts from the Grade ${book.grade} ${subject.name.en} textbook (${book.originalTitle})?`)}`);
                   }}
                   className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-atlas-blue text-white font-bold text-xs shadow-md flex items-center gap-2 transition-all flex-shrink-0 self-stretch sm:self-auto justify-center"
                 >
@@ -202,7 +227,7 @@ export const SubjectDetailPage: React.FC = () => {
         ) : (
           <div className="p-6 text-center bg-white rounded-3xl border border-dashed border-slate-200">
             <p className="text-xs text-slate-500">
-              No uploaded PDF textbook found for this subject yet. Upload the official textbook from the Backoffice portal to ground the AI Tutor in this subject.
+              No uploaded PDF textbook found for Grade {studentGradeNum || 10} {subject.name[language]} yet. The AI Tutor uses the official national curriculum framework.
             </p>
           </div>
         )}

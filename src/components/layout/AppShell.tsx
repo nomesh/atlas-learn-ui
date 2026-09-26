@@ -20,10 +20,10 @@ export const AppShell: React.FC = () => {
 
       {/* Main Content Viewport */}
       <main
-        className={`flex-1 w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 ${
+        className={`flex-1 w-full mx-auto ${
           isTutorPage
-            ? 'py-2 sm:py-3.5 flex flex-col min-h-0 overflow-hidden'
-            : 'py-4 sm:py-6 pb-24 md:pb-12'
+            ? 'max-w-[96vw] 2xl:max-w-[2400px] px-2 sm:px-4 lg:px-6 2xl:px-8 py-2 sm:py-3.5 flex flex-col min-h-0 overflow-hidden'
+            : 'max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 md:pb-12'
         }`}
       >
         <Outlet />

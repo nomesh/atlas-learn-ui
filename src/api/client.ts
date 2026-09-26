@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || '';
+const baseURL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || '';
 
 /**
  * Resolves the active authentication Bearer token.
@@ -8,12 +8,9 @@ const baseURL = import.meta.env.VITE_API_BASE_URL || '';
  */
 export function getAuthToken(): string | null {
   return (
-    localStorage.getItem('atlas_auth_token') ||
-    localStorage.getItem('atlas_token') ||
-    localStorage.getItem('token') ||
-    sessionStorage.getItem('atlas_auth_token') ||
-    sessionStorage.getItem('atlas_token') ||
-    import.meta.env.VITE_ATLAS_AUTH_TOKEN ||
+    (typeof localStorage !== 'undefined' && (localStorage.getItem('atlas_auth_token') || localStorage.getItem('atlas_token') || localStorage.getItem('token'))) ||
+    (typeof sessionStorage !== 'undefined' && (sessionStorage.getItem('atlas_auth_token') || sessionStorage.getItem('atlas_token'))) ||
+    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ATLAS_AUTH_TOKEN) ||
     null
   );
 }
@@ -22,18 +19,24 @@ export function getAuthToken(): string | null {
  * Stores a Bearer token in localStorage for subsequent API requests.
  */
 export function setAuthToken(token: string): void {
-  localStorage.setItem('atlas_auth_token', token);
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('atlas_auth_token', token);
+  }
 }
 
 /**
  * Clears stored authentication tokens.
  */
 export function clearAuthToken(): void {
-  localStorage.removeItem('atlas_auth_token');
-  localStorage.removeItem('atlas_token');
-  localStorage.removeItem('token');
-  sessionStorage.removeItem('atlas_auth_token');
-  sessionStorage.removeItem('atlas_token');
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem('atlas_auth_token');
+    localStorage.removeItem('atlas_token');
+    localStorage.removeItem('token');
+  }
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.removeItem('atlas_auth_token');
+    sessionStorage.removeItem('atlas_token');
+  }
 }
 
 /**
@@ -43,9 +46,9 @@ export function clearAuthToken(): void {
  */
 export function getTenantId(): string | null {
   return (
-    localStorage.getItem('atlas_tenant_id') ||
-    sessionStorage.getItem('atlas_tenant_id') ||
-    import.meta.env.VITE_ATLAS_TENANT_ID ||
+    (typeof localStorage !== 'undefined' && localStorage.getItem('atlas_tenant_id')) ||
+    (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('atlas_tenant_id')) ||
+    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ATLAS_TENANT_ID) ||
     null
   );
 }

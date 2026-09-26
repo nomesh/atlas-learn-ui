@@ -14,17 +14,21 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { MOCK_SUBJECTS, MOCK_TOPICS, getLessonStepsForTopic } from '../../mocks/curriculumData';
+import { useStudent } from '../../state/studentContext';
 import { ElectricSwitchVisualizer } from '../../components/interactive/ElectricSwitchVisualizer';
 import { ResolutionVisualizer } from '../../components/interactive/ResolutionVisualizer';
 import { ScratchBlockVisualizer } from '../../components/interactive/ScratchBlockVisualizer';
 import { MicrocontrollerVisualizer } from '../../components/interactive/MicrocontrollerVisualizer';
 import { UrlAnatomyVisualizer } from '../../components/interactive/UrlAnatomyVisualizer';
 import { WordProcessingVisualizer } from '../../components/interactive/WordProcessingVisualizer';
+import { SubjectConceptVisualizer } from '../../components/interactive/SubjectConceptVisualizer';
+import { RichContentRenderer } from './RichContentRenderer';
 
 interface CurriculumCompanionPaneProps {
   subjectId: string;
   topicId?: string;
   language: 'en' | 'si' | 'ta';
+  activeModeHint?: string;
   onAskQuestion: (query: string) => void;
   onSelectTopic: (newTopicId: string) => void;
 }
@@ -74,6 +78,13 @@ const getTopicDeepDive = (topicId: string) => {
         clarifyPrompt: 'Can you clarify the difference between Cc and Bcc in email communication?',
         verifyPrompt: 'What should I do if I receive a suspicious email asking for my school account password?'
       };
+    case 'history-gr10-sources':
+      return {
+        examTrap: '⚠️ O/L History Trap: Inscriptions (Sellipi) are primary archaeological sources, NOT secondary literary sources! The 5 types are: Cave (ලෙන්), Rock (ගිරි), Pillar (ටැම්), Slab (පුවරු), and Seat (ආසන). Don\'t confuse Panakaduwa (copper plate of King Vijayabahu I) with Vallipuram (gold plate of King Vasabha)!',
+        challenge: '🎯 Interactive Challenge: Ask the Tutor about the 5 types of Sellipi or how early Brahmi cave inscriptions helped Buddhist monks (Sangha) during the rainy season (Wassana)!',
+        clarifyPrompt: 'ඉතිහාසය හැදෑරීමේ මූලාශ්‍ර වල සෙල්ලිපි (Sellipi) වර්ග සහ බ්‍රාහ්මී ලේඛන ගැන විස්තර කරන්න',
+        verifyPrompt: 'ලංකාවේ ශිලා ලේඛන සහ වෙනත් ලේඛන මාධ්‍ය (ගල්පොත, සීගිරි කුරුටු ගී, පනාකඩුව තඹ සන්නස) මොනවාද?'
+      };
     default:
       return {
         examTrap: '⚠️ National Syllabus Focus: Ensure you review past paper questions from the Educational Publications Department!',
@@ -88,22 +99,33 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
   subjectId,
   topicId,
   language,
+  activeModeHint,
   onAskQuestion,
   onSelectTopic,
 }) => {
+  const { grade: studentGrade } = useStudent();
   const currentSubject = MOCK_SUBJECTS.find((s) => s.id === subjectId) || MOCK_SUBJECTS[0];
-  const subjectTopics = MOCK_TOPICS.filter((t) => t.subjectId === currentSubject.id);
+  const gradeFilteredTopics = MOCK_TOPICS.filter(
+    (t) => t.subjectId === currentSubject.id && (!t.grade || t.grade === studentGrade)
+  );
+  const subjectTopics = gradeFilteredTopics.length > 0
+    ? gradeFilteredTopics
+    : (studentGrade ? [] : MOCK_TOPICS.filter((t) => t.subjectId === currentSubject.id));
 
   // Active topic or first topic of subject
   const activeTopic = 
     (topicId ? subjectTopics.find((t) => t.id === topicId) : null) || 
     subjectTopics[0] || 
+    MOCK_TOPICS.find((t) => (!t.grade || t.grade === studentGrade)) ||
     MOCK_TOPICS[0];
 
   const steps = getLessonStepsForTopic(activeTopic.id);
   const [activeStepTab, setActiveStepTab] = useState(0);
 
   const currentStep = steps[activeStepTab] || steps[0];
+  const gradeDisplay = activeTopic.grade
+    ? activeTopic.grade.replace('grade-', 'Grade ')
+    : (studentGrade ? studentGrade.replace('grade-', 'Grade ') : 'Grade 10');
 
   return (
     <aside className="h-full flex flex-col bg-slate-900 border border-slate-800 rounded-3xl shadow-xl overflow-hidden text-white">
@@ -112,7 +134,7 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono text-[11px] font-bold border border-cyan-500/30 uppercase tracking-wide">
-              {currentSubject.name[language]} • Grade 8
+              {currentSubject.name[language]} • {gradeDisplay}
             </span>
             <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -204,6 +226,16 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
           {activeTopic.id === 'word-processing' && (
             <WordProcessingVisualizer language={language} />
           )}
+
+          {/* Interactive Subject Concept Visualizer for Maths, Science, History, etc. */}
+          {!['number-systems', 'configuring-formatting-computer', 'programming', 'physical-computing', 'internet', 'word-processing'].includes(activeTopic.id) && (
+            <SubjectConceptVisualizer
+              topicId={activeTopic.id}
+              subjectId={currentSubject.id}
+              language={language}
+              activeModeHint={activeModeHint}
+            />
+          )}
         </div>
 
         {/* 4. Multi-Step Detailed Lesson Walkthrough */}
@@ -260,9 +292,10 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
                 </button>
               </div>
 
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed whitespace-pre-line">
-                {currentStep.concept[language]}
-              </p>
+              <RichContentRenderer 
+                content={currentStep.concept[language]} 
+                darkTheme={true} 
+              />
 
               {/* Real World Example Callout */}
               {currentStep.realWorldExample && (

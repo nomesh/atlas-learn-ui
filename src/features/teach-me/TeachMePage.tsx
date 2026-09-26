@@ -22,6 +22,9 @@ import { ScratchBlockVisualizer } from '../../components/interactive/ScratchBloc
 import { MicrocontrollerVisualizer } from '../../components/interactive/MicrocontrollerVisualizer';
 import { UrlAnatomyVisualizer } from '../../components/interactive/UrlAnatomyVisualizer';
 import { WordProcessingVisualizer } from '../../components/interactive/WordProcessingVisualizer';
+import { ReactionRateVisualizer } from '../../components/interactive/ReactionRateVisualizer';
+import { SubjectConceptVisualizer } from '../../components/interactive/SubjectConceptVisualizer';
+import { RichContentRenderer, MathView } from '../tutor/RichContentRenderer';
 
 export const TeachMePage: React.FC = () => {
   const { topicId } = useParams<{ topicId: string }>();
@@ -88,7 +91,7 @@ export const TeachMePage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in duration-300">
+    <div className="max-w-4xl lg:max-w-5xl mx-auto space-y-6 animate-in fade-in duration-300">
       {/* Header bar with Back button and Progress indicator */}
       <div className="flex items-center justify-between">
         <button
@@ -131,55 +134,71 @@ export const TeachMePage: React.FC = () => {
           </div>
 
           {/* 1. Core Concept Explanation */}
-          <div className="text-sm sm:text-base text-slate-800 leading-relaxed space-y-3 font-medium">
-            <p className="whitespace-pre-line">{currentStep.concept[language]}</p>
+          <div className="text-sm sm:text-base text-slate-800 leading-relaxed font-medium">
+            <RichContentRenderer content={currentStep.concept[language]} />
           </div>
 
           {/* 2. Visual / Formula Card */}
           {currentStep.visualCard && (
-            <div className="p-4 sm:p-5 rounded-2xl bg-slate-900 text-cyan-200 border border-slate-800 shadow-inner">
-              <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider mb-2">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>{currentStep.visualCard.title}</span>
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-sky-50/90 via-indigo-50/50 to-slate-50 border border-sky-200/90 shadow-xs">
+              <div className="flex items-center justify-between gap-2 mb-2.5">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-atlas-blue uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5 text-atlas-cyan" />
+                  <span>{currentStep.visualCard.title}</span>
+                </div>
+                <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200/60">
+                  {currentStep.visualCard.diagramType === 'formula' ? 'Key Formula' : 'Key Concept'}
+                </span>
               </div>
-              <div className="font-mono text-xs sm:text-sm text-center py-2 px-3 bg-slate-950/60 rounded-xl text-white overflow-x-auto">
-                {currentStep.visualCard.content}
-              </div>
-              <p className="text-[11px] text-cyan-100/70 mt-2 text-center">
-                {currentStep.visualCard.caption}
-              </p>
+
+              {currentStep.visualCard.diagramType === 'formula' || /[\^=+\-\\×÷√]/.test(currentStep.visualCard.content) ? (
+                <MathView formula={currentStep.visualCard.content} displayMode={true} />
+              ) : (
+                <div className="py-2.5 px-4 bg-white/80 rounded-xl border border-sky-100 text-slate-800 text-center font-medium text-xs sm:text-sm shadow-2xs">
+                  {currentStep.visualCard.content}
+                </div>
+              )}
+
+              {currentStep.visualCard.caption && (
+                <p className="text-[11px] text-slate-500 mt-2 text-center font-medium">
+                  {currentStep.visualCard.caption}
+                </p>
+              )}
             </div>
           )}
 
           {/* Interactive Simulation & Visualizer */}
-          {topicId === 'number-systems' && (
+          {topicId === 'number-systems' ? (
             <div className="rounded-2xl overflow-hidden border border-slate-200">
               <ElectricSwitchVisualizer language={language} showByteBuilder={true} />
             </div>
-          )}
-          {topicId === 'configuring-formatting-computer' && (
+          ) : topicId === 'configuring-formatting-computer' ? (
             <div className="rounded-2xl overflow-hidden border border-slate-200">
               <ResolutionVisualizer language={language} />
             </div>
-          )}
-          {topicId === 'programming' && (
+          ) : topicId === 'programming' ? (
             <div className="rounded-2xl overflow-hidden border border-slate-200">
               <ScratchBlockVisualizer language={language} />
             </div>
-          )}
-          {topicId === 'physical-computing' && (
+          ) : topicId === 'physical-computing' ? (
             <div className="rounded-2xl overflow-hidden border border-slate-200">
               <MicrocontrollerVisualizer language={language} />
             </div>
-          )}
-          {topicId === 'internet' && (
+          ) : topicId === 'internet' ? (
             <div className="rounded-2xl overflow-hidden border border-slate-200">
               <UrlAnatomyVisualizer language={language} />
             </div>
-          )}
-          {topicId === 'word-processing' && (
+          ) : topicId === 'word-processing' ? (
             <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
               <WordProcessingVisualizer language={language} />
+            </div>
+          ) : topicId === 'science-gr10-ch17-rate-of-reactions' ? (
+            <div className="rounded-2xl overflow-hidden border border-slate-800 shadow-xl">
+              <ReactionRateVisualizer language={language} />
+            </div>
+          ) : (
+            <div className="rounded-2xl overflow-hidden border border-slate-800 shadow-xl">
+              <SubjectConceptVisualizer topicId={topicId} subjectId={currentTopic?.subjectId} language={language} />
             </div>
           )}
 

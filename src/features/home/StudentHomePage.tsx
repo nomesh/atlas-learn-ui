@@ -28,9 +28,9 @@ export const StudentHomePage: React.FC = () => {
   const { studentName, grade, language, streakDays, tutorState, setCurriculumSubject, learningContext } = useStudent();
 
   const continueTopic =
-    (learningContext?.topicId ? MOCK_TOPICS.find((t) => t.id === learningContext.topicId) : null) ||
-    (learningContext?.subjectId ? MOCK_TOPICS.find((t) => t.subjectId === learningContext.subjectId) : null) ||
-    MOCK_TOPICS.find((t) => t.id === 'number-systems') ||
+    (learningContext?.topicId ? MOCK_TOPICS.find((t) => t.id === learningContext.topicId && (!t.grade || t.grade === grade)) : null) ||
+    (learningContext?.subjectId ? MOCK_TOPICS.find((t) => t.subjectId === learningContext.subjectId && (!t.grade || t.grade === grade)) : null) ||
+    MOCK_TOPICS.find((t) => (!t.grade || t.grade === grade)) ||
     MOCK_TOPICS[0];
   const continueSubject = MOCK_SUBJECTS.find((s) => s.id === continueTopic.subjectId) || MOCK_SUBJECTS[0];
 

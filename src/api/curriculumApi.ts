@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import type { Topic } from '../types';
 
 export interface CurriculumResourceItem {
   resourceId: string;
@@ -84,19 +85,90 @@ export const FALLBACK_CURRICULUM_RESOURCES: CurriculumResourceItem[] = [
     checksumSha256: 'maths-gr6-en-sha256',
     indexedChunks: 366,
   },
+  {
+    resourceId: '3d5b7a12-8f3a-4b92-91f8-0c6a32d1e101',
+    revisionId: '3d5b7a12-8f3a-4b92-91f8-0c6a32d1e101',
+    originalTitle: 'Mathematics Grade 10 Part I',
+    resourceType: 'TEXTBOOK',
+    grade: 10,
+    subjectCode: 'MATHEMATICS',
+    subjectName: 'Mathematics',
+    languageCode: 'EN',
+    publisherAuthority: 'Educational Publications Department Sri Lanka',
+    sourceReference: 'Ministry of Education National Curriculum',
+    versionIdentifier: '1.0.0',
+    ingestionStatus: 'INDEXED',
+    checksumSha256: 'maths-gr10-p1-en-sha256',
+    indexedChunks: 412,
+  },
+  {
+    resourceId: '4e6c8b23-9a4b-4c03-a2f9-1d7b43e2f202',
+    revisionId: '4e6c8b23-9a4b-4c03-a2f9-1d7b43e2f202',
+    originalTitle: 'Mathematics Grade 10 Part II',
+    resourceType: 'TEXTBOOK',
+    grade: 10,
+    subjectCode: 'MATHEMATICS',
+    subjectName: 'Mathematics',
+    languageCode: 'EN',
+    publisherAuthority: 'Educational Publications Department Sri Lanka',
+    sourceReference: 'Ministry of Education National Curriculum',
+    versionIdentifier: '1.0.0',
+    ingestionStatus: 'INDEXED',
+    checksumSha256: 'maths-gr10-p2-en-sha256',
+    indexedChunks: 388,
+  },
 ];
 
 export async function fetchCurriculumResources(): Promise<CurriculumResourceItem[]> {
   try {
-    const { data } = await apiClient.get<CurriculumResourceItem[]>('/api/learn/resources');
+    let remote: CurriculumResourceItem[] = [];
+    try {
+      const { data } = await apiClient.get<CurriculumResourceItem[]>('/api/learn/resources');
+      if (Array.isArray(data) && data.length > 0) remote = data;
+    } catch {
+      try {
+        const { data } = await apiClient.get<CurriculumResourceItem[]>('/api/v1/learn/resources');
+        if (Array.isArray(data) && data.length > 0) remote = data;
+      } catch (inner) {
+        // Fallback to local
+      }
+    }
+
+    if (remote.length > 0) {
+      // Merge remote resources with any missing fallback curriculum items (e.g. Grade 10 Mathematics)
+      const existingKeys = new Set(
+        remote.map((r) => `${(r.subjectCode || '').toUpperCase()}_${r.grade}_${(r.originalTitle || '').toLowerCase().trim()}`)
+      );
+      const missingFallbacks = FALLBACK_CURRICULUM_RESOURCES.filter(
+        (f) => !existingKeys.has(`${(f.subjectCode || '').toUpperCase()}_${f.grade}_${(f.originalTitle || '').toLowerCase().trim()}`)
+      );
+      return [...remote, ...missingFallbacks];
+    }
+  } catch (err) {
+    console.warn('[CurriculumApi] Could not fetch remote curriculum resources, using local fallback:', err);
+  }
+  return FALLBACK_CURRICULUM_RESOURCES;
+}
+
+export async function fetchCurriculumTopics(subjectId?: string, grade?: string): Promise<Topic[]> {
+  try {
+    const params = new URLSearchParams();
+    if (subjectId) params.set('subjectId', subjectId);
+    if (grade) params.set('grade', grade);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    const { data } = await apiClient.get<Topic[]>(`/api/learn/curriculum${query}`);
     if (Array.isArray(data) && data.length > 0) return data;
   } catch (err) {
     try {
-      const { data } = await apiClient.get<CurriculumResourceItem[]>('/api/v1/learn/resources');
+      const params = new URLSearchParams();
+      if (subjectId) params.set('subjectId', subjectId);
+      if (grade) params.set('grade', grade);
+      const query = params.toString() ? `?${params.toString()}` : '';
+      const { data } = await apiClient.get<Topic[]>(`/api/v1/learn/curriculum${query}`);
       if (Array.isArray(data) && data.length > 0) return data;
     } catch (innerErr) {
-      console.warn('[CurriculumApi] Could not fetch remote curriculum resources, using local fallback:', innerErr);
+      console.warn('[CurriculumApi] Could not fetch remote curriculum topics:', innerErr);
     }
   }
-  return FALLBACK_CURRICULUM_RESOURCES;
+  return [];
 }
