@@ -1,4 +1,17 @@
 import type { Subject, Topic, LessonStep, QuizQuestion } from '../types';
+import {
+  TEACH_ME_HISTORY_SOURCES_STEPS,
+  TEACH_ME_HISTORY_SETTLEMENTS_STEPS,
+  TEACH_ME_HISTORY_POLITICAL_POWER_STEPS,
+  TEACH_ME_HISTORY_ANCIENT_SOCIETY_STEPS,
+  TEACH_ME_HISTORY_SCIENCE_TECH_STEPS,
+  TEACH_ME_HISTORY_PRACTICAL_KNOWLEDGE_STEPS,
+  TEACH_ME_HISTORY_SOUTH_WEST_KINGDOMS_STEPS,
+  TEACH_ME_HISTORY_KANDYAN_KINGDOM_STEPS,
+  TEACH_ME_HISTORY_RENAISSANCE_STEPS,
+  TEACH_ME_HISTORY_WESTERN_WORLD_STEPS,
+} from './historyCurriculumData';
+
 
 export const MOCK_SUBJECTS: Subject[] = [
   {
@@ -3870,10 +3883,19 @@ export const LESSON_STEPS_BY_TOPIC: Record<string, LessonStep[]> = {
   'maths-gr10-ch10-pythagoras': TEACH_ME_PYTHAGORAS_STEPS,
   'algorithms-flowcharts': TEACH_ME_ALGORITHMS_STEPS,
   'computer-systems-hardware': TEACH_ME_CONFIGURING_COMPUTER_STEPS,
-  'history-gr10-sources': TEACH_ME_HISTORY_HERITAGE_STEPS,
-  'history-gr10-ancient-heritage': TEACH_ME_HISTORY_HERITAGE_STEPS,
-  'history-gr10-hydraulic-society': TEACH_ME_HISTORY_POLONNARUWA_STEPS,
-  'history-gr10-colonial-transitions': TEACH_ME_HISTORY_COLONIAL_STEPS,
+  'history-gr10-sources': TEACH_ME_HISTORY_SOURCES_STEPS,
+  'history-gr10-settlements': TEACH_ME_HISTORY_SETTLEMENTS_STEPS,
+  'history-gr10-political-power': TEACH_ME_HISTORY_POLITICAL_POWER_STEPS,
+  'history-gr10-ancient-society': TEACH_ME_HISTORY_ANCIENT_SOCIETY_STEPS,
+  'history-gr10-science-tech': TEACH_ME_HISTORY_SCIENCE_TECH_STEPS,
+  'history-gr10-historical-knowledge': TEACH_ME_HISTORY_PRACTICAL_KNOWLEDGE_STEPS,
+  'history-gr10-decline-new-kingdoms': TEACH_ME_HISTORY_SOUTH_WEST_KINGDOMS_STEPS,
+  'history-gr10-kandyan-kingdom': TEACH_ME_HISTORY_KANDYAN_KINGDOM_STEPS,
+  'history-gr10-renaissance': TEACH_ME_HISTORY_RENAISSANCE_STEPS,
+  'history-gr10-western-world': TEACH_ME_HISTORY_WESTERN_WORLD_STEPS,
+  'history-gr10-ancient-heritage': TEACH_ME_HISTORY_SOURCES_STEPS,
+  'history-gr10-hydraulic-society': TEACH_ME_HISTORY_SCIENCE_TECH_STEPS,
+  'history-gr10-colonial-transitions': TEACH_ME_HISTORY_WESTERN_WORLD_STEPS,
   'science-gr10-ch1-chemical-basis': TEACH_ME_CHEMICAL_BASIS_STEPS,
   'science-gr10-ch2-motion': TEACH_ME_MOTION_STEPS,
   'science-gr10-ch4-newtons-laws': TEACH_ME_NEWTONS_LAWS_STEPS,
@@ -3935,9 +3957,9 @@ export function generateUniversalLessonSteps(topic: Topic): LessonStep[] {
         },
         options: [
           { id: 'opt-1', text: { en: topic.description.en, si: topic.description.si, ta: topic.description.ta } },
-          { id: 'opt-2', text: { en: 'It is an isolated theory with no practical application in Sri Lankan daily life', si: 'එදිනෙදා ජීවිතයේ කිසිදු ප්‍රායෝගික යෙදීමක් නොමැති හුදෙකලා සිද්ධාන්තයකි', ta: 'அன்றாட வாழ்வில் எந்த நடைமுறைப் பயனுமற்ற கோட்பாடு' } },
-          { id: 'opt-3', text: { en: 'It contradicts national curriculum guidelines', si: 'ජාතික විෂය නිර්දේශ මාර්ගෝපදේශ වලට පටහැනි සංකල්පයකි', ta: 'தேசிய பாடத்திட்டத்திற்கு முரணானது' } },
-          { id: 'opt-4', text: { en: 'It is solely memorized for definitions without understanding underlying principles', si: 'මූලධර්ම නොසලකා නිර්වචනය පමණක් කටපාඩම් කළ යුත්තකි', ta: 'விளக்கமின்றி மனனம் செய்ய வேண்டிய விடயம்' } },
+          { id: 'opt-2', text: { en: 'It functions purely as an isolated empirical classification without interdisciplinary relevance', si: 'අන්තර් විෂයමය සම්බන්ධතාවකින් තොරව වර්ගීකරණයට පමණක් සීමා වූ නිරීක්ෂණයකි', ta: 'துறைசார் தொடர்பின்றி வகைப்படுத்தலுக்கு மட்டுமே பயன்படும் ஒரு அவதானிப்பு' } },
+          { id: 'opt-3', text: { en: 'It describes only rare laboratory anomalies rather than standard natural or historic phenomena', si: 'සාමාන්‍ය ස්වාභාවික සංසිද්ධි වෙනුවට දුර්ලභ විද්‍යාගාර අසාමාන්‍යතා පමණක් පැහැදිලි කරයි', ta: 'பொதுவான இயற்கை விதிகளுக்குப் பதிலாக அரிதான முரண்பாடுகளை மட்டுமே விளக்குகிறது' } },
+          { id: 'opt-4', text: { en: 'It focuses strictly on macroscopic outcomes while overlooking underlying governing principles', si: 'මූලික යාන්ත්‍රණය නොසලකා බාහිරින් පෙනෙන දළ ප්‍රතිඵල පමණක් සලකා බලයි', ta: 'அடிப்படை விதிகளை புறக்கணித்து மேலோட்டமான முடிவுகளை மட்டுமே கருதுகிறது' } },
         ],
         correctOptionId: 'opt-1',
         educationalFeedback: {

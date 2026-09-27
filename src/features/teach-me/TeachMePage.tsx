@@ -11,7 +11,8 @@ import {
   Lightbulb, 
   Check, 
   RotateCcw,
-  Compass
+  Compass,
+  Award
 } from 'lucide-react';
 import { useStudent } from '../../state/studentContext';
 import { TutorAvatar } from '../avatar/TutorAvatar';
@@ -220,36 +221,56 @@ export const TeachMePage: React.FC = () => {
             </p>
           </div>
 
-          {/* 4. Check Understanding Mini-Quiz */}
+          {/* 4. G.C.E. O/L Competency Check / Exam Mastery */}
           {question && (
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                  <CheckCircle2 className="w-4 h-4 text-atlas-cyan" />
-                  {t('teachMe.checkTitle')}
-                </span>
-                <span className="text-[10px] bg-slate-200/80 text-slate-600 px-2 py-0.5 rounded-full font-semibold">
-                  Check Understanding
-                </span>
+            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/90 shadow-sm space-y-3.5">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-indigo-100 text-indigo-600">
+                    <Award className="w-3.5 h-3.5" />
+                  </span>
+                  <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                    {language === 'si'
+                      ? 'අ.පො.ස. සා/පෙළ මට්ටමේ ඇගයීම'
+                      : language === 'ta'
+                      ? 'க.பொ.த சா/தர பரீட்சை மதிப்பீடு'
+                      : 'G.C.E. O/L Competency Check'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] bg-indigo-50 border border-indigo-200/80 text-indigo-700 px-2 py-0.5 rounded-full font-semibold">
+                    {question.grade === 'grade-10'
+                      ? (language === 'si' ? '10 ශ්‍රේණිය' : language === 'ta' ? 'தரம் 10' : 'Grade 10')
+                      : 'National Syllabus'}
+                  </span>
+                  <span className="text-[10px] bg-slate-200/80 text-slate-700 px-2 py-0.5 rounded-full font-semibold">
+                    {language === 'si' ? 'විභාග ප්‍රමිතිය' : language === 'ta' ? 'பரீட்சை மாதிரி' : 'Exam Standard'}
+                  </span>
+                </div>
               </div>
 
-              <h4 className="text-sm font-bold text-slate-900">
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">
                 {question.questionText[language]}
               </h4>
 
               <div className="space-y-2">
-                {question.options.map((opt) => {
+                {question.options.map((opt, idx) => {
                   const isSelected = selectedOptionId === opt.id;
                   const isCorrect = opt.id === question.correctOptionId;
+                  const optionLabel = String.fromCharCode(65 + idx); // A, B, C, D
 
                   let optStyle = 'border-slate-200 bg-white hover:border-slate-300 text-slate-800';
+                  let labelStyle = 'bg-slate-100 text-slate-600 border border-slate-200';
                   if (isSelected && !isAnswerSubmitted) {
-                    optStyle = 'border-atlas-cyan bg-cyan-50/60 ring-2 ring-atlas-cyan/30 text-atlas-navy font-bold';
+                    optStyle = 'border-indigo-500 bg-indigo-50/60 ring-2 ring-indigo-500/20 text-slate-900 font-medium';
+                    labelStyle = 'bg-indigo-600 text-white border-transparent';
                   } else if (isAnswerSubmitted) {
                     if (isCorrect) {
-                      optStyle = 'border-emerald-400 bg-emerald-50 text-emerald-950 font-bold';
+                      optStyle = 'border-emerald-400 bg-emerald-50 text-emerald-950 font-medium';
+                      labelStyle = 'bg-emerald-600 text-white border-transparent';
                     } else if (isSelected && !isCorrect) {
-                      optStyle = 'border-amber-400 bg-amber-50 text-amber-950';
+                      optStyle = 'border-rose-300 bg-rose-50 text-rose-950';
+                      labelStyle = 'bg-rose-500 text-white border-transparent';
                     }
                   }
 
@@ -259,11 +280,14 @@ export const TeachMePage: React.FC = () => {
                       type="button"
                       disabled={isAnswerSubmitted}
                       onClick={() => handleSelectOption(opt.id)}
-                      className={`w-full p-3 rounded-xl border text-left text-xs sm:text-sm flex items-center justify-between transition-all ${optStyle}`}
+                      className={`w-full p-2.5 sm:p-3 rounded-xl border text-left text-xs sm:text-sm flex items-start gap-2.5 transition-all ${optStyle}`}
                     >
-                      <span>{opt.text[language]}</span>
+                      <span className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5 transition-colors ${labelStyle}`}>
+                        {optionLabel}
+                      </span>
+                      <span className="flex-1 leading-relaxed">{opt.text[language]}</span>
                       {isAnswerSubmitted && isCorrect && (
-                        <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 ml-2" />
+                        <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 ml-1 mt-0.5" />
                       )}
                     </button>
                   );
@@ -278,24 +302,72 @@ export const TeachMePage: React.FC = () => {
                   onClick={handleSubmitAnswer}
                   className={`mt-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                     selectedOptionId
-                      ? 'bg-slate-900 hover:bg-atlas-blue text-white shadow-sm'
+                      ? 'bg-slate-900 hover:bg-indigo-600 text-white shadow-sm'
                       : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                   }`}
                 >
                   {t('practice.checkAnswer')}
                 </button>
               ) : (
-                <div className="mt-3 p-3 rounded-xl bg-white border border-slate-200 text-xs space-y-1 animate-in fade-in">
-                  <div className="font-bold text-slate-800">
-                    {selectedOptionId === question.correctOptionId ? (
-                      <span className="text-emerald-700">🌟 {t('practice.correctTitle')}</span>
-                    ) : (
-                      <span className="text-amber-700">🌱 {t('practice.encouragingTitle')}</span>
-                    )}
+                <div className="mt-3 p-3.5 rounded-xl bg-white border border-slate-200/90 text-xs space-y-2.5 animate-in fade-in shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="font-bold">
+                      {selectedOptionId === question.correctOptionId ? (
+                        <span className="text-emerald-700 flex items-center gap-1.5">
+                          <span>🌟</span>
+                          <span>
+                            {language === 'si' ? 'විශිෂ්ටයි! නිවැරදි විභාග පිළිතුරකි.' : language === 'ta' ? 'அருமை! சரியான பரீட்சை விடை.' : 'Outstanding! Correct Exam Answer.'}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="text-amber-700 flex items-center gap-1.5">
+                          <span>🌱</span>
+                          <span>
+                            {language === 'si' ? 'විභාග විශ්ලේෂණය සහ නිවැරදි කරුණ' : language === 'ta' ? 'பரீட்சை மாதிரி பகுப்பாய்வு' : "Examiner's Guidance & Key Principle"}
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-medium">
+                      {language === 'si' ? 'ලකුණු දීමේ පටිපාටිය' : language === 'ta' ? 'மதிப்பீட்டுத் திட்டம்' : 'Marking Scheme Insight'}
+                    </span>
                   </div>
-                  <p className="text-slate-600 leading-relaxed">
+
+                  <p className="text-slate-700 leading-relaxed bg-slate-50/80 p-2.5 rounded-lg border border-slate-100">
                     {question.educationalFeedback[language]}
                   </p>
+
+                  {question.syllabusReference && (
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 pt-1 border-t border-slate-100">
+                      <BookOpen className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" />
+                      <span>{question.syllabusReference}</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const subId = currentTopic?.subjectId || 'history';
+                      const topId = currentTopic?.id || topicId || '';
+                      const qText = question.questionText[language];
+                      const prompt = language === 'si'
+                        ? `මෙම විභාග ප්‍රශ්නය සහ එහි මූලධර්මය මට තවදුරටත් විස්තර කරන්න: "${qText}"`
+                        : language === 'ta'
+                        ? `இந்த பரீட்சை வினாவின் கோட்பாட்டை எனக்கு மேலும் விளக்க முடியுமா: "${qText}"`
+                        : `Can you explain the syllabus concept behind this exam question in detail: "${qText}"?`;
+                      navigate(`/tutor?subject=${encodeURIComponent(subId)}&topic=${encodeURIComponent(topId)}&q=${encodeURIComponent(prompt)}`);
+                    }}
+                    className="w-full py-1.5 px-3 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/80 text-indigo-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>
+                      {language === 'si'
+                        ? 'මෙම ප්‍රශ්නය ගැන AI ගුරුතුමාගෙන් අසන්න'
+                        : language === 'ta'
+                        ? 'இந்த வினா பற்றி AI ஆசிரியரிடம் கேட்க'
+                        : 'Ask AI Tutor about this Exam Question'}
+                    </span>
+                  </button>
                 </div>
               )}
             </div>

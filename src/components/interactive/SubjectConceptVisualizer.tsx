@@ -13,7 +13,19 @@ import {
   Shield,
   Gauge,
   Flame,
-  ArrowRight
+  ArrowRight,
+  Landmark,
+  BookOpen,
+  Scroll,
+  Globe,
+  Award,
+  Droplets,
+  Scale,
+  Mountain,
+  Crown,
+  CheckCircle2,
+  MapPin,
+  Trees
 } from 'lucide-react';
 
 interface SubjectConceptVisualizerProps {
@@ -174,15 +186,100 @@ export const SubjectConceptVisualizer: React.FC<SubjectConceptVisualizerProps> =
   // --------------------------------------------------------------------------
   // HISTORY EXPLORER STATE
   // --------------------------------------------------------------------------
-  const [historyMode, setHistoryMode] = useState<'sluice' | 'brahmi'>('sluice');
+  type HistoryMode = 'settlements' | 'political' | 'society' | 'sluice' | 'practical' | 'kingdoms' | 'kandy' | 'renaissance' | 'western' | 'brahmi';
+
+  const getInitialHistoryMode = (tId: string, hint?: string): HistoryMode => {
+    const combined = `${tId} ${hint || ''}`.toLowerCase();
+    if (combined.includes('settlement') || combined.includes('pre-historic') || combined.includes('pahiyangala') || combined.includes('ibbankatuwa') || combined.includes('ජනාවාස')) {
+      return 'settlements';
+    }
+    if (combined.includes('political') || combined.includes('power') || combined.includes('gamika') || combined.includes('parumaka') || combined.includes('දේශපාලන')) {
+      return 'political';
+    }
+    if (combined.includes('society') || combined.includes('ancient-society') || combined.includes('සමාජය') || combined.includes('gam sabha')) {
+      return 'society';
+    }
+    if (combined.includes('science-tech') || combined.includes('hydraulic') || combined.includes('sluice') || combined.includes('bisokotuwa') || combined.includes('විද්‍යාව') || combined.includes('තාක්ෂණ')) {
+      return 'sluice';
+    }
+    if (combined.includes('historical-knowledge') || combined.includes('practical') || combined.includes('bethma') || combined.includes('badulla') || combined.includes('ප්‍රායෝගික')) {
+      return 'practical';
+    }
+    if (combined.includes('decline') || combined.includes('kingdoms') || combined.includes('dambadeniya') || combined.includes('yapahuwa') || combined.includes('රාජධානි')) {
+      return 'kingdoms';
+    }
+    if (combined.includes('kandyan') || combined.includes('kandy') || combined.includes('senkadagala') || combined.includes('උඩරට')) {
+      return 'kandy';
+    }
+    if (combined.includes('renaissance') || combined.includes('gutenberg') || combined.includes('copernicus') || combined.includes('පුනරුදය')) {
+      return 'renaissance';
+    }
+    if (combined.includes('western') || combined.includes('portuguese') || combined.includes('dutch') || combined.includes('බටහිර')) {
+      return 'western';
+    }
+    if (combined.includes('source') || combined.includes('brahmi') || combined.includes('sellipi') || combined.includes('මූලාශ්‍ර')) {
+      return 'brahmi';
+    }
+    return 'sluice';
+  };
+
+  const [historyMode, setHistoryMode] = useState<HistoryMode>(() => getInitialHistoryMode(topicId, activeModeHint));
+
+  React.useEffect(() => {
+    setHistoryMode(getInitialHistoryMode(topicId, activeModeHint));
+  }, [topicId, activeModeHint]);
+
+  // Settlements state
+  const [settlementEra, setSettlementEra] = useState<'prehistoric' | 'protohistoric' | 'earlyhistoric'>('prehistoric');
+  const [microlithLength, setMicrolithLength] = useState<number>(2.5); // cm
+  const [cistLidOpen, setCistLidOpen] = useState<boolean>(false);
+
+  // Political power state (1: Gamika, 2: Parumaka, 3: Aya, 4: Maharaja)
+  const [politicalStage, setPoliticalStage] = useState<1 | 2 | 3 | 4>(1);
+
+  // Ancient society state
+  const [societySector, setSocietySector] = useState<'wewa' | 'dagoba' | 'ketha' | 'gamgoda'>('wewa');
+
+  // Hydraulic engineering state
   const [reservoirDepth, setReservoirDepth] = useState<number>(20); // 5m - 40m
+  const [yodaElaDistance, setYodaElaDistance] = useState<number>(45); // km
+
+  // Practical knowledge state
+  const [practicalTab, setPracticalTab] = useState<'bethma' | 'badulla' | 'heirloom'>('bethma');
+  const [reservoirWaterLevel, setReservoirWaterLevel] = useState<number>(30); // % capacity
+  const [activeRiceVar, setActiveRiceVar] = useState<'suwandel' | 'heenati' | 'maawee'>('suwandel');
+
+  // South-West kingdoms state
+  const [activeKingdom, setActiveKingdom] = useState<'dambadeniya' | 'yapahuwa' | 'kurunegala' | 'gampola' | 'kotte'>('dambadeniya');
+
+  // Kandyan kingdom state
+  const [kandyFocus, setKandyFocus] = useState<'defenses' | 'battles' | 'hierarchy'>('defenses');
+
+  // Renaissance state
+  const [renaissanceTopic, setRenaissanceTopic] = useState<'press' | 'copernicus' | 'navigation'>('press');
+  const [pressPrinted, setPressPrinted] = useState<boolean>(false);
+
+  // Western world encounters state
+  const [westernTimeline, setWesternTimeline] = useState<'arrival1505' | 'mulleriyawa1562' | 'dutch1658'>('arrival1505');
+
+  // Brahmi characters & inscriptions
   const [activeBrahmiChar, setActiveBrahmiChar] = useState<number>(0);
+  const [activeInscriptionShape, setActiveInscriptionShape] = useState<number>(0);
 
   const brahmiCharacters = [
     { glyph: '𑀧', translit: 'Pa', term: 'Parumaka (පරුමක)', meaningEn: 'Ancient clan chieftain or community leader title found in cave inscriptions', meaningSi: 'ලෙන් ලිපි වල හමුවන ගෝත්‍ර ප්‍රධානියා හෝ පාලකයා හැඳින්වූ ගෞරව නාමය', meaningTa: 'பண்டைய குகைக் கல்வெட்டுகளில் காணப்படும் தலைவரின் பட்டப்பெயர்' },
     { glyph: '𑀕', translit: 'Ga', term: 'Gāmani (ගාමිණී)', meaningEn: 'Village administrator or early royal title representing governance', meaningSi: 'ග්‍රාම පාලකයා හෝ මුල් යුගයේ පාලක නාමය', meaningTa: 'கிராமத் தலைவர் அல்லது ஆரம்பகால அரசப் பெயர்' },
     { glyph: '𑀯', translit: 'Va', term: 'Vāpi (වාපී)', meaningEn: 'Water reservoir or tank constructed for agricultural irrigation', meaningSi: 'කෘෂිකාර්මික වාරිමාර්ග සඳහා තැනූ වැව', meaningTa: 'விவசாய பாசனத்திற்காக அமைக்கப்பட்ட குளம்/ஏரி' },
     { glyph: '𑀮', translit: 'La', term: 'Lene (ලෙන)', meaningEn: 'Rock shelter or cave donated to the Buddhist Sangha', meaningSi: 'මහා සංඝරත්නය වෙත පූජා කළ ස්වාභාවික ගල් ගුහාව', meaningTa: 'சங்கத்தினருக்கு தானமாக வழங்கப்பட்ட குகை' },
+    { glyph: '𑀭', translit: 'Ra', term: 'Raja (රජ)', meaningEn: 'Sovereign monarch heading the unified central kingdom', meaningSi: 'රාජ්‍යයේ මූලික නායකයා හෙවත් රජතුමා', meaningTa: 'இராச்சியத்தின் தலைவர் அல்லது மன்னன்' },
+  ];
+
+  const inscriptionTypes = [
+    { nameEn: 'Cave Inscriptions (ලෙන් ලිපි)', nameSi: 'ලෙන් ලිපි', nameTa: 'குகைக் கல்வெட்டுகள்', descEn: 'Carved beneath drip-ledges (කටාරම්) of rock shelters donated to the Sangha from 3rd century BCE.', descSi: 'මහා සංඝරත්නයට පූජා කළ ලෙන් කටාරම් යට ක්‍රි.පූ. 3 වන සියවසේ සිට කොටන ලදී.', descTa: 'சங்கத்தினருக்கு வழங்கப்பட்ட குகைகளில் வெட்டப்பட்டவை.' },
+    { nameEn: 'Rock Inscriptions (ගිරි ලිපි)', nameSi: 'ගිරි ලිපි', nameTa: 'பாறைக் கல்வெட்டுகள்', descEn: 'Engraved directly upon massive natural rock surfaces (e.g. Tonigala, Mihintale).', descSi: 'ස්වාභාවික විශාල ගල් පර්වත තල මත කෙලින්ම කොටන ලද ලේඛන (තෝණිගල, මිහින්තලේ).', descTa: 'இயற்கை பாறைகளின் மேற்பரப்பில் செதுக்கப்பட்டவை.' },
+    { nameEn: 'Pillar Inscriptions (ටැම් ලිපි)', nameSi: 'ටැම් ලිපි', nameTa: 'தூண் கல்வெட்டுகள்', descEn: 'Four-sided polished stone pillars for royal decrees and market laws (e.g. Badulla pillar).', descSi: 'රාජකීය අණපනත් සහ වෙළඳ නීති සඳහා සිටුවන ලද සිව්පැති ගල් කණු (බදුලු ටැම් ලිපිය).', descTa: 'அரச கட்டளைகளுக்காக நடப்பட்ட கல் தூண்கள்.' },
+    { nameEn: 'Slab Inscriptions (පුවරු ලිපි)', nameSi: 'පුවරු ලිපි', nameTa: 'பலகைக் கல்வெட்டுகள்', descEn: 'Flat stone slabs with extensive legal charters (e.g. Polonnaruwa Galpotha).', descSi: 'විශාල නීති සංග්‍රහ හා විස්තර සහිත සමතලා ගල් පුවරු (පොළොන්නරුව ගල්පොත).', descTa: 'தட்டையான கற்பலகைகளில் எழுதப்பட்டவை.' },
+    { nameEn: 'Seat Inscriptions (ආසන ලිපි)', nameSi: 'ආසන ලිපි', nameTa: 'ஆசனக் கல்வெட்டுகள்', descEn: 'Carved on stone thrones or royal seats where kings sat during festivals.', descSi: 'රජවරුන් උත්සව නැරඹීමට වැඩහුන් ගල් ආසන මත කොටන ලද ලිපි.', descTa: 'அரச ஆசனங்களில் பொறிக்கப்பட்டவை.' },
   ];
 
   // --------------------------------------------------------------------------
@@ -300,7 +397,27 @@ export const SubjectConceptVisualizer: React.FC<SubjectConceptVisualizerProps> =
                 {domain === 'physics' && (language === 'si' ? 'අන්තර්ක්‍රියාකාරී භෞතික විද්‍යාගාරය' : language === 'ta' ? 'ஊடாடும் பௌதீக ஆய்வுகூடம்' : 'Interactive Physics Laboratory')}
                 {domain === 'biology' && (language === 'si' ? 'අන්වීක්ෂීය සෛල ගවේෂකය' : language === 'ta' ? 'நுண்ணோக்கி கல ஆய்வி' : 'Microscopic Cell Explorer')}
                 {domain === 'chemistry' && (language === 'si' ? 'රසායනික බන්ධන හා පරමාණු විද්‍යාගාරය' : language === 'ta' ? 'இரசாயனப் பிணைப்பு ஆய்வுகூடம்' : 'Chemical Bonding & Atomic Lab')}
-                {domain === 'history' && (language === 'si' ? 'පුරාණ වාරි හා සෙල්ලිපි ගවේෂකය' : language === 'ta' ? 'நீரியல் & கல்வெட்டு ஆய்வி' : 'Hydraulic & Inscription Explorer')}
+                {domain === 'history' && (
+                  historyMode === 'settlements'
+                    ? (language === 'si' ? 'පුරාණ ජනාවාස හා මානව පරිණාම ගවේෂකය' : language === 'ta' ? 'பண்டைய குடியேற்றங்கள் ஆய்வி' : 'Ancient Settlements & Prehistoric Explorer')
+                    : historyMode === 'political'
+                    ? (language === 'si' ? 'දේශපාලන බලය විකාශනය සහ පාලන ව්‍යුහය' : language === 'ta' ? 'அரசியல் அதிகார வளர்ச்சி மாதிரி' : 'Evolution of Political Power Explorer')
+                    : historyMode === 'society'
+                    ? (language === 'si' ? 'පුරාණ ශ්‍රී ලාංකීය සමාජය සහ වැව් පද්ධතිය' : language === 'ta' ? 'பண்டைய இலங்கை சமூகம் ஆய்வி' : 'Ancient Sri Lankan Society & Village Ecosystem')
+                    : historyMode === 'practical'
+                    ? (language === 'si' ? 'ඓතිහාසික දැනුම සහ ප්‍රායෝගික යෙදීම් ආදර්ශකය' : language === 'ta' ? 'வரலாற்று அறிவும் நடைமுறை பயன்பாடுகளும்' : 'Historical Knowledge & Traditional Applications')
+                    : historyMode === 'kingdoms'
+                    ? (language === 'si' ? 'නිරිතදිග නව රාජධානි හා නාගරීකරණ ගවේෂකය' : language === 'ta' ? 'தென்மேற்கு புதிய இராச்சியங்கள் ஆய்வி' : 'South-West Transitional Kingdoms Explorer')
+                    : historyMode === 'kandy'
+                    ? (language === 'si' ? 'උඩරට රාජධානිය සහ ආරක්ෂක උපායමාර්ග ආදර්ශකය' : language === 'ta' ? 'கண்டி இராச்சியம் மற்றும் தற்காப்பு மாதிரி' : 'Kandyan Kingdom & Mountain Defenses Simulator')
+                    : historyMode === 'renaissance'
+                    ? (language === 'si' ? 'යුරෝපීය පුනරුදය හා විද්‍යාත්මක විප්ලවය' : language === 'ta' ? 'ஐரோப்பிய மறுமலர்ச்சி ஆய்வுகூடம்' : 'European Renaissance & Science Lab')
+                    : historyMode === 'western'
+                    ? (language === 'si' ? 'ශ්‍රී ලංකාව සහ බටහිර ලෝකය (යටත්විජිත යුගය)' : language === 'ta' ? 'இலங்கையும் மேலைத்தேய உலகமும்' : 'Sri Lanka & Western World Encounters')
+                    : historyMode === 'brahmi'
+                    ? (language === 'si' ? 'සෙල්ලිපි හා බ්‍රාහ්මී අක්ෂර විකේතකය' : language === 'ta' ? 'பிராமி கல்வெட்டு எழுத்துக்கள் ஆய்வி' : 'Inscriptions & Brahmi Epigraphy Decipherer')
+                    : (language === 'si' ? 'පුරාණ වාරි හා සොරොව් තාක්ෂණ ආදර්ශකය' : language === 'ta' ? 'பண்டைய நீரியல் தொழினுட்ப மாதிரி' : 'Ancient Hydraulic & Sluice Gate Simulator')
+                )}
                 {domain === 'maths' && (
                   mathsMode === 'loci'
                     ? (language === 'si' ? 'මූලික පථ හතර සහ නිර්මාණ ආදර්ශකය' : language === 'ta' ? 'நான்கு அடிப்படை ஒழுக்குகளும் அமைப்புகளும்' : 'Four Basic Loci & Constructions Lab')
@@ -875,32 +992,421 @@ export const SubjectConceptVisualizer: React.FC<SubjectConceptVisualizerProps> =
       {/* ====================================================================== */}
       {domain === 'history' && (
         <div className="space-y-4">
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setHistoryMode('sluice')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                historyMode === 'sluice' 
-                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' 
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              Bisokotuwa Sluice Gate (බිසෝකොටුව)
-            </button>
-            <button
-              type="button"
-              onClick={() => setHistoryMode('brahmi')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                historyMode === 'brahmi' 
-                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' 
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              Brahmi Script Decipherer (සෙල්ලිපි)
-            </button>
+          {/* Chapter & Topic Mode Selector */}
+          <div className="flex flex-wrap gap-1.5 bg-slate-950/40 p-2 rounded-xl border border-slate-800">
+            {[
+              { id: 'settlements', labelEn: 'Ch 2: Settlements', labelSi: '2: ජනාවාස', labelTa: '2: குடியேற்றங்கள்' },
+              { id: 'political', labelEn: 'Ch 3: Political Power', labelSi: '3: දේශපාලන බලය', labelTa: '3: அரசியல் அதிகாரம்' },
+              { id: 'society', labelEn: 'Ch 4: Ancient Society', labelSi: '4: පුරාණ සමාජය', labelTa: '4: பண்டைய சமூகம்' },
+              { id: 'sluice', labelEn: 'Ch 5: Science & Hydraulics', labelSi: '5: විද්‍යාව හා වාරි', labelTa: '5: நீரியல் தொழினுட்பம்' },
+              { id: 'practical', labelEn: 'Ch 6: Practical Knowledge', labelSi: '6: ප්‍රායෝගික දැනුම', labelTa: '6: நடைமுறை அறிவு' },
+              { id: 'kingdoms', labelEn: 'Ch 7: SW Kingdoms', labelSi: '7: නිරිතදිග රාජධානි', labelTa: '7: தென்மேற்கு இராச்சியங்கள்' },
+              { id: 'kandy', labelEn: 'Ch 8: Kandyan Kingdom', labelSi: '8: උඩරට රාජධානිය', labelTa: '8: கண்டி இராச்சியம்' },
+              { id: 'renaissance', labelEn: 'Ch 9: Renaissance', labelSi: '9: පුනරුදය', labelTa: '9: மறுமலர்ச்சி' },
+              { id: 'western', labelEn: 'Ch 10: Western World', labelSi: '10: බටහිර ලෝකය', labelTa: '10: மேலைத்தேய உலகம்' },
+              { id: 'brahmi', labelEn: 'Ch 1: Inscriptions & Sources', labelSi: '1: සෙල්ලිපි හා මූලාශ්‍ර', labelTa: '1: கல்வெட்டுகள்' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setHistoryMode(tab.id as HistoryMode)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                  historyMode === tab.id 
+                    ? 'bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/20' 
+                    : 'bg-slate-800/80 text-slate-400 hover:text-slate-200 hover:bg-slate-700/80'
+                }`}
+              >
+                {language === 'si' ? tab.labelSi : language === 'ta' ? tab.labelTa : tab.labelEn}
+              </button>
+            ))}
           </div>
 
-          {historyMode === 'sluice' ? (
+          {/* 1. ANCIENT SETTLEMENTS (CHAPTER 2) */}
+          {historyMode === 'settlements' && (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-1.5 bg-slate-950/40 p-2 rounded-xl border border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setSettlementEra('prehistoric')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    settlementEra === 'prehistoric' ? 'bg-amber-500 text-slate-950 font-black shadow-xs' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {language === 'si' ? 'ප්‍රාග් ඓතිහාසික (පාහියංගල / බලංගොඩ මානවයා)' : language === 'ta' ? 'வரலாற்றுக்கு முற்பட்ட காலம் (பாகியன்கல)' : 'Pre-Historic (Pahiyangala Caves / 38,000 BP)'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSettlementEra('protohistoric')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    settlementEra === 'protohistoric' ? 'bg-amber-500 text-slate-950 font-black shadow-xs' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {language === 'si' ? 'පූර්ව ඓතිහාසික (ඉබ්බන්කටුව මහා ශිලා සුසාන)' : language === 'ta' ? 'ஆதி வரலாற்றுக் காலம் (இப்பன்கட்டுவ)' : 'Proto-Historic (Ibbankatuwa Megalithic)'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSettlementEra('earlyhistoric')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    settlementEra === 'earlyhistoric' ? 'bg-amber-500 text-slate-950 font-black shadow-xs' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {language === 'si' ? 'මූල ඓතිහාසික (මල්වතු ඔය නිම්න ජනාවාස)' : language === 'ta' ? 'ஆரம்ப வரலாற்றுக் காலம் (நதிக்கரை)' : 'Early Historic (River Basin Agrarian)'}
+                </button>
+              </div>
+
+              {settlementEra === 'prehistoric' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                    <div className="flex items-center justify-between text-xs text-slate-400 border-b border-slate-800 pb-2">
+                      <span className="font-semibold text-amber-300">Pahiyangala Cave & Microlithic Technology</span>
+                      <span className="font-mono text-emerald-400 font-bold">~38,000 BP</span>
+                    </div>
+
+                    <div className="flex items-center justify-center py-2 bg-slate-900/40 rounded-lg border border-slate-800/60">
+                      <svg viewBox="0 0 260 140" className="w-full max-w-[260px] h-[140px] overflow-visible">
+                        <defs>
+                          <linearGradient id="caveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="#451a03" stopOpacity="0.8" />
+                            <stop offset="100%" stopColor="#1e1b4b" stopOpacity="0.9" />
+                          </linearGradient>
+                        </defs>
+                        {/* Cave Silhouette */}
+                        <path d="M 10 130 Q 30 20 130 20 Q 230 20 250 130 Z" fill="url(#caveGrad)" stroke="#78350f" strokeWidth="2" />
+                        {/* Microlith Tool Silhouette */}
+                        <polygon
+                          points={`130,${90 - microlithLength * 12} ${130 - microlithLength * 10},90 ${130 + microlithLength * 8},90`}
+                          fill="#fef08a"
+                          stroke="#ca8a04"
+                          strokeWidth="2"
+                        />
+                        <text x="130" y="115" textAnchor="middle" fill="#fef08a" fontSize="11" fontWeight="bold">
+                          Geometric Microlith ({microlithLength} cm)
+                        </text>
+                        <text x="130" y="45" textAnchor="middle" fill="#fdba74" fontSize="10" fontStyle="italic">
+                          Pahiyangala Rock Shelter Arch
+                        </text>
+                      </svg>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-slate-300">Adjust Microlith Flake Size:</span>
+                        <span className="font-bold text-amber-400">{microlithLength} cm</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="1"
+                        max="4"
+                        step="0.5"
+                        value={microlithLength}
+                        onChange={(e) => setMicrolithLength(Number(e.target.value))}
+                        className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-400"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-2.5 text-xs">
+                    <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                      <Landmark className="w-4 h-4 text-amber-400" />
+                      <span>Balangoda Man (Homo sapiens balangodensis)</span>
+                    </div>
+                    <p className="text-slate-300 leading-relaxed">
+                      Excavations at <strong>Pahiyangala (Fa-Hien Cave)</strong> in Bulathsinhala and <strong>Batadombalena</strong> in Kuruwita proved modern humans lived in Sri Lanka over 38,000 years ago. They manufactured geometric microlithic stone tools from quartz and chert, hunting arboreal prey (monkeys, giant squirrels) and gathering wild breadfruit (දෙල්) and Kekuna nuts.
+                    </p>
+                    <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-slate-300 space-y-1">
+                      <div className="text-amber-400 font-bold">Key Archaeological Sites:</div>
+                      <div>• Pahiyangala (Bulathsinhala): Earliest anatomically modern humans (~38,000 BP)</div>
+                      <div>• Batadombalena (Kuruwita): Microlithic quartz tool manufacturing workshop</div>
+                      <div>• Bellanbandi Palassa: Open-air hunter-gatherer habitation site</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {settlementEra === 'protohistoric' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                    <div className="flex items-center justify-between text-xs text-slate-400 border-b border-slate-800 pb-2">
+                      <span className="font-semibold text-amber-300">Ibbankatuwa Megalithic Cist Tomb</span>
+                      <span className="font-mono text-emerald-400 font-bold">~1000–300 BCE</span>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center py-3 bg-slate-900/40 rounded-lg border border-slate-800/60">
+                      <svg viewBox="0 0 240 130" className="w-full max-w-[240px] h-[130px] overflow-visible">
+                        {/* Megalithic Stone Slab Cist Box */}
+                        <rect x="50" y="45" width="140" height="70" fill="#334155" stroke="#94a3b8" strokeWidth="3" rx="4" />
+                        {/* Clay Urn Inside */}
+                        <circle cx="120" cy="80" r="22" fill="#b45309" stroke="#d97706" strokeWidth="2" />
+                        <text x="120" y="84" textAnchor="middle" fill="#fef08a" fontSize="9" fontWeight="bold">BRW Urn</text>
+                        {/* Movable Top Capstone Slab */}
+                        <rect
+                          x={cistLidOpen ? "80" : "40"}
+                          y={cistLidOpen ? "15" : "38"}
+                          width="160"
+                          height="12"
+                          fill="#64748b"
+                          stroke="#cbd5e1"
+                          strokeWidth="2"
+                          rx="3"
+                          className="transition-all duration-300"
+                        />
+                      </svg>
+                      <button
+                        type="button"
+                        onClick={() => setCistLidOpen(!cistLidOpen)}
+                        className="mt-2 px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-lg text-xs font-bold"
+                      >
+                        {cistLidOpen ? 'Close Stone Capstone Lid' : 'Lift Stone Capstone Lid (Inspect Grave)'}
+                      </button>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-slate-300">
+                      <span className="text-amber-400 font-bold">Burial Goods Inside:</span> Black and Red Ware (BRW) pottery with clan graffiti symbols, iron spear points, copper wire, and carnelian beads from Indian Ocean maritime trade.
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-2 text-xs">
+                    <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                      <Shield className="w-4 h-4 text-amber-400" />
+                      <span>Proto-Historic Early Iron Age Culture</span>
+                    </div>
+                    <p className="text-slate-300 leading-relaxed">
+                      Between 1000 BCE and 300 BCE, Sri Lankan society transitioned into the Early Iron Age. The discovery of the <strong>Ibbankatuwa Megalithic Cemetery</strong> (near Dambulla) and <strong>Pomparippu</strong> revealed elaborate stone cist tombs, iron metallurgy, paddy cultivation, and overseas trading links with South Asia.
+                    </p>
+                    <div className="p-3 bg-amber-950/30 border border-amber-500/20 rounded-lg text-[11px] text-amber-200">
+                      <strong>Textbook Exam Fact:</strong> Carbon-14 dating of Ibbankatuwa charcoal confirms permanent settled agrarian communities existed centuries before the traditional Prince Vijaya arrival legends!
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {settlementEra === 'earlyhistoric' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                    <div className="font-bold text-amber-300 text-xs border-b border-slate-800 pb-2">
+                      Four Great River Valley Settlement Axes
+                    </div>
+                    <div className="space-y-2 text-xs">
+                      <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+                        <span className="text-cyan-400 font-bold">1. Malwathu Oya (Aruvi Aru):</span>
+                        <p className="text-slate-400 text-[11px] mt-0.5">Anuradhapura heartland; connected directly to the international sea port of Mantai (Manthai).</p>
+                      </div>
+                      <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+                        <span className="text-cyan-400 font-bold">2. Mahaweli Ganga Basin:</span>
+                        <p className="text-slate-400 text-[11px] mt-0.5">Perennial water feeding Dimbulagala, Polonnaruwa, and Trincomalee (Gokanna port).</p>
+                      </div>
+                      <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+                        <span className="text-cyan-400 font-bold">3. Deduru Oya Basin:</span>
+                        <p className="text-slate-400 text-[11px] mt-0.5">Agricultural breadbasket spanning Chilaw, Kurunegala, and Panduwasnuwara.</p>
+                      </div>
+                      <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+                        <span className="text-cyan-400 font-bold">4. Walawe & Kirindi Oya (Ruhuna):</span>
+                        <p className="text-slate-400 text-[11px] mt-0.5">Southern principality anchored at Magama (Tissamaharama) and Godawaya port.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-2.5 text-xs">
+                    <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                      <Compass className="w-4 h-4 text-amber-400" />
+                      <span>Why Did Ancient Settlers Choose River Basins?</span>
+                    </div>
+                    <ul className="list-disc pl-4 space-y-1.5 text-slate-300">
+                      <li><strong>Fertile Alluvial Soil:</strong> Seasonal river floods deposited rich mineral silt ideal for wet-rice cultivation (*Ketha*).</li>
+                      <li><strong>Drinking & Domestic Water:</strong> Perennial river flow ensured year-round survival in the dry zone.</li>
+                      <li><strong>Inland Waterway Navigation:</strong> Rafts and flat-bottom canoes transported grain, timber, and pottery downstream to coastal trading ports.</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 2. EVOLUTION OF POLITICAL POWER (CHAPTER 3) */}
+          {historyMode === 'political' && (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-950/40 p-2.5 rounded-xl border border-slate-800">
+                <span className="text-xs text-slate-400">4 Stages of Political Power Evolution:</span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {[
+                    { stage: 1, title: '1. Gamika (ගාමික)' },
+                    { stage: 2, title: '2. Parumaka (පරුමක)' },
+                    { stage: 3, title: '3. Aya / Gāmani (අය)' },
+                    { stage: 4, title: '4. Maharaja (මහාරජ)' },
+                  ].map((s) => (
+                    <button
+                      key={s.stage}
+                      type="button"
+                      onClick={() => setPoliticalStage(s.stage as 1 | 2 | 3 | 4)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                        politicalStage === s.stage 
+                          ? 'bg-amber-500 text-slate-950 font-black shadow-xs' 
+                          : 'bg-slate-800 text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      {s.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                  <div className="flex items-center justify-between text-xs border-b border-slate-800 pb-2">
+                    <span className="text-slate-400">Selected Title & Authority:</span>
+                    <span className="font-mono text-amber-300 font-bold">Stage {politicalStage} of 4</span>
+                  </div>
+
+                  {politicalStage === 1 && (
+                    <div className="space-y-2">
+                      <div className="text-lg font-black text-amber-400">Gamika (ගාමික / கிராமத் தலைவர்)</div>
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        The earliest leadership unit in ancient Sri Lanka. The <strong>Gamika</strong> was the respected village headman who supervised the small village tank (Gama Wewa), mediated agrarian boundary disputes, and organized communal labor for paddy cultivation.
+                      </p>
+                      <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-cyan-300 font-mono">
+                        Early Brahmi Inscription: "Gamika Tisa Lene Sagasa" (The cave of village headman Tissa is dedicated to the Sangha).
+                      </div>
+                    </div>
+                  )}
+
+                  {politicalStage === 2 && (
+                    <div className="space-y-2">
+                      <div className="text-lg font-black text-amber-400">Parumaka & Parumakalu (පරුමක / පරුමකලු)</div>
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        Elite clan chieftains who governed territorial clan divisions (*Kabojha*, *Murundi*). They controlled regional trade, mines, and tanks. Ancient Brahmi inscriptions frequently record <strong>Parumakalu</strong> (female clan leaders), proving women possessed high civic autonomy and property ownership rights!
+                      </p>
+                      <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-cyan-300 font-mono">
+                        Cave Inscription: "Parumaka Sumana Puta Parumaka Abhaya Lene Sagasa"
+                      </div>
+                    </div>
+                  )}
+
+                  {politicalStage === 3 && (
+                    <div className="space-y-2">
+                      <div className="text-lg font-black text-amber-400">Aya & Gāmani (අය / ගාමිණී)</div>
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        Regional princes and supreme military commanders. <strong>Aya</strong> denoted a district revenue-collecting prince (from Sanskrit <em>Aya</em> = revenue/taxes), while <strong>Gāmani</strong> evolved into an illustrious royal title (e.g. <em>Gamani Uttiya</em>, <em>Gamani Tissa</em>) signifying consolidated regional rule.
+                      </p>
+                      <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-cyan-300 font-mono">
+                        Epigraphic Record: "Aya Asali Puta Aya Siva Lene"
+                      </div>
+                    </div>
+                  )}
+
+                  {politicalStage === 4 && (
+                    <div className="space-y-2">
+                      <div className="text-lg font-black text-amber-400">Maharaja / Raja (මහාරජ / பேரரசன்)</div>
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        Sovereign monarch heading a centralized state under a unified royal umbrella (<strong>Ekasath Kirima</strong>). Reinforced by Buddhist ethics (<em>Mahasammata</em> concept and <em>Dharmaraja</em> righteous kingship), beginning with King Devanampiyatissa and consolidated nationwide by King Dutugemunu.
+                      </p>
+                      <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-emerald-400 font-mono">
+                        Periyapuliyankulam Inscription: "Damarakita Teraha Lene Agata Anagata Chatusa Sagasa Dine Gamani Damaraja"
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-3 text-xs">
+                  <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                    <Crown className="w-4 h-4 text-amber-400" />
+                    <span>Transformation of Kingship via Buddhism</span>
+                  </div>
+                  <p className="text-slate-300 leading-relaxed">
+                    Prior to the arrival of Arahat Mahinda (3rd Century BCE), rulers were largely territorial warlords. Buddhism introduced the sublime concept of the <strong>Dharmaraja</strong> (Righteous Ruler) guided by the <em>Dasa Raja Dharma</em> (Ten Royal Virtues: charity, morality, generosity, honesty, gentleness, self-control, non-anger, non-violence, patience, and non-opposition).
+                  </p>
+                  <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg text-[11px] text-slate-300">
+                    <div className="text-amber-400 font-bold mb-1">G.C.E. O/L Examination Formula:</div>
+                    Gamika (Village) ➔ Parumaka (Clan Territory) ➔ Aya / Gāmani (District Principalities) ➔ Maharaja (Centralized Island Monarchy)
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 3. ANCIENT SOCIETY & VILLAGE ECOSYSTEM (CHAPTER 4) */}
+          {historyMode === 'society' && (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-1.5 bg-slate-950/40 p-2 rounded-xl border border-slate-800">
+                {[
+                  { id: 'wewa', label: '1. Wewa (වැව - Reservoir)' },
+                  { id: 'dagoba', label: '2. Dagoba (දාගැබ - Stupa)' },
+                  { id: 'ketha', label: '3. Ketha (කෙත - Paddy Fields)' },
+                  { id: 'gamgoda', label: '4. Gamgoda (ගම්ගොඩ - Homestead)' },
+                ].map((sec) => (
+                  <button
+                    key={sec.id}
+                    type="button"
+                    onClick={() => setSocietySector(sec.id as any)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      societySector === sec.id ? 'bg-amber-500 text-slate-950 font-black shadow-xs' : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    {sec.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                  <div className="flex items-center justify-between text-xs border-b border-slate-800 pb-2">
+                    <span className="font-semibold text-amber-300">The Quadripartite Ecological Harmony</span>
+                    <span className="text-[10px] text-emerald-400 font-mono">වැවයි • දාගැබයි • ගමයි • පන්සලයි</span>
+                  </div>
+
+                  <div className="flex items-center justify-center py-2 bg-slate-900/40 rounded-lg border border-slate-800/60">
+                    <svg viewBox="0 0 240 140" className="w-full max-w-[240px] h-[140px] overflow-visible">
+                      {/* Quadrant 1: Wewa (Top Left) */}
+                      <rect x="20" y="15" width="95" height="50" rx="8" fill={societySector === 'wewa' ? 'rgba(6, 182, 212, 0.3)' : 'rgba(30, 41, 59, 0.6)'} stroke={societySector === 'wewa' ? '#06b6d4' : '#475569'} strokeWidth="1.5" />
+                      <text x="67" y="44" textAnchor="middle" fill="#38bdf8" fontSize="11" fontWeight="bold">Wewa (Water)</text>
+
+                      {/* Quadrant 2: Dagoba (Top Right) */}
+                      <rect x="125" y="15" width="95" height="50" rx="8" fill={societySector === 'dagoba' ? 'rgba(245, 158, 11, 0.3)' : 'rgba(30, 41, 59, 0.6)'} stroke={societySector === 'dagoba' ? '#f59e0b' : '#475569'} strokeWidth="1.5" />
+                      <text x="172" y="44" textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="bold">Dagoba (Faith)</text>
+
+                      {/* Quadrant 3: Ketha (Bottom Left) */}
+                      <rect x="20" y="75" width="95" height="50" rx="8" fill={societySector === 'ketha' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(30, 41, 59, 0.6)'} stroke={societySector === 'ketha' ? '#22c55e' : '#475569'} strokeWidth="1.5" />
+                      <text x="67" y="104" textAnchor="middle" fill="#4ade80" fontSize="11" fontWeight="bold">Ketha (Food)</text>
+
+                      {/* Quadrant 4: Gamgoda (Bottom Right) */}
+                      <rect x="125" y="75" width="95" height="50" rx="8" fill={societySector === 'gamgoda' ? 'rgba(168, 85, 247, 0.3)' : 'rgba(30, 41, 59, 0.6)'} stroke={societySector === 'gamgoda' ? '#a855f7' : '#475569'} strokeWidth="1.5" />
+                      <text x="172" y="104" textAnchor="middle" fill="#c084fc" fontSize="11" fontWeight="bold">Gamgoda (Home)</text>
+                    </svg>
+                  </div>
+
+                  <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg text-xs space-y-1">
+                    {societySector === 'wewa' && (
+                      <p className="text-slate-300"><strong>Wewa (Lifeblood Reservoir):</strong> Supplied gravity irrigation to paddy tracts, raised the subterranean groundwater table, and created a microclimate preventing drought desiccation.</p>
+                    )}
+                    {societySector === 'dagoba' && (
+                      <p className="text-slate-300"><strong>Dagoba & Vihara (Spiritual Anchor):</strong> Unified villagers through Buddhist rituals, monastic education (Pirivenas), cultural arts, and moral discipline.</p>
+                    )}
+                    {societySector === 'ketha' && (
+                      <p className="text-slate-300"><strong>Ketha (Agrarian Sustenance):</strong> Communally farmed wet-rice fields cultivating indigenous grains through cooperative mutual labor (<em>Aththam</em> and <em>Kayiya</em>).</p>
+                    )}
+                    {societySector === 'gamgoda' && (
+                      <p className="text-slate-300"><strong>Gamgoda (Highland Homestead):</strong> Residential homes constructed on higher ground above flood contours to safeguard fertile arable soils below.</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-3 text-xs">
+                  <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                    <Scale className="w-4 h-4 text-amber-400" />
+                    <span>Democratic Village Governance: Gam Sabha</span>
+                  </div>
+                  <p className="text-slate-300 leading-relaxed">
+                    Ancient Sri Lankan villages were autonomous democratic republics. The <strong>Gam Sabha</strong> (Village Assembly) comprised village elders gathering beneath the banyan or sacred bo-tree. They resolved land boundary disputes, scheduled water turns (<em>Diya Mura</em>), and maintained reservoir bunds through voluntary civic labor.
+                  </p>
+                  <div className="p-3 bg-amber-950/30 border border-amber-500/20 rounded-lg text-[11px] text-amber-200">
+                    <strong>Social Equality:</strong> Unlike the rigid Hindu caste hierarchies of the mainland with "untouchables", Sri Lanka's occupational guild system (<em>Kula</em>) was heavily tempered by egalitarian Buddhist philosophy where all human beings shared equal spiritual dignity.
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 4. ANCIENT SCIENCE & HYDRAULIC TECHNOLOGY (CHAPTER 5) */}
+          {historyMode === 'sluice' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
                 <div>
@@ -920,48 +1426,688 @@ export const SubjectConceptVisualizer: React.FC<SubjectConceptVisualizerProps> =
                 </div>
                 <div className="text-[11px] text-slate-300 space-y-1 pt-2 border-t border-slate-800">
                   <div>Deep Water Hydrostatic Thrust: <span className="font-mono text-cyan-400">{(reservoirDepth * 10).toFixed(0)} kPa</span></div>
-                  <div>Sluice Water Exit Velocity: <span className="font-mono text-emerald-400">Controlled (Safe Trickle)</span></div>
+                  <div>Bisokotuwa Pressure Dissipation: <span className="font-mono text-emerald-400">Turbulence Absorbed in Stone Chamber</span></div>
+                  <div>Sluice Water Exit Velocity: <span className="font-mono text-emerald-400">Controlled (Safe Trickle into Canal)</span></div>
+                </div>
+
+                <div className="pt-2 border-t border-slate-800">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-slate-300">Yoda Ela (Jaya Ganga) Distance:</span>
+                    <span className="font-bold text-cyan-400">{yodaElaDistance} km (of 87 km)</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="87"
+                    step="5"
+                    value={yodaElaDistance}
+                    onChange={(e) => setYodaElaDistance(Number(e.target.value))}
+                    className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                  />
+                  <div className="text-[10px] text-slate-400 mt-1">
+                    Gradient: <strong className="text-amber-300">Less than 6 inches per mile (1 in 10,000)</strong> engineered by King Dhatusena!
+                  </div>
                 </div>
               </div>
 
-              <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-2">
+              <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-2 text-xs">
                 <div className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
-                  <Shield className="w-4 h-4" />
-                  <span>The Ancient Engineering Miracle</span>
+                  <Shield className="w-4 h-4 text-amber-400" />
+                  <span>The Bisokotuwa Sluice Valve & Monumental Engineering</span>
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Before the 3rd Century BC, massive dams would wash away under raging deep water pressure. Ancient Sinhala engineers invented the <strong>Bisokotuwa</strong> (enclosed stone pressure valve). Water entered stone chambers where turbulence was absorbed, releasing smooth water into distribution canals without breaching the earthen bund!
+                <p className="text-slate-300 leading-relaxed">
+                  Before the 3rd Century BC, massive earthen dams washed away under raging deep water pressure. Ancient Sinhala engineers invented the <strong>Bisokotuwa</strong> (enclosed stone pressure valve). Water entered stone chambers where hydraulic turbulence was absorbed, releasing smooth water into distribution canals without breaching the earthen bund!
                 </p>
+                <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-slate-300 space-y-1">
+                  <div className="text-amber-300 font-bold">Other Feats in Grade 10 Chapter 5:</div>
+                  <div>• <strong>Jetavanaramaya:</strong> Over 120m high, third tallest structure in the ancient world.</div>
+                  <div>• <strong>Sigiriya Fountains:</strong> Powered entirely by gravitational hydraulic head pressure.</div>
+                  <div>• <strong>Samanalawewa Furnaces:</strong> Wind-powered monsoon iron smelting achieving &gt;1200°C!</div>
+                </div>
               </div>
             </div>
-          ) : (
-            <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-                Click Early Brahmi Glyphs to Decipher Rock Inscriptions:
-              </span>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {brahmiCharacters.map((char, index) => {
-                  const isSelected = activeBrahmiChar === index;
-                  return (
-                    <button
-                      key={char.translit}
-                      type="button"
-                      onClick={() => setActiveBrahmiChar(index)}
-                      className={`p-3 rounded-xl border text-center transition-all ${
-                        isSelected 
-                          ? 'border-amber-400 bg-amber-500/20 text-amber-300' 
-                          : 'border-slate-800 bg-slate-900 text-slate-300 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="text-3xl font-serif mb-1">{char.glyph}</div>
-                      <div className="text-xs font-bold">{char.term}</div>
-                    </button>
-                  );
-                })}
+          )}
+
+          {/* 5. HISTORICAL KNOWLEDGE & PRACTICAL APPLICATIONS (CHAPTER 6) */}
+          {historyMode === 'practical' && (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-1.5 bg-slate-950/40 p-2 rounded-xl border border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setPracticalTab('bethma')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    practicalTab === 'bethma' ? 'bg-amber-500 text-slate-950 font-black shadow-xs' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {language === 'si' ? 'බෙත්ම ක්‍රමය (නියං සමයේ ජල බෙදීම)' : language === 'ta' ? 'பெத்ம முறை (வறட்சி நீர் பகிர்வு)' : 'The Bethma Water-Sharing Protocol'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPracticalTab('badulla')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    practicalTab === 'badulla' ? 'bg-amber-500 text-slate-950 font-black shadow-xs' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {language === 'si' ? 'බදුලු ටැම් ලිපිය (වෙළඳ නීති හා පාරිභෝගික රැකවරණය)' : language === 'ta' ? 'பதுளை தூண் கல்வெட்டு' : 'Badulla Pillar Inscription (Market Laws)'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPracticalTab('heirloom')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    practicalTab === 'heirloom' ? 'bg-amber-500 text-slate-950 font-black shadow-xs' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {language === 'si' ? 'දේශීය පාරම්පරික වී ප්‍රභේද' : language === 'ta' ? 'பாரம்பரிய நெல் வகைகள்' : 'Heirloom Rice Varieties'}
+                </button>
               </div>
 
-              <div className="p-3 bg-amber-950/30 border border-amber-500/20 rounded-lg text-xs text-amber-200">
-                <strong>Historical Meaning:</strong> {language === 'si' ? brahmiCharacters[activeBrahmiChar].meaningSi : language === 'ta' ? brahmiCharacters[activeBrahmiChar].meaningTa : brahmiCharacters[activeBrahmiChar].meaningEn}
+              {practicalTab === 'bethma' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-slate-300">Reservoir Water Level:</span>
+                        <span className={`font-bold ${reservoirWaterLevel < 40 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                          {reservoirWaterLevel}% ({reservoirWaterLevel < 40 ? 'Drought Alert: BETHMA ACTIVE!' : 'Normal Seasonal Level'})
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="10"
+                        max="100"
+                        step="5"
+                        value={reservoirWaterLevel}
+                        onChange={(e) => setReservoirWaterLevel(Number(e.target.value))}
+                        className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-400"
+                      />
+                    </div>
+
+                    <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg text-xs space-y-1.5">
+                      <div className="font-bold text-amber-400">Bethma Protocol Status:</div>
+                      {reservoirWaterLevel < 40 ? (
+                        <div className="text-rose-300 text-[11px] leading-relaxed">
+                          <strong>Active Drought Strategy:</strong> Outer fields are temporarily retired. All village farming families receive equal micro-strips immediately below the sluice. Water is shared equally regardless of who originally owned the title deeds!
+                        </div>
+                      ) : (
+                        <div className="text-emerald-300 text-[11px] leading-relaxed">
+                          <strong>Normal Cultivation:</strong> Water is plentiful. Full paddy tracts across all upper and lower field sectors are actively irrigated.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-2 text-xs">
+                    <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                      <Droplets className="w-4 h-4 text-cyan-400" />
+                      <span>Ancient Wisdom for Modern Climate Resilience</span>
+                    </div>
+                    <p className="text-slate-300 leading-relaxed">
+                      The <strong>Bethma</strong> system prevented starvation and prevented wealthy landowners from monopolizing scarce water during severe droughts. It represents an ancient sustainable socialist collective principle embedded inside traditional Sri Lankan tank culture.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {practicalTab === 'badulla' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                    <div className="font-bold text-amber-300 text-xs border-b border-slate-800 pb-1.5">
+                      Badulla Pillar Inscription (Hopitigamuwa - 10th Century CE)
+                    </div>
+                    <div className="space-y-1.5 text-xs text-slate-300">
+                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
+                        <span className="text-amber-400 font-bold">1. Verified Weights & Measures:</span> Merchants must use standardized royal scales. Cheating customers was severely fined.
+                      </div>
+                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
+                        <span className="text-amber-400 font-bold">2. Protection Against Tax Extortion:</span> Royal tax collectors were prohibited from collecting arbitrary or illegal levies from traveling merchants.
+                      </div>
+                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
+                        <span className="text-amber-400 font-bold">3. Official Market Days:</span> Trading was conducted strictly in public marketplaces on authorized days; trading on Poya was prohibited.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-2 text-xs">
+                    <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                      <Scale className="w-4 h-4 text-amber-400" />
+                      <span>Early Consumer Rights in South Asia</span>
+                    </div>
+                    <p className="text-slate-300 leading-relaxed">
+                      The Badulla Pillar Inscription (erected by King Udaya III at Hopitigamuwa market near Mahiyangana) is one of the earliest documented municipal consumer protection codes in world history! It proves ancient Sri Lanka maintained advanced commercial ethics and legal oversight.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {practicalTab === 'heirloom' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                    <div className="flex gap-2">
+                      {(['suwandel', 'heenati', 'maawee'] as const).map((r) => (
+                        <button
+                          key={r}
+                          type="button"
+                          onClick={() => setActiveRiceVar(r)}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold capitalize transition-all ${
+                            activeRiceVar === r ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-400'
+                          }`}
+                        >
+                          {r}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg text-xs space-y-1.5">
+                      {activeRiceVar === 'suwandel' && (
+                        <>
+                          <div className="text-amber-400 font-bold text-sm">Suwandel (සුවඳැල්)</div>
+                          <p className="text-slate-300">Famed for its exquisite aroma and sweet taste. Rich in antioxidants and low in glycemic index, historically prepared for royal banquets and auspicious ceremonies.</p>
+                        </>
+                      )}
+                      {activeRiceVar === 'heenati' && (
+                        <>
+                          <div className="text-amber-400 font-bold text-sm">Kalu Heenati (කළු හීනැටි)</div>
+                          <p className="text-slate-300">Drought-tolerant variety with exceptional iron and zinc content. Traditionally recommended for nursing mothers and restoring physical stamina after illness.</p>
+                        </>
+                      )}
+                      {activeRiceVar === 'maawee' && (
+                        <>
+                          <div className="text-amber-400 font-bold text-sm">Maa-Wee (මා වී)</div>
+                          <p className="text-slate-300">Long-duration (6 to 8 month) flood-resilient paddy variety. Deep roots thrive in marshy lowlands and waterlogged floodplains without chemical inputs.</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-2 text-xs">
+                    <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                      <Trees className="w-4 h-4 text-emerald-400" />
+                      <span>Natural Disease & Climate Resistance</span>
+                    </div>
+                    <p className="text-slate-300 leading-relaxed">
+                      Sri Lanka possessed over 2,000 distinct heirloom rice cultivars before modern hybrid mono-cropping. These indigenous varieties required zero chemical fertilizers or synthetic pesticides and naturally adapted to local seasonal monsoons.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 6. DECLINE OF DRY ZONE & SOUTH-WEST KINGDOMS (CHAPTER 7) */}
+          {historyMode === 'kingdoms' && (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-1.5 bg-slate-950/40 p-2 rounded-xl border border-slate-800">
+                {[
+                  { id: 'dambadeniya', label: '1. Dambadeniya (1232)' },
+                  { id: 'yapahuwa', label: '2. Yapahuwa (1273)' },
+                  { id: 'kurunegala', label: '3. Kurunegala (1293)' },
+                  { id: 'gampola', label: '4. Gampola (1341)' },
+                  { id: 'kotte', label: '5. Kotte (1412)' },
+                ].map((k) => (
+                  <button
+                    key={k.id}
+                    type="button"
+                    onClick={() => setActiveKingdom(k.id as any)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      activeKingdom === k.id ? 'bg-amber-500 text-slate-950 font-black shadow-xs' : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    {k.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-xs">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <span className="font-bold text-amber-400 text-sm capitalize">{activeKingdom} Capital Era</span>
+                    <span className="text-[10px] text-slate-400 font-mono">13th–15th Century CE</span>
+                  </div>
+
+                  {activeKingdom === 'dambadeniya' && (
+                    <p className="text-slate-300 leading-relaxed">
+                      Founded by King Vijayabahu III and made illustrious by King Parakramabahu II. Regarded as a literary golden era (authorship of <em>Pujavaliya</em>, <em>Kavsilumina</em>, and <em>Visuddhimarga Sannaya</em>). The Sacred Tooth Relic was safeguarded atop Beligala rock.
+                    </p>
+                  )}
+                  {activeKingdom === 'yapahuwa' && (
+                    <p className="text-slate-300 leading-relaxed">
+                      King Bhuvanekabahu I fortified the sheer granite crag of Subha Pabbata (Yapahuwa). Renowned for its monumental <strong>Lion Staircase</strong> showing exquisite Chinese artistic influence, stone relief carvings of female dancers, and fortified palace terrace.
+                    </p>
+                  )}
+                  {activeKingdom === 'kurunegala' && (
+                    <p className="text-slate-300 leading-relaxed">
+                      Reigned by King Parakramabahu IV. A landmark period for Sinhala vernacular literature: the monumental translation of 550 Pali Jataka stories into Sinhala (<em>Pansiya Panas Jataka Potha</em>) and <em>Dalada Siritha</em>.
+                    </p>
+                  )}
+                  {activeKingdom === 'gampola' && (
+                    <p className="text-slate-300 leading-relaxed">
+                      Scenic hill kingdom reigned by Bhuvanekabahu IV and Vikramabahu III. Renowned for architectural masterpieces blending timber and stone: <strong>Gadaladeniya</strong>, <strong>Lankatilaka</strong>, and the intricate wood carvings of <strong>Embekke Devalaya</strong>.
+                    </p>
+                  )}
+                  {activeKingdom === 'kotte' && (
+                    <p className="text-slate-300 leading-relaxed">
+                      Fortified by Minister Nissanka Alagakkonara amidst the Diyawanna marshes. Reached supreme glory under <strong>King Parakramabahu VI (1412–1467 CE)</strong>, who achieved the last sovereign political unification of the entire island! Golden age of <em>Sandesha Kavya</em> message poems.
+                    </p>
+                  )}
+                </div>
+
+                <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-2 text-xs">
+                  <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                    <Compass className="w-4 h-4 text-amber-400" />
+                    <span>Four Catalysts for the South-Western Drift</span>
+                  </div>
+                  <ul className="list-disc pl-4 space-y-1.5 text-slate-300">
+                    <li><strong>Brutal Foreign Invasions:</strong> Devastating invasion by Kalinga Magha (1215 CE) smashed Rajarata administrative centers.</li>
+                    <li><strong>Destruction of Hydraulic Cascades:</strong> Breaching of complex inter-connected tank networks rendered irrigation unviable.</li>
+                    <li><strong>Malaria Epidemics:</strong> Stagnant breach waters in dry zone valleys fostered disease vectors.</li>
+                    <li><strong>Boom in Wet Zone Spice Trade:</strong> High international demand for wild cinnamon and spices shifted prosperity to southwestern coastal ports.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 7. KANDYAN KINGDOM (CHAPTER 8) */}
+          {historyMode === 'kandy' && (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-1.5 bg-slate-950/40 p-2 rounded-xl border border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setKandyFocus('defenses')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    kandyFocus === 'defenses' ? 'bg-amber-500 text-slate-950 font-black shadow-xs' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {language === 'si' ? 'ස්වාභාවික කඳුකර ආරක්ෂාව' : language === 'ta' ? 'இயற்கை தற்காப்பு' : 'Natural Mountain Fortress Defenses'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setKandyFocus('battles')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    kandyFocus === 'battles' ? 'bg-amber-500 text-slate-950 font-black shadow-xs' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {language === 'si' ? 'ඓතිහාසික සටන් (දන්තුරේ / ගන්නෝරුව)' : language === 'ta' ? 'வரலாற்று சமர்கள்' : 'Decisive Battles (Danture & Gannoruwa)'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setKandyFocus('hierarchy')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    kandyFocus === 'hierarchy' ? 'bg-amber-500 text-slate-950 font-black shadow-xs' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {language === 'si' ? 'උඩරට පරිපාලන ව්‍යුහය (අදිකාරම්වරු / දිසාවේවරු)' : language === 'ta' ? 'நிர்வாக கட்டமைப்பு' : 'Administrative Hierarchy & Rajakariya'}
+                </button>
+              </div>
+
+              {kandyFocus === 'defenses' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                    <div className="font-bold text-amber-300 border-b border-slate-800 pb-2 flex items-center justify-between">
+                      <span>Senkadagala Geopolitical Fortress</span>
+                      <span className="text-[10px] text-emerald-400 font-mono">Impregnable Bastion</span>
+                    </div>
+                    <p className="text-slate-300 leading-relaxed">
+                      The Kingdom of Kandy defended its sovereignty for over 300 years through ingenious use of physical geography:
+                    </p>
+                    <ul className="list-disc pl-4 space-y-1.5 text-slate-400">
+                      <li><strong>The Mahaweli River Moat:</strong> Encircles Senkadagala on three sides like a colossal natural moat.</li>
+                      <li><strong>Balana Pass & Choke Points (Kadawath):</strong> Extremely narrow rocky passes where European troops had to march in single file.</li>
+                      <li><strong>Monsoon Guerrilla Warfare:</strong> Heavy rains soaked European gunpowders and ruined matchlocks while Sinhala archers and snipers attacked from jungle canopy!</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-2">
+                    <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                      <Mountain className="w-4 h-4 text-amber-400" />
+                      <span>Guerrilla Strategy: Evacuate & Encircle</span>
+                    </div>
+                    <p className="text-slate-300 leading-relaxed">
+                      Whenever Portuguese or Dutch armies marched into Kandy, the King and population evacuated the capital with all food, leaving an empty shell. When the invading soldiers grew starved and attempted to retreat down the mountain defiles, Kandyan forces struck with deadly ambushes!
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {kandyFocus === 'battles' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  <div className="space-y-2 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                    <div className="font-bold text-amber-400 text-sm">Battle of Danture (1594 CE)</div>
+                    <p className="text-slate-300 leading-relaxed">
+                      King Vimaladharmasuriya I completely routed the Portuguese army led by Governor Pero Lopes de Sousa, capturing weapons and cementing Kandyan royal legitimacy by marrying Princess Kusumasana Devi (Dona Catherina).
+                    </p>
+                  </div>
+                  <div className="space-y-2 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                    <div className="font-bold text-amber-400 text-sm">Battle of Gannoruwa (1638 CE)</div>
+                    <p className="text-slate-300 leading-relaxed">
+                      The last great battle fought between the Portuguese and Sinhala forces. King Rajasinha II and Prince Vijayapala annihilated Diogo de Melo’s army on the banks of the Mahaweli River at Gannoruwa, ending Portuguese inland offensive ambitions forever.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {kandyFocus === 'hierarchy' && (
+                <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-xs">
+                  <div className="font-bold text-amber-300 border-b border-slate-800 pb-2">
+                    Kandyan Central & Provincial Administration
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
+                      <div className="text-amber-400 font-bold">1. The King (මහරජු)</div>
+                      <p className="text-[11px] text-slate-400">Supreme executive, legislative, and judicial head of state; custodian of the Sacred Tooth Relic.</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
+                      <div className="text-amber-400 font-bold">2. Maha Adigars (අදිකාරම්)</div>
+                      <p className="text-[11px] text-slate-400">Pallegampahe and Udagampahe Adigars acted as First and Second Prime Ministers and chief justices.</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
+                      <div className="text-amber-400 font-bold">3. Dissawas & Rate Mahattayas</div>
+                      <p className="text-[11px] text-slate-400">Governors administering the 12 large outer provinces (Dissawanies) and 9 inner districts (Rataval).</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 8. EUROPEAN RENAISSANCE (CHAPTER 9) */}
+          {historyMode === 'renaissance' && (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-1.5 bg-slate-950/40 p-2 rounded-xl border border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setRenaissanceTopic('press')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    renaissanceTopic === 'press' ? 'bg-amber-500 text-slate-950 font-black shadow-xs' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {language === 'si' ? 'ගුටෙන්බර්ග් මුද්‍රණ යන්ත්‍රය' : language === 'ta' ? 'அச்சு இயந்திரம்' : 'Gutenberg Movable Type Press'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRenaissanceTopic('copernicus')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    renaissanceTopic === 'copernicus' ? 'bg-amber-500 text-slate-950 font-black shadow-xs' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {language === 'si' ? 'කොපර්නිකස්ගේ සූර්ය කේන්ද්‍රවාදය' : language === 'ta' ? 'சூரிய மையக் கோட்பாடு' : 'Copernicus Heliocentric Model'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRenaissanceTopic('navigation')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    renaissanceTopic === 'navigation' ? 'bg-amber-500 text-slate-950 font-black shadow-xs' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {language === 'si' ? 'දේශ ගවේෂණ හා මාලිමාව' : language === 'ta' ? 'திசையறி கருவி' : 'Maritime Compass & Discoveries'}
+                </button>
+              </div>
+
+              {renaissanceTopic === 'press' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                      <span className="font-semibold text-amber-300">Johannes Gutenberg's Invention (~1450 CE)</span>
+                      <span className="text-[10px] text-emerald-400 font-mono">Knowledge Revolution</span>
+                    </div>
+
+                    <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-800 flex flex-col items-center text-center space-y-2">
+                      <button
+                        type="button"
+                        onClick={() => setPressPrinted(!pressPrinted)}
+                        className={`px-4 py-2 rounded-xl text-xs font-black transition-all shadow-md ${
+                          pressPrinted ? 'bg-slate-800 text-slate-200' : 'bg-amber-500 text-slate-950 hover:bg-amber-400'
+                        }`}
+                      >
+                        {pressPrinted ? 'Reset Screw Press Lever' : 'Pull Screw Press Lever ➔ Print Page!'}
+                      </button>
+                      <div className="p-3 rounded-lg bg-amber-950/20 border border-amber-500/20 w-full text-left font-serif text-[11px] text-amber-200">
+                        {pressPrinted ? (
+                          <span>"Knowledge belongs to humanity. Printed in Mainz: The Holy Bible & Scientific Treatises in Latin."</span>
+                        ) : (
+                          <span className="text-slate-500 italic">Type blocks ready inked with oil lacquer. Pull lever to print.</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-slate-300">
+                      <strong>Impact:</strong> Reduced the time to duplicate a book from 1 year of hand copying by a monk to under 1 minute! Democratized literacy across Europe.
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-2 text-xs">
+                    <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                      <BookOpen className="w-4 h-4 text-amber-400" />
+                      <span>Humanism (මානවවාදය)</span>
+                    </div>
+                    <p className="text-slate-300 leading-relaxed">
+                      The intellectual heart of the Renaissance. Replaced medieval theological dogma with rational inquiry, celebration of human reason, individual potential, and secular observation of the natural world. Spearheaded by scholars like Petrarch, Erasmus, and artists like Leonardo da Vinci and Michelangelo.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {renaissanceTopic === 'copernicus' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                    <div className="font-bold text-amber-300 border-b border-slate-800 pb-2">
+                      Heliocentrism vs Medieval Geocentric Dogma
+                    </div>
+                    <div className="flex items-center justify-center py-2 bg-slate-900/40 rounded-lg border border-slate-800/60">
+                      <svg viewBox="0 0 200 130" className="w-full max-w-[200px] h-[130px] overflow-visible">
+                        {/* Sun in center */}
+                        <circle cx="100" cy="65" r="16" fill="#f59e0b" stroke="#fbbf24" strokeWidth="2" />
+                        <text x="100" y="69" textAnchor="middle" fill="#0f172a" fontSize="9" fontWeight="black">SUN</text>
+                        {/* Orbit line */}
+                        <circle cx="100" cy="65" r="45" fill="none" stroke="#475569" strokeWidth="1" strokeDasharray="3 3" />
+                        {/* Earth */}
+                        <circle cx="145" cy="65" r="7" fill="#06b6d4" stroke="#e2e8f0" strokeWidth="1" />
+                        <text x="145" y="52" textAnchor="middle" fill="#38bdf8" fontSize="8" fontWeight="bold">Earth</text>
+                      </svg>
+                    </div>
+                    <p className="text-slate-300 text-[11px] leading-relaxed">
+                      Nicolaus Copernicus proved the Earth and planets revolve around the Sun, shattering the Ptolemaic church model of a stationary Earth at the center of the universe. Later verified by Galileo Galilei's telescope observations!
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-2 text-xs">
+                    <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                      <Globe className="w-4 h-4 text-cyan-400" />
+                      <span>Scientific Revolution</span>
+                    </div>
+                    <p className="text-slate-300 leading-relaxed">
+                      The Renaissance laid the empirical foundations for modern medicine (Andreas Vesalius human anatomy dissections, William Harvey blood circulation) and physics (Isaac Newton's laws of motion).
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {renaissanceTopic === 'navigation' && (
+                <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-xs">
+                  <div className="font-bold text-amber-300 border-b border-slate-800 pb-2">
+                    Maritime Inventions Driving Age of Discovery
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
+                      <div className="text-cyan-400 font-bold">1. Magnetic Compass</div>
+                      <p className="text-slate-400 text-[11px]">Enabled navigators to determine true North across open oceanic expanse without sight of land.</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
+                      <div className="text-cyan-400 font-bold">2. Astrolabe & Quadrant</div>
+                      <p className="text-slate-400 text-[11px]">Measured the altitude of the sun and Polaris star to calculate ship latitude at sea.</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
+                      <div className="text-cyan-400 font-bold">3. Caravel Ships</div>
+                      <p className="text-slate-400 text-[11px]">Light, fast sailing vessels equipped with triangular Lateen sails allowing ships to sail against wind.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 9. SRI LANKA & WESTERN WORLD (CHAPTER 10) */}
+          {historyMode === 'western' && (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-1.5 bg-slate-950/40 p-2 rounded-xl border border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setWesternTimeline('arrival1505')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    westernTimeline === 'arrival1505' ? 'bg-amber-500 text-slate-950 font-black shadow-xs' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {language === 'si' ? '1505 පෘතුගීසි ආගමනය හා කෝට්ටේ' : language === 'ta' ? '1505 போர்த்துக்கேயர் வருகை' : '1505 Portuguese Arrival & Kotte'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWesternTimeline('mulleriyawa1562')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    westernTimeline === 'mulleriyawa1562' ? 'bg-amber-500 text-slate-950 font-black shadow-xs' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {language === 'si' ? '1562 මුල්ලේරියා සටන (සීතාවක ප්‍රතිරෝධය)' : language === 'ta' ? 'சீதாவக்கையின் எதிர்ப்பு' : '1562 Battle of Mulleriyawa'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWesternTimeline('dutch1658')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    westernTimeline === 'dutch1658' ? 'bg-amber-500 text-slate-950 font-black shadow-xs' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {language === 'si' ? '1658 ලන්දේසි පාලනය හා රෝම-ලන්දේසි නීතිය' : language === 'ta' ? '1658 டச்சு ஆட்சி' : '1658 Dutch VOC Rule & Roman-Dutch Law'}
+                </button>
+              </div>
+
+              {westernTimeline === 'arrival1505' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                    <div className="font-bold text-amber-300 border-b border-slate-800 pb-2">
+                      Arrival of Lourenço de Almeida (1505 CE)
+                    </div>
+                    <p className="text-slate-300 leading-relaxed">
+                      Driven off course by a storm, Portuguese explorer Lourenço de Almeida entered Galle and Colombo harbors in 1505. Contemporary observers described them to King Dharma Parakramabahu IX:
+                    </p>
+                    <div className="p-3 bg-slate-900 border border-amber-500/20 rounded-lg text-[11px] text-amber-200 italic">
+                      "There is in our haven of Colombo a race of people of fair skins and exceeding beauty with iron jackets and hats; they eat white stone (bread) and drink blood (wine)..."
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-2">
+                    <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                      <Shield className="w-4 h-4 text-amber-400" />
+                      <span>The Vijayaba Kollaya Partition (1521 CE)</span>
+                    </div>
+                    <p className="text-slate-300 leading-relaxed">
+                      In 1521, three royal sons of King Vijayabahu VII assassinated their father and divided the Kotte Kingdom into three weakened realms: <strong>Bhuvanekabahu VII (Kotte)</strong>, <strong>Mayadunne (Sitawaka)</strong>, and <strong>Raigam Bandara (Raigama)</strong>. This partition opened the door to Portuguese colonial intervention.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {westernTimeline === 'mulleriyawa1562' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                    <div className="font-bold text-amber-300 border-b border-slate-800 pb-2">
+                      Sitawaka Valor: Battle of Mulleriyawa (1562 CE)
+                    </div>
+                    <p className="text-slate-300 leading-relaxed">
+                      Led by young crown prince Tikiri Bandara (later King Rajasinha I), Sitawaka troops surrounded a heavily armed Portuguese force at Mulleriyawa marsh. Utilizing fierce hand-to-hand combat with Sinhala swords (<em>Ilangam</em> martial arts) and war elephants, they crushed the invaders in the deadliest battle suffered by the Portuguese in 16th century Asia!
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-2">
+                    <div className="font-bold text-rose-400">1580 Deed of Gift (Donation of Dharmapala)</div>
+                    <p className="text-slate-300 leading-relaxed">
+                      Baptized as Don Juan Dharmapala, the puppet king of Kotte signed a secret deed in 1580 bequeathing the entire sovereign realm of Kotte to King Henry of Portugal upon his death, permanently forfeiting indigenous royal sovereignty.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {westernTimeline === 'dutch1658' && (
+                <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-xs">
+                  <div className="font-bold text-amber-300 border-b border-slate-800 pb-2">
+                    Dutch East India Company (VOC) Maritime Rule & Enduring Legacies
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
+                      <div className="text-amber-400 font-bold">1. Roman-Dutch Law</div>
+                      <p className="text-slate-400 text-[11px]">Introduced in Dutch maritime courts; remains the cornerstone of modern Sri Lankan civil legal jurisprudence!</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
+                      <div className="text-amber-400 font-bold">2. Thombo Land Registers</div>
+                      <p className="text-slate-400 text-[11px]">Systematic Head and School Thombo registers surveying land titles, boundaries, and genealogy.</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
+                      <div className="text-amber-400 font-bold">3. Forts & Canals</div>
+                      <p className="text-slate-400 text-[11px]">Preserved Galle Fort (UNESCO World Heritage), Wolvendaal Church, and the Hamilton Canal system.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 10. BRAHMI EPIGRAPHY & SOURCES (CHAPTER 1) */}
+          {historyMode === 'brahmi' && (
+            <div className="space-y-4">
+              <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                  Click Early Brahmi Glyphs to Decipher Rock Inscriptions:
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  {brahmiCharacters.map((char, index) => {
+                    const isSelected = activeBrahmiChar === index;
+                    return (
+                      <button
+                        key={char.translit}
+                        type="button"
+                        onClick={() => setActiveBrahmiChar(index)}
+                        className={`p-3 rounded-xl border text-center transition-all ${
+                          isSelected 
+                            ? 'border-amber-400 bg-amber-500/20 text-amber-300' 
+                            : 'border-slate-800 bg-slate-900 text-slate-300 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="text-3xl font-serif mb-1">{char.glyph}</div>
+                        <div className="text-xs font-bold">{char.term}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="p-3 bg-amber-950/30 border border-amber-500/20 rounded-lg text-xs text-amber-200">
+                  <strong>Historical Meaning:</strong> {language === 'si' ? brahmiCharacters[activeBrahmiChar].meaningSi : language === 'ta' ? brahmiCharacters[activeBrahmiChar].meaningTa : brahmiCharacters[activeBrahmiChar].meaningEn}
+                </div>
+              </div>
+
+              {/* 5 Categories of Inscriptions by Stone Shape */}
+              <div className="space-y-2 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 pb-1.5 flex justify-between">
+                  <span>5 Stone Inscription Categories (Grade 10 Textbook Chapter 1):</span>
+                  <span className="text-amber-400">Click to Explore Shape</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 pt-1">
+                  {inscriptionTypes.map((ins, idx) => (
+                    <button
+                      key={ins.nameEn}
+                      type="button"
+                      onClick={() => setActiveInscriptionShape(idx)}
+                      className={`p-2 rounded-lg text-left text-xs font-bold border transition-all ${
+                        activeInscriptionShape === idx
+                          ? 'border-amber-400 bg-amber-500/20 text-amber-300'
+                          : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      {language === 'si' ? ins.nameSi : language === 'ta' ? ins.nameTa : ins.nameEn.split('(')[0]}
+                    </button>
+                  ))}
+                </div>
+                <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300 mt-2">
+                  <span className="text-amber-300 font-bold">{inscriptionTypes[activeInscriptionShape].nameEn}: </span>
+                  {language === 'si' ? inscriptionTypes[activeInscriptionShape].descSi : language === 'ta' ? inscriptionTypes[activeInscriptionShape].descTa : inscriptionTypes[activeInscriptionShape].descEn}
+                </div>
               </div>
             </div>
           )}
