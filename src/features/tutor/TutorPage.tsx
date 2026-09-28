@@ -169,13 +169,141 @@ export const detectCurriculumContextFromMessage = (
     return { subjectId: 'history', topicId: 'history-gr10-sources' };
   }
 
-  // History general
+  // History Chapter 2: Settlements
+  if (
+    lower.includes('settlement') ||
+    lower.includes('ජනාවාස') ||
+    lower.includes('ibbankatuwa') ||
+    lower.includes('ඉබ්බන්කටුව') ||
+    lower.includes('fa-hien') ||
+    lower.includes('පාහියන්ගල') ||
+    lower.includes('batadombalena') ||
+    lower.includes('බටදොඹලෙන') ||
+    ((lower.includes('chapter 2') || lower.includes('2 වන පාඩම')) &&
+      (currentSubject === 'history' || lower.includes('history') || lower.includes('ඉතිහාසය')))
+  ) {
+    return { subjectId: 'history', topicId: 'history-gr10-settlements' };
+  }
+
+  // History Chapter 3: Political Power
+  if (
+    lower.includes('parumaka') ||
+    lower.includes('පරුමක') ||
+    lower.includes('gamika') ||
+    lower.includes('ගාමික') ||
+    lower.includes('political power') ||
+    lower.includes('දේශපාලන බලය') ||
+    ((lower.includes('chapter 3') || lower.includes('3 වන පාඩම')) &&
+      (currentSubject === 'history' || lower.includes('history') || lower.includes('ඉතිහාසය')))
+  ) {
+    return { subjectId: 'history', topicId: 'history-gr10-political-power' };
+  }
+
+  // History Chapter 4: Ancient Society
+  if (
+    lower.includes('ancient society') ||
+    lower.includes('පුරාණ සමාජය') ||
+    lower.includes('කුල ක්‍රමය') ||
+    lower.includes('gam sabha') ||
+    lower.includes('ගම් සභා') ||
+    ((lower.includes('chapter 4') || lower.includes('4 වන පාඩම')) &&
+      (currentSubject === 'history' || lower.includes('history') || lower.includes('ඉතිහාසය')))
+  ) {
+    return { subjectId: 'history', topicId: 'history-gr10-ancient-society' };
+  }
+
+  // History Chapter 5: Hydraulic / Science & Tech
+  if (
+    lower.includes('hydraulic') ||
+    lower.includes('වාරි') ||
+    lower.includes('bisokotuwa') ||
+    lower.includes('බිසෝකොටුව') ||
+    lower.includes('yoda ela') ||
+    lower.includes('යෝධ ඇළ') ||
+    lower.includes('ralapanawa') ||
+    lower.includes('රළපනාව') ||
+    ((lower.includes('chapter 5') || lower.includes('5 වන පාඩම')) &&
+      (currentSubject === 'history' || lower.includes('history') || lower.includes('ඉතිහාසය')))
+  ) {
+    return { subjectId: 'history', topicId: 'history-gr10-science-tech' };
+  }
+
+  // History Chapter 6: Historical Knowledge
+  if (
+    lower.includes('historical knowledge') ||
+    lower.includes('ඓතිහාසික දැනුම') ||
+    lower.includes('ප්‍රායෝගික භාවිතය') ||
+    ((lower.includes('chapter 6') || lower.includes('6 වන පාඩම')) &&
+      (currentSubject === 'history' || lower.includes('history') || lower.includes('ඉතිහාසය')))
+  ) {
+    return { subjectId: 'history', topicId: 'history-gr10-historical-knowledge' };
+  }
+
+  // History Chapter 7: Decline & SW Kingdoms
+  if (
+    lower.includes('dambadeniya') ||
+    lower.includes('දඹදෙණිය') ||
+    lower.includes('yapahuwa') ||
+    lower.includes('යාපහුව') ||
+    lower.includes('kurunegala') ||
+    lower.includes('gampola') ||
+    lower.includes('kotte') ||
+    lower.includes('කෝට්ටේ') ||
+    ((lower.includes('chapter 7') || lower.includes('7 වන පාඩම')) &&
+      (currentSubject === 'history' || lower.includes('history') || lower.includes('ඉතිහාසය')))
+  ) {
+    return { subjectId: 'history', topicId: 'history-gr10-decline-new-kingdoms' };
+  }
+
+  // History Chapter 8: Kandyan Kingdom
+  if (
+    lower.includes('kandyan') ||
+    lower.includes('උඩරට') ||
+    lower.includes('vimaladharmasuriya') ||
+    lower.includes('විමලධර්මසූරිය') ||
+    lower.includes('danture') ||
+    lower.includes('දන්තුරේ') ||
+    lower.includes('gannoruwa') ||
+    lower.includes('ගන්නෝරුව') ||
+    ((lower.includes('chapter 8') || lower.includes('8 වන පාඩම')) &&
+      (currentSubject === 'history' || lower.includes('history') || lower.includes('ඉතිහාසය')))
+  ) {
+    return { subjectId: 'history', topicId: 'history-gr10-kandyan-kingdom' };
+  }
+
+  // History Chapter 9: Renaissance
+  if (
+    lower.includes('renaissance') ||
+    lower.includes('පුනරුදය') ||
+    lower.includes('da vinci') ||
+    lower.includes('gutenberg') ||
+    ((lower.includes('chapter 9') || lower.includes('9 වන පාඩම')) &&
+      (currentSubject === 'history' || lower.includes('history') || lower.includes('ඉතිහාසය')))
+  ) {
+    return { subjectId: 'history', topicId: 'history-gr10-renaissance' };
+  }
+
+  // History Chapter 10: Western World
+  if (
+    lower.includes('western world') ||
+    lower.includes('බටහිර ලෝකය') ||
+    lower.includes('portuguese') ||
+    lower.includes('පෘතුගීසි') ||
+    lower.includes('dutch') ||
+    lower.includes('ලන්දේසි') ||
+    ((lower.includes('chapter 10') || lower.includes('10 වන පාඩම')) &&
+      (currentSubject === 'history' || lower.includes('history') || lower.includes('ඉතිහාසය')))
+  ) {
+    return { subjectId: 'history', topicId: 'history-gr10-western-world' };
+  }
+
+  // History general fallback
   if (
     lower.includes('history') ||
     lower.includes('ඉතිහාසය') ||
     lower.includes('வரலாறு') ||
-    lower.includes('settlements') ||
     lower.includes('anuradhapura') ||
+    lower.includes('polonnaruwa') ||
     lower.includes('king') ||
     lower.includes('kingdom')
   ) {

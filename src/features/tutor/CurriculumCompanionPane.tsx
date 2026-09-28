@@ -79,11 +79,77 @@ const getTopicDeepDive = (topicId: string) => {
         verifyPrompt: 'What should I do if I receive a suspicious email asking for my school account password?'
       };
     case 'history-gr10-sources':
+    case 'history-gr10-ancient-heritage':
       return {
         examTrap: '⚠️ O/L History Trap: Inscriptions (Sellipi) are primary archaeological sources, NOT secondary literary sources! The 5 types are: Cave (ලෙන්), Rock (ගිරි), Pillar (ටැම්), Slab (පුවරු), and Seat (ආසන). Don\'t confuse Panakaduwa (copper plate of King Vijayabahu I) with Vallipuram (gold plate of King Vasabha)!',
         challenge: '🎯 Interactive Challenge: Ask the Tutor about the 5 types of Sellipi or how early Brahmi cave inscriptions helped Buddhist monks (Sangha) during the rainy season (Wassana)!',
         clarifyPrompt: 'ඉතිහාසය හැදෑරීමේ මූලාශ්‍ර වල සෙල්ලිපි (Sellipi) වර්ග සහ බ්‍රාහ්මී ලේඛන ගැන විස්තර කරන්න',
         verifyPrompt: 'ලංකාවේ ශිලා ලේඛන සහ වෙනත් ලේඛන මාධ්‍ය (ගල්පොත, සීගිරි කුරුටු ගී, පනාකඩුව තඹ සන්නස) මොනවාද?'
+      };
+    case 'history-gr10-settlements':
+      return {
+        examTrap: '⚠️ O/L Exam Trap: Pre-historic era belongs to stone-age foragers (Fa-Hien, Batadombalena); Proto-historic era introduced iron metallurgy, BRW pottery, and Ibbankatuwa megalithic cist burials (c. 1000–300 B.C.)!',
+        challenge: '🎯 Practice Challenge: Compare the stone microliths of Bellanbandi Palassa with the iron tools found at proto-historic sites!',
+        clarifyPrompt: 'ශ්‍රී ලංකාවේ ප්‍රාග් සහ පූර්ව ඓතිහාසික ජනාවාස (පාහියන්ගල, ඉබ්බන්කටුව) ගැන විස්තර කරන්න',
+        verifyPrompt: 'ඉබ්බන්කටුව මහා ශිලා සුසානයෙන් හමුවූ පුරාවිද්‍යාත්මක සාක්ෂි මොනවාද?'
+      };
+    case 'history-gr10-political-power':
+      return {
+        examTrap: '⚠️ O/L History Trap: More than 70% of Early Brahmi cave inscriptions record donations by Parumakas (clan chieftains & tank owners), NOT kings! Over time, regional Parumakas were integrated under unified monarchs (Raja).',
+        challenge: '🎯 Inscription Challenge: Notice the inscriptional formula "Parumaka [Name]ha lene agata anagata chatudisa sagasa dine"!',
+        clarifyPrompt: 'දේශපාලන බලය විකාශනය වීම සහ පරුමකවරුන්ගේ කාර්යභාරය ගැන විස්තර කරන්න',
+        verifyPrompt: 'මුල් බ්‍රාහ්මී ලෙන් ලිපිවල සඳහන් පරුමක, ගාමික, සහ ආය යන තනතුරු අතර වෙනස කුමක්ද?'
+      };
+    case 'history-gr10-ancient-society':
+      return {
+        examTrap: '⚠️ O/L Exam Trap: The ancient Sri Lankan caste system (Kula) was based on occupational hereditary services, but was far more flexible and less ritually rigid than Indian Varna due to Buddhist ethical philosophy!',
+        challenge: '🎯 Cultural Challenge: Ask the Tutor how the Gam Sabha (village council) peacefully resolved tank water distribution and village disputes!',
+        clarifyPrompt: 'පුරාණ ශ්‍රී ලංකාවේ සමාජ ව්‍යුහය, කුල ක්‍රමය සහ ගම් සභා ගැන විස්තර කරන්න',
+        verifyPrompt: 'පුරාණ ගම්මානයක "වැවයි දාගැබයි ගමයි කෙතයි" සංකල්පයේ වැදගත්කම කුමක්ද?'
+      };
+    case 'history-gr10-science-tech':
+    case 'history-gr10-hydraulic-society':
+    case 'ancient-hydraulics':
+      return {
+        examTrap: '⚠️ O/L Engineering Trap: The Bisokotuwa (cistern sluice) was a hydrostatic pressure regulator placed INSIDE the tank to break water force, preventing tank bund breach!',
+        challenge: '🎯 Irrigation Challenge: Ask the Tutor how the 54-mile Yoda Ela maintained a gradient of less than 6 inches per mile across dense jungle!',
+        clarifyPrompt: 'පුරාණ වාරි ශිෂ්ටාචාරයේ බිසෝකොටුව සහ යෝධ ඇළ තාක්ෂණය ගැන විස්තර කරන්න',
+        verifyPrompt: 'බිසෝකොටුව මඟින් වැව් බැම්ම කැඩීයාම වළක්වා ගත්තේ කෙසේද?'
+      };
+    case 'history-gr10-historical-knowledge':
+      return {
+        examTrap: '⚠️ O/L Exam Trap: Studying history is not just rote memorization—it provides practical lessons for environmental conservation (cascade wewa systems) and social tolerance!',
+        challenge: '🎯 Practical Challenge: Discover how ancient water laws recorded in the Badulla Pillar Inscription apply to modern resource sharing!',
+        clarifyPrompt: 'ඓතිහාසික දැනුම සහ එහි ප්‍රායෝගික භාවිතය ගැන විස්තර කරන්න',
+        verifyPrompt: 'පුරාණ එල්ලංගා වැව් පද්ධති මඟින් නූතන පරිසර සංරක්ෂණයට ලැබෙන පාඩම් මොනවාද?'
+      };
+    case 'history-gr10-decline-new-kingdoms':
+      return {
+        examTrap: '⚠️ O/L History Trap: The shift of political centers to the Southwest was driven by security (Kalinga Magha invasion 1215 CE), malaria, and collapse of irrigation, shifting capital to rock fortresses (Dambadeniya, Yapahuwa)!',
+        challenge: '🎯 Strategic Challenge: Ask about the defensive architecture of Yapahuwa rock citadel and the protection of the Sacred Tooth Relic!',
+        clarifyPrompt: 'වියළි කලාපයේ නගර පරිහානිය සහ නිරිතදිග රාජධානි බිහිවීම ගැන විස්තර කරන්න',
+        verifyPrompt: 'දඹදෙණිය සහ යාපහුව රාජධානි ආරක්ෂිත බලකොටු ලෙස තෝරාගත්තේ ඇයි?'
+      };
+    case 'history-gr10-kandyan-kingdom':
+      return {
+        examTrap: '⚠️ O/L History Trap: The Battle of Danture (1594) under King Vimaladharmasuriya I secured Kandyan independence; the Battle of Gannoruwa (1638) under King Rajasinha II crushed the Portuguese expedition led by Diogo de Melo!',
+        challenge: '🎯 Resistance Challenge: Explore how the geographic mountain terrain and guerrilla warfare defended the Kingdom of Kandy for over two centuries!',
+        clarifyPrompt: 'කන්ද උඩරට රාජධානිය සහ 1 වන විමලධර්මසූරිය රජුගේ කාර්යභාරය ගැන විස්තර කරන්න',
+        verifyPrompt: 'දන්තුරේ සහ ගන්නෝරුව සටන්වල ඓතිහාසික වැදගත්කම කුමක්ද?'
+      };
+    case 'history-gr10-renaissance':
+      return {
+        examTrap: '⚠️ O/L World History Trap: The Renaissance began in Italy (Florence) due to Mediterranean maritime trade, Byzantine scholars fleeing the fall of Constantinople (1453), and wealthy patrons like the Medici family!',
+        challenge: '🎯 Discovery Challenge: Ask the Tutor about Gutenberg’s printing press and Leonardo da Vinci’s scientific sketches!',
+        clarifyPrompt: 'යුරෝපීය පුනරුදය සහ විද්‍යාත්මක සොයාගැනීම් ගැන විස්තර කරන්න',
+        verifyPrompt: 'පුනරුද සමයේ මුද්‍රණ ශිල්පය සහ මානවවාදය පැතිර ගියේ කෙසේද?'
+      };
+    case 'history-gr10-western-world':
+      return {
+        examTrap: '⚠️ O/L History Trap: Portuguese arrived in Sri Lanka in 1505 accidentally (Lourenço de Almeida blown by storm to Galle), seeking cinnamon; Dutch took maritime provinces in 1658; British captured them in 1796!',
+        challenge: '🎯 Trade Challenge: Explore how European maritime powers exploited the internal rivalries of the Kotte Kingdom and Sitawaka!',
+        clarifyPrompt: 'ශ්‍රී ලංකාවට බටහිර ජාතීන්ගේ පැමිණීම සහ එහි ප්‍රතිඵල ගැන විස්තර කරන්න',
+        verifyPrompt: 'පෘතුගීසි සහ ලන්දේසි පාලනයෙන් ලංකාවේ ආර්ථිකයට සහ නීතියට සිදුවූ බලපෑම් මොනවාද?'
       };
     default:
       return {

@@ -268,23 +268,6 @@ export class MockTutorAdapter implements TutorAdapter {
     // 2. Specific Question Answering across History, Mathematics, Science, and ICT
     // (Always prioritize the student's actual question query content over background topicId context)
 
-    // Quick pedagogical interaction prompts
-    if (lowerQ.includes('clarify') || lowerQ.includes('break this down') || lowerQ.includes('more detail') || lowerQ.includes('තවදුරටත්') || lowerQ.includes('විස්තර කරන්න') || lowerQ.includes('விளக்குங்கள்')) {
-      return this.handleClarifyExplanation(lang, context);
-    }
-    if (lowerQ.includes('again') || lowerQ.includes('නැවත') || lowerQ.includes('repeat') || lowerQ.includes('மீண்டும்')) {
-      return this.handleRepeatExplanation(lang);
-    }
-    if (lowerQ.includes('easier') || lowerQ.includes('simpler') || lowerQ.includes('සරල') || lowerQ.includes('எளிதாக')) {
-      return this.handleSimplerExplanation(lang, context);
-    }
-    if (lowerQ.includes('example') || lowerQ.includes('උදාහරණ') || lowerQ.includes('உதாரணம்')) {
-      return this.handleExample(lang, context);
-    }
-    if (lowerQ.includes('quiz') || lowerQ.includes('ප්‍රශ්න') || lowerQ.includes('வினாடி வினா')) {
-      return this.handleQuizPrompt(lang);
-    }
-
     // =========================================================================
     // HISTORY CHAPTERS (Grade 10 Sri Lankan National Curriculum)
     // =========================================================================
@@ -421,6 +404,24 @@ export class MockTutorAdapter implements TutorAdapter {
       lowerQ.includes('සමනලවැව')
     ) {
       return this.handleAncientScienceAndTech(lang, question);
+    }
+
+    // Chapter 6: Historical Knowledge and Practical Application
+    if (
+      (context.subjectId === 'history' && (
+        context.topicId === 'history-gr10-historical-knowledge' ||
+        lowerQ.includes('chapter 6') ||
+        lowerQ.includes('lesson 6') ||
+        lowerQ.includes('ch 6') ||
+        lowerQ.includes('6 වන') ||
+        lowerQ.includes('6 ஆம்')
+      )) ||
+      lowerQ.includes('historical knowledge') ||
+      lowerQ.includes('ඓතිහාසික දැනුම') ||
+      lowerQ.includes('ප්‍රායෝගික භාවිතය') ||
+      lowerQ.includes('வரலாற்று அறிவு')
+    ) {
+      return this.handleHistoricalKnowledge(lang, question);
     }
 
     // Chapter 7: Decline of Dry Zone Cities & South West Kingdoms
@@ -996,6 +997,83 @@ export class MockTutorAdapter implements TutorAdapter {
     }
 
     // =========================================================================
+    // 2b. QUICK PEDAGOGICAL INTERACTION PROMPTS
+    // (Pedagogical action chips and generic commands: Clarify, Simpler, Example, Repeat, Quiz)
+    // =========================================================================
+    const trimmed = lowerQ.trim();
+    const isClarify =
+      lowerQ.includes('clarify') ||
+      lowerQ.includes('break this down') ||
+      lowerQ.includes('more detail') ||
+      lowerQ.includes('step-by-step') ||
+      lowerQ.includes('step by step') ||
+      lowerQ.includes('තවදුරටත් පැහැදිලි') ||
+      lowerQ.includes('පැහැදිලි කරන්න') ||
+      lowerQ.includes('විස්තර කරන්න') ||
+      lowerQ.includes('තවදුරටත්') ||
+      lowerQ.includes('விளக்குங்கள்') ||
+      trimmed === 'විස්තර කරන්න' ||
+      trimmed === 'clarify' ||
+      trimmed === 'clarify more' ||
+      trimmed === 'clarify this concept';
+
+    if (isClarify) {
+      return this.handleClarifyExplanation(lang, context);
+    }
+
+    const isSimpler =
+      lowerQ.includes('easier') ||
+      lowerQ.includes('simpler') ||
+      lowerQ.includes('explain simpler') ||
+      lowerQ.includes('සරලව') ||
+      lowerQ.includes('සරල') ||
+      lowerQ.includes('எளிதாக') ||
+      trimmed === 'simpler' ||
+      trimmed === 'easier';
+
+    if (isSimpler) {
+      return this.handleSimplerExplanation(lang, context);
+    }
+
+    const isExample =
+      lowerQ.includes('sri lankan example') ||
+      lowerQ.includes('give an example') ||
+      lowerQ.includes('real-world example') ||
+      lowerQ.includes('උදාහරණයක්') ||
+      lowerQ.includes('උදාහරණ දෙන්න') ||
+      lowerQ.includes('උදාහරණය') ||
+      lowerQ.includes('உதாரணம்') ||
+      trimmed === 'example';
+
+    if (isExample) {
+      return this.handleExample(lang, context);
+    }
+
+    const isRepeat =
+      lowerQ.includes('repeat') ||
+      lowerQ.includes('once again') ||
+      lowerQ.includes('නැවත') ||
+      lowerQ.includes('නැවත කියන්න') ||
+      lowerQ.includes('மீண்டும்') ||
+      trimmed === 'again';
+
+    if (isRepeat) {
+      return this.handleRepeatExplanation(lang, context);
+    }
+
+    const isQuiz =
+      lowerQ.includes('quiz me') ||
+      lowerQ.includes('test me') ||
+      lowerQ.includes('ප්‍රශ්නයක් අහන්න') ||
+      lowerQ.includes('ප්‍රශ්න අහන්න') ||
+      lowerQ.includes('வினாடி வினா') ||
+      trimmed === 'quiz';
+
+    if (isQuiz) {
+      return this.handleQuizPrompt(lang, context);
+    }
+
+    // =========================================================================
     // 3. CONTEXTUAL / TOPIC DISPATCH (ONLY if prompt is open-ended or generic)
     // =========================================================================
     if (isGenericContextualPrompt(lowerQ)) {
@@ -1005,6 +1083,7 @@ export class MockTutorAdapter implements TutorAdapter {
       if (context.topicId === 'history-gr10-settlements') return this.handleAncientSettlements(lang, question);
       if (context.topicId === 'history-gr10-ancient-society') return this.handleAncientSociety(lang, question);
       if (context.topicId === 'history-gr10-science-tech') return this.handleAncientScienceAndTech(lang, question);
+      if (context.topicId === 'history-gr10-historical-knowledge') return this.handleHistoricalKnowledge(lang, question);
       if (context.topicId === 'history-gr10-decline-new-kingdoms') return this.handleSouthWestKingdoms(lang, question);
       if (context.topicId === 'history-gr10-kandyan-kingdom') return this.handleKandyanKingdom(lang, question);
       if (context.topicId === 'history-gr10-renaissance') return this.handleRenaissance(lang, question);
@@ -3597,7 +3676,10 @@ Always verify by substituting the result back into the original problem to ensur
     };
   }
 
-  private handleRepeatExplanation(lang: 'en' | 'si' | 'ta'): RAGResponse {
+  private handleRepeatExplanation(lang: 'en' | 'si' | 'ta', context?: LearningContext): RAGResponse {
+    if (context?.subjectId === 'history') {
+      return this.handleHistoryRepeat(lang, context);
+    }
     return {
       answer: lang === 'si' 
         ? `සතුටින් නැවත සලකා බලමු! සරලවම කිව්වොත්: ශාක වලට ජීවත් වෙන්නත් කෑම අවශ්‍යයි. සතුන් වගේ ඇවිදලා කෑම හොයන්න බැරි නිසා, ශාක තමන්ගේ පත්‍ර වල තියෙන **හරිතප්‍රද** සහ **හිරු එළිය** පාවිච්චි කරලා, බිමෙන් **වතුරයි** හුස්ම ගන්න වාතයෙන් **කාබන් ඩයොක්සයිඩුයි** අරගෙන රසවත් ග්ලූකෝස් ආහාර හදනවා. මෙයට අපි **ප්‍රභාසංස්ලේෂණය** කියනවා.`
@@ -3671,26 +3753,7 @@ Would you like to try converting another decimal number or test it in the intera
     }
 
     if (isHistory) {
-      return {
-        answer: `### Step-by-Step Breakdown: Ancient Hydraulic Engineering
-
-1. **Catchment Basin:** Rain falling in the central highlands was caught by trans-basin earthen bunds.
-2. **Bisokotuwa Water Gate:** Water entered an inner stone chamber (Biso-Kotuwa). Thick stone baffles absorbed the massive hydrostatic pressure of the deep water, slowing the rush to a safe trickle.
-3. **Distribution Canal (Yoda Ela):** The water was released into long canals engineered with a gradient of less than 6 inches per mile, irrigating dry-zone paddy fields across hundreds of villages!`,
-        sources: [
-          {
-            source: 'Grade 10 History Textbook — Ancient Engineering Innovations',
-            pageNumber: 25,
-            distance: 0.12,
-          }
-        ],
-        suggestedFollowUps: [
-          'Explain simpler: How does the Bisokotuwa work like a bathroom tap?',
-          'Sri Lankan Example: The engineering of Jaya Ganga',
-          'Memory trick: Parakramabahu\'s famous motto',
-          'Quiz me on ancient hydraulics'
-        ],
-      };
+      return this.handleHistoryClarify(lang, context);
     }
 
     return {
@@ -3736,7 +3799,7 @@ Because computer chips have billions of microscopic switches, they count only us
 - One switch = **1 Bit** (a tiny piece of information).
 - A group of 8 switches = **1 Byte** (enough to store 1 English letter, like 'A').
 
-When you type 'A', the keyboard simply sets 8 switches to: \`01000001\`! That's all there is to it!`;
+When you type 'A', the keyboard simply sets 8 switches to: '01000001'! That's all there is to it!`;
       return {
         answer: en,
         sources: [{ source: 'Grade 8 ICT Basics', pageNumber: 2 }],
@@ -3749,21 +3812,8 @@ When you type 'A', the keyboard simply sets 8 switches to: \`01000001\`! That's 
       };
     }
 
-    if (isHistory) {
-      return {
-        answer: `### Super Simple Version: The Bisokotuwa Sluice Gate
-
-Imagine blowing water through a straw with full force: it blasts out wildly. But if you blow into a cup with tiny holes first, the water flows out smoothly without splashing.
-
-Ancient Sinhala kings built stone chambers inside reservoirs called **Bisokotuwa**. It trapped the wild, roaring water pressure so it wouldn't smash the mud dam, letting smooth water flow safely to the farmers!`,
-        sources: [{ source: 'Grade 10 History Basics', pageNumber: 15 }],
-        suggestedFollowUps: [
-          'Clarify more: The technical design of Bisokotuwa',
-          'Sri Lankan Example: Reservoirs in Anuradhapura',
-          'Memory trick for King Parakramabahu',
-          'Quiz me on history'
-        ]
-      };
+    if (isHistory && context) {
+      return this.handleHistorySimpler(lang, context);
     }
 
     return {
@@ -3817,6 +3867,10 @@ Every single memory device sold across Sri Lanka follows the exact binary place 
       };
     }
 
+    if (isHistory && context) {
+      return this.handleHistoryExample(lang, context);
+    }
+
     return {
       answer: `**A Real-World Sri Lankan Example:**
 Think of a King Coconut (Thambili) tree in your garden. The tall fronds spread wide to catch equatorial sunshine. 
@@ -3831,7 +3885,10 @@ Through photosynthesis, the palm creates glucose and electrolytes, which it pump
     };
   }
 
-  private handleQuizPrompt(lang: 'en' | 'si' | 'ta'): RAGResponse {
+  private handleQuizPrompt(lang: 'en' | 'si' | 'ta', context?: LearningContext): RAGResponse {
+    if (context?.subjectId === 'history') {
+      return this.handleHistoryQuiz(lang, context);
+    }
     return {
       answer: lang === 'si'
         ? `**ඔබේ අවබෝධය පරීක්ෂා කරමු! මෙන්න ප්‍රශ්නයක්:**
@@ -3858,6 +3915,758 @@ Type or tap your answer, and let's check it together!`,
           distance: 0.12,
         }
       ],
+    };
+  }
+
+  // =========================================================================
+  // GRADE 10 HISTORY SPECIALIZED ACTION HANDLERS
+  // =========================================================================
+
+  private handleHistoryClarify(lang: 'en' | 'si' | 'ta', context: LearningContext): RAGResponse {
+    const topicId = context.topicId || 'history-gr10-sources';
+
+    // Chapter 1: Sources & Inscriptions
+    if (topicId === 'history-gr10-sources' || topicId === 'history-gr10-ancient-heritage') {
+      return this.handleSellipiClarify(lang);
+    }
+
+    // Chapter 2: Ancient Settlements
+    if (topicId === 'history-gr10-settlements') {
+      return this.handleSettlementsClarify(lang);
+    }
+
+    // Chapter 3: Evolution of Political Power
+    if (topicId === 'history-gr10-political-power') {
+      return this.handlePoliticalPowerClarify(lang);
+    }
+
+    // Chapter 4: Ancient Society
+    if (topicId === 'history-gr10-ancient-society') {
+      return this.handleAncientSocietyClarify(lang);
+    }
+
+    // Chapter 5: Hydraulic Technology & Ancient Science
+    if (topicId === 'history-gr10-science-tech' || topicId === 'ancient-hydraulics' || topicId === 'history-gr10-hydraulic-society') {
+      return this.handleHydraulicClarify(lang);
+    }
+
+    // Chapter 6: Historical Knowledge & Practical Application
+    if (topicId === 'history-gr10-historical-knowledge') {
+      return this.handleHistoricalKnowledgeClarify(lang);
+    }
+
+    // Chapter 7: Decline & South-West Kingdoms
+    if (topicId === 'history-gr10-decline-new-kingdoms') {
+      return this.handleSouthWestKingdomsClarify(lang);
+    }
+
+    // Chapter 8: Kandyan Kingdom
+    if (topicId === 'history-gr10-kandyan-kingdom') {
+      return this.handleKandyanKingdomClarify(lang);
+    }
+
+    // Chapter 9: Renaissance
+    if (topicId === 'history-gr10-renaissance') {
+      return this.handleRenaissanceClarify(lang);
+    }
+
+    // Chapter 10: Western World
+    if (topicId === 'history-gr10-western-world') {
+      return this.handleWesternWorldClarify(lang);
+    }
+
+    return this.handleSellipiClarify(lang);
+  }
+
+  private handleSellipiClarify(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    const sources: SourceCitation[] = [
+      {
+        documentId: 'moe-lk-history-gr10-histoy-g-10-e',
+        source: 'Grade 10 History Textbook — Chapter 1: Sources of Studying History (Educational Publications Department Sri Lanka, Pages 3–5)',
+        fileType: 'PDF',
+        pageNumber: 3,
+        chunkNumber: 8,
+        distance: 0.08,
+        excerpt: 'Inscriptions (Sellipi): Cave, rock, pillar, slab, and seat inscriptions provide contemporaneous primary archaeological evidence for ancient Sri Lanka.'
+      }
+    ];
+
+    const en = `### Step-by-Step Breakdown: Inscriptions & Epigraphical Sources (Sellipi)
+**Grade 10 History — Chapter 1: Sources of Studying History (Textbook pp. 3–5)**
+
+1. **Why Inscriptions are Primary Archaeological Sources:**
+   Unlike literary chronicles which could be copied, translated, or re-interpreted centuries later, inscriptions were engraved directly onto durable stone surfaces at the exact historical moment an event occurred. They provide firsthand historical evidence free from subsequent modifications.
+
+2. **The 5 Categories of Inscriptions by Stone Shape:**
+   - **Cave Inscriptions (ලෙන් ලිපි / Len Lipi):** Inscribed beneath the drip-ledges (*katara*) of natural rock caves. The oldest Brahmi inscriptions in Sri Lanka (3rd–2nd Century B.C.) record donations of rock shelters to the Buddhist Sangha (*"Agata Anagata Chatudisa Sagasa Dine"* - offered to the Sangha of four directions, present and future).
+   - **Rock Inscriptions (ගිරි ලිපි / Giri Lipi):** Engraved on natural flat rocks and boulders (e.g. Tonigala rock inscription recording grain storage and banking interest, Vessagiriya).
+   - **Pillar Inscriptions (ටැම් ලිපි / Tam Lipi):** Inscribed on octagonal or rectangular stone pillars erected at public crossroads, boundaries, or market entrances (e.g. Badulla Pillar Inscription detailing market laws and customs duties).
+   - **Slab Inscriptions (පුවරු ලිපි / Puwaru Lipi):** Engraved on smoothly dressed rectangular stone slabs (e.g. Mihintale Tablets of Mahinda IV on monastery administration and temple worker rights).
+   - **Seat Inscriptions (ආසන ලිපි / Asana Lipi):** Carved directly on royal stone throne seats used by monarchs during ceremonies (e.g. King Nisshankamalla's stone seats in Polonnaruwa).
+
+3. **Other Epigraphical Media in Ancient Sri Lanka:**
+   - **Plastered Walls:** Sigiriya Graffiti (*Kurutu Gee*) inscribed on the Mirror Wall by 8th–10th century visitors.
+   - **Copper Plates:** Royal Panakaduwa Copper Plate granted by King Vijayabahu I to Lord Budalna.
+   - **Golden Plates:** Vallipuram Gold Plate of King Vasabha in Jaffna.
+   - **Wood:** Inscriptions carved on wooden pillars of Embekke Devalaya.`;
+
+    const si = `### පියවරෙන් පියවර පැහැදිලි කිරීම: ඉතිහාසය හැදෑරීමේ මූලාශ්‍ර සහ සෙල්ලිපි (Sellipi)
+**10 ශ්‍රේණිය ඉතිහාසය — 1 වන පරිච්ඡේදය: මූලාශ්‍ර සහ අභිලේඛන (පෙළපොත පිටු 3–5)**
+
+1. **සෙල්ලිපි ප්‍රාථමික පුරාවිද්‍යාත්මක මූලාශ්‍රයක් වන්නේ ඇයි?**
+   සාහිත්‍ය මූලාශ්‍ර පසුකාලීනව පිටපත් කිරීමේදී හෝ සංස්කරණයේදී වෙනස්කම්වලට ලක් විය හැකි වුවත්, සෙල්ලිපි අදාළ සිදුවීම සිදුවූ මොහොතේදීම කල්පවත්නා ගල් මත සටහන් කර ඇති බැවින් කිසිදු වෙනස්කමකට ලක් නොවූ සත්‍ය ඓතිහාසික තොරතුරු සපයයි.
+
+2. **ගල්වල හැඩය අනුව සෙල්ලිපි ප්‍රධාන වර්ග 5:**
+   - **ලෙන් ලිපි (Cave Inscriptions):** ස්වභාවික ගල් ලෙන්වල කටාරමට යටින් කොටා ඇති පැරණිතම බ්‍රාහ්මී ලිපි (ක්‍රි.පූ. 3 - 2 සියවස්). මහා සංඝරත්නයට ලෙන් පූජා කිරීම වාර්තා කරයි (*"අගත අනගත චතුදිස සගස දිනෙ"*).
+   - **ගිරි ලිපි (Rock Inscriptions):** ස්වභාවික ගල් පර්වත මතුපිට කොටන ලද ලිපි (උදා: තෝණිගල, වෙස්සගිරිය).
+   - **ටැම් ලිපි (Pillar Inscriptions):** සකස් කළ ගල් කණු මත සතර පැත්තේම කොටන ලද ලිපි (උදා: වෙළඳ නීති ඇතුළත් බදුලු ටැම් ලිපිය).
+   - **පුවරු ලිපි (Slab Inscriptions):** මනාව ඔපමට්ටම් කළ සෘජුකෝණාස්‍රාකාර ගල් පුවරු මත කෙටූ ලිපි (උදා: මිහින්තලා පුවරු ලිපිය).
+   - **ආසන ලිපි (Seat Inscriptions):** රජවරුන් වැඩසිටි ගල් ආසන මත කෙටූ ලිපි (උදා: පොළොන්නරුවේ නිශ්ශංකමල්ල රජුගේ ගල් ආසන).
+
+3. **අභිලේඛන සඳහා භාවිත කළ වෙනත් වැදගත් මාධ්‍ය:**
+   - **බිත්ති:** සීගිරි කැඩපත් පවුරේ ලියැවුණු සීගිරි කුරුටු ගී.
+   - **තඹ පත්:** 1 වන විජයබාහු රජු බුදල්නාවන්ට වරප්‍රසාද දුන් පනාකඩුව තඹ සන්නස.
+   - **රන් පත්:** යාපනයෙන් හමුවූ වසභ රජුගේ වල්ලිපුරම් රන් පත.
+   - **ලී:** ඇම්බැක්කේ දේවාලයේ ලී කණු මත ඇති කැටයම් සහිත ලිපි.`;
+
+    const ta = `### படிமுறை விளக்கம்: வரலாற்று மூலாதாரங்களும் கல்வெட்டுகளும் (Sellipi)
+**தரம் 10 வரலாறு — அத்தியாயம் 1: வரலாற்று மூலாதாரங்கள் (பக். 3–5)**
+
+1. **கல்வெட்டுகள் முதன்மையான தொல்பொருள் மூலாதாரங்கள் ஆகும்:**
+   இலக்கிய நூல்கள் பிற்காலத்தில் திருத்தப்பட வாய்ப்புள்ள போதிலும், கல்வெட்டுகள் நிகழ்வுகள் இடம்பெற்ற காலத்திலேயே நிரந்தரமான பாறைகளில் செதுக்கப்பட்டதால் உண்மையான தகவல்களை வழங்குகின்றன.
+
+2. **பாறைகளின் வடிவத்தை அடிப்படையாகக் கொண்ட 5 வகையான கல்வெட்டுகள்:**
+   - **குகைக் கல்வெட்டுகள் (Cave Inscriptions):** காடிக்கு (drip-ledge) கீழே செதுக்கப்பட்ட பிராமி குகைக் கல்வெட்டுகள் (கி.மு. 3 - 2 ஆம் நூற்றாண்டு).
+   - **பாறைக் கல்வெட்டுகள் (Rock Inscriptions):** தட்டையான பாறை மேற்பரப்புகளில் செதுக்கப்பட்டவை (தோணிகல கல்வெட்டு).
+   - **தூண் கல்வெட்டுகள் (Pillar Inscriptions):** செவ்வக அல்லது எண் கோண கல்தூண்களில் செதுக்கப்பட்டவை (பதுளை தூண் கல்வெட்டு).
+   - **பலகைக் கல்வெட்டுகள் (Slab Inscriptions):** மெருகூட்டப்பட்ட கற்பலகைகளில் செதுக்கப்பட்டவை (மிகிந்தலை பலகைக் கல்வெட்டு).
+   - **ஆசனக் கல்வெட்டுகள் (Seat Inscriptions):** அரசர்கள் அமர்ந்திருந்த கல் ஆசனங்களில் செதுக்கப்பட்டவை (நிசங்கமல்லனின் கல் ஆசனங்கள்).`;
+
+    return {
+      answer: lang === 'si' ? si : lang === 'ta' ? ta : en,
+      sources,
+      suggestedFollowUps: [
+        'ගිරි ලිපි සහ ටැම් ලිපි අතර වෙනස කුමක්ද?',
+        'පනාකඩුව තඹ සන්නසේ ඓතිහාසික වැදගත්කම පැහැදිලි කරන්න',
+        'බ්‍රාහ්මී ලෙන් ලිපි වල සඳහන් වන ප්‍රධානීන් කවුද?',
+        'සෙල්ලිපි වලින් විභාග ප්‍රශ්නයක් අසන්න'
+      ]
+    };
+  }
+
+  private handleSettlementsClarify(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    const sources: SourceCitation[] = [
+      {
+        documentId: 'sl-moe-history-gr10',
+        source: 'Grade 10 History Textbook — Chapter 2: Ancient Settlements of Sri Lanka (pp. 10–30)',
+        pageNumber: 10,
+        distance: 0.09
+      }
+    ];
+
+    const en = `### Step-by-Step Breakdown: Ancient Settlements of Sri Lanka
+**Grade 10 History — Chapter 2: Ancient Settlements (Textbook pp. 10–30)**
+
+1. **Pre-Historic Hunter-Gatherer Cave Dwellers (Stone Age):**
+   - Natural rock caves: **Fa-Hien Lena (පාහියන්ගල)**, **Batadombalena (බටදොඹලෙන)**, and **Beli Lena (බෙලිලෙන)**.
+   - Mesolithic hunter-gatherers crafted geometric microlith stone tools from quartz and chert.
+   - Open-air dwelling site at **Bellanbandi Palassa (බෙල්ලන්බැඳිපැලැස්ස)**.
+
+2. **Proto-Historic Early Iron Age (c. 1000–300 B.C.):**
+   - Emergence of sedentary agricultural villages and systematic wet-rice cultivation.
+   - **Iron Metallurgy:** Forging iron weapons, digging hoes, and sickles.
+   - **Black and Red Ware (BRW) Pottery:** Fine pottery produced in reduction-atmosphere kilns.
+   - **Megalithic Cist Burials:** The cemetery at **Ibbankatuwa (ඉබ්බන්කටුව)** near Dambulla contains stone slab cists holding cremation ashes, carnelian beads, and metal artifacts.`;
+
+    const si = `### පියවරෙන් පියවර පැහැදිලි කිරීම: ශ්‍රී ලංකාවේ පුරාණ ජනාවාස
+**10 ශ්‍රේණිය ඉතිහාසය — 2 වන පරිච්ඡේදය: පුරාණ ජනාවාස (පෙළපොත පිටු 10–30)**
+
+1. **ප්‍රාග් ඓතිහාසික ශිලා යුගය:**
+   - ස්වභාවික ගල් ලෙන්: **පාහියන්ගල**, **බටදොඹලෙන**, සහ **බෙලිලෙන**.
+   - ක්ෂුද්‍ර ශිලා මෙවලම් (Microliths) භාවිත කරමින් දඩයමින් සහ කැලෑ අල-කොළ ආහාරයට ගනිමින් ජීවත් වූහ.
+   - ප්‍රධාන එළිමහන් ජනාවාසය: **බෙල්ලන්බැඳිපැලැස්ස**.
+
+2. **පූර්ව ඓතිහාසික මුල් යකඩ යුගය (ක්‍රි.පූ. 1000–300):**
+   - ස්ථිර කෘෂිකාර්මික ගම්මාන හා වී ගොවිතැන ඇරඹීම.
+   - **යකඩ තාක්ෂණය:** කෘෂිකාර්මික හා යුද මෙවලම් තැනීම.
+   - **කළු සහ රතු මැටි බඳුන් (BRW):** උසස් කුඹල් කර්මාන්තය.
+   - **ඉබ්බන්කටුව මහා ශිලා සුසානය:** දඹුල්ල අසල ගල් පෙට්ටි සුසාන (Cist Burials) සහ භෂ්මාවශේෂ තැන්පත් කළ මැටි බඳුන්.`;
+
+    const ta = `### படிமுறை விளக்கம்: இலங்கையின் பண்டைய குடியேற்றங்கள் (அத்தியாயம் 2)
+பாகியன்கல போன்ற குகைகளில் வாழ்ந்த கற்கால மனிதன், இரும்பின் கண்டுபிடிப்பு மற்றும் இப்பத்கட்டுவ பெருங்கற்கால புதைகுழியுடன் நிலையான விவசாய கிராமங்களை அமைத்தான்!`;
+
+    return {
+      answer: lang === 'si' ? si : lang === 'ta' ? ta : en,
+      sources,
+      suggestedFollowUps: [
+        'What was found at the Ibbankatuwa cemetery?',
+        'Difference between Pre-historic and Proto-historic eras',
+        'Quiz me on Chapter 2'
+      ]
+    };
+  }
+
+  private handlePoliticalPowerClarify(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    const sources: SourceCitation[] = [
+      {
+        documentId: 'sl-moe-history-gr10',
+        source: 'Grade 10 History Textbook — Chapter 3: Evolution of Political Power (pp. 31–43)',
+        pageNumber: 31,
+        distance: 0.07
+      }
+    ];
+
+    const en = `### Step-by-Step Breakdown: Evolution of Political Power in Ancient Sri Lanka
+**Grade 10 History — Chapter 3: Evolution of Political Power (Textbook pp. 31–43)**
+
+1. **Who were the Parumakas?**
+   - The title **Parumaka** (from Sanskrit *Pramukha*, meaning "chief" or "foremost") was the aristocratic rank of regional clan chieftains, tank custodians (*Vapi-hamika*), and military generals from 3rd century B.C. to 1st century A.D.
+   - Over **70% of Early Brahmi cave inscriptions** record donations of caves to Buddhist monks by Parumakas (*"Parumaka [Name]ha lene agata anagata chatudisa sagasa dine"*).
+
+2. **The 4 Tiers of Political Evolution:**
+   - **Gamika:** Local village headman presiding over a single agricultural settlement.
+   - **Parumaka:** Regional chieftain controlling reservoirs, land tenure, and warrior retinues.
+   - **Aya:** Provincial prince / royal family member.
+   - **Raja / Maharaja:** Monarch uniting regional principalities under a sovereign kingdom.`;
+
+    const si = `### පියවරෙන් පියවර පැහැදිලි කිරීම: දේශපාලන බලය විකාශනය වීම සහ පරුමකවරුන්
+**10 ශ්‍රේණිය ඉතිහාසය — 3 වන පරිච්ඡේදය: දේශපාලන බලය විකාශනය වීම (පෙළපොත පිටු 31–43)**
+
+1. **පරුමකවරුන් යනු කවුද?**
+   - **පරුමක** (*ප්‍රමුඛ*) යනු ක්‍රි.පූ. 3 වන සියවසේ සිට විසූ ප්‍රභූ ගෝත්‍ර නායකයන්, වැව් හිමියන් (*වාපි-හමික*), ඇමතිවරුන් සහ හමුදා ප්‍රධානීන් හැඳින්වූ ගෞරව නාමයයි.
+   - ලංකාවේ මුල් බ්‍රාහ්මී ලෙන් ලිපිවලින් **70% කට වැඩි ප්‍රමාණයක්** ලියවා ඇත්තේ සංඝයාට ලෙන් පූජා කළ පරුමකවරුන් විසිනි.
+
+2. **දේශපාලන බලය විකාශනය වූ පියවර 4:**
+   - **ගාමික:** එක් ගමක නායකයා.
+   - **පරුමක:** ගම්මාන කිහිපයක වැව් සහ ඉඩම් හිමි ප්‍රභූ ප්‍රධානියා.
+   - **ආය:** ප්‍රාදේශීය කුමාරවරුන් (රුහුණේ බහුලව විසූහ).
+   - **රජ / මහාරජ:** මුළු රටම එක්සේසත් කළ කේන්ද්‍රගත පාලකයා (උදා: දුටුගැමුණු රජු).`;
+
+    const ta = `### படிமுறை விளக்கம்: அரசியல் அதிகாரம் வளர்ச்சி (அத்தியாயம் 3)
+1. காமிக (கிராமத் தலைவர்) ➔ 2. பருமக (பிராந்தியத் தலைவர் / குலத் தலைவர்) ➔ 3. ஆய (இளவரசர்) ➔ 4. ராஜா (மன்னர்).`;
+
+    return {
+      answer: lang === 'si' ? si : lang === 'ta' ? ta : en,
+      sources,
+      suggestedFollowUps: [
+        'Why did Parumakas donate caves to the Sangha?',
+        'Who were female chieftains (Parumakalu)?',
+        'Quiz me on political evolution'
+      ]
+    };
+  }
+
+  private handleAncientSocietyClarify(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    const sources: SourceCitation[] = [
+      {
+        documentId: 'sl-moe-history-gr10',
+        source: 'Grade 10 History Textbook — Chapter 4: The Ancient Society of Sri Lanka (pp. 44–62)',
+        pageNumber: 44,
+        distance: 0.1
+      }
+    ];
+
+    const en = `### Step-by-Step Breakdown: The Ancient Society of Sri Lanka
+**Grade 10 History — Chapter 4 (Textbook pp. 44–62)**
+
+1. **Occupational Caste Structure (Kula):**
+   - Society was organized around functional services (*Kula*): agrarian landholders (**Goigama**), metalworkers, potters, and weavers.
+   - Buddhist ethics prevented the extreme ritual untouchability seen in ancient India.
+
+2. **Autonomous Village Council (Gam Sabha):**
+   - Administered local customary law, mediated boundary disputes, and regulated tank water turns (*Muraya*).
+
+3. **The Cultural Matrix:**
+   - The harmonious balance between the **Wewa** (tank for economic life), the **Dagoba** (stupa for moral values), the **Ketha** (paddy field), and the **Gamgoda** (village settlement).`;
+
+    const si = `### පියවරෙන් පියවර පැහැදිලි කිරීම: පුරාණ ශ්‍රී ලංකාවේ සමාජය
+**10 ශ්‍රේණිය ඉතිහාසය — 4 වන පරිච්ඡේදය: පුරාණ සමාජය (පෙළපොත පිටු 44–62)**
+
+1. **කුල ක්‍රමය (Kula):**
+   - වෘත්තීය සේවා පදනම් කරගත් කුල සංවිධානය: ගොවිතැන් කළ **ගොවි කුලය**, කම්මල්කරුවන්, කුඹල්කරුවන්, සහ රෙදි වියන්නන්.
+   - බුදුදහමේ ආභාසය නිසා ඉන්දියාවේ මෙන් දැඩි පීඩාකාරී බවක් මෙරට නොවීය.
+
+2. **ගම් සභාව:**
+   - ගමේ වැව් වතුර බෙදාහැරීම, සාමූහික ශ්‍රමදාන, සහ ආරවුල් විසඳීම සිදුකළ ස්වාධීන ග්‍රාමීය ආයතනය.
+
+3. **"වැවයි දාගැබයි ගමයි කෙතයි":**
+   - වැවෙන් ආර්ථික ශක්තියත්, දාගැබෙන් ආධ්‍යාත්මික සැනසීමත් ලැබූ අපූර්ව සංස්කෘතික පරිසරය.`;
+
+    const ta = `### படிமுறை விளக்கம்: இலங்கையின் பண்டைய சமூகம் (அத்தியாயம் 4)
+குல அமைப்பு, கிராம சபை மற்றும் "வாவி, தாதுகோபம், வயல், கிராமம்" ஆகியவற்றுக்கு இடையிலான கலாசார ஒற்றுமை.`;
+
+    return {
+      answer: lang === 'si' ? si : lang === 'ta' ? ta : en,
+      sources,
+      suggestedFollowUps: [
+        'How did Gam Sabha resolve village disputes?',
+        'Role of Buddhism in ancient social harmony',
+        'Quiz me on ancient society'
+      ]
+    };
+  }
+
+  private handleHydraulicClarify(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    const sources: SourceCitation[] = [
+      {
+        documentId: 'sl-moe-history-gr10',
+        source: 'Grade 10 History Textbook — Chapter 5: Ancient Science & Technology (pp. 63–80)',
+        pageNumber: 63,
+        distance: 0.08
+      }
+    ];
+
+    const en = `### Step-by-Step Breakdown: Ancient Hydraulic Engineering
+**Grade 10 History — Chapter 5: Ancient Science & Technology (Textbook pp. 63–80)**
+
+1. **Catchment Basin (Wewa System):**
+   Rain falling in the central highlands was caught by cascade earthen bunds forming massive reservoirs like Kala Wewa and Minneriya.
+
+2. **Bisokotuwa (Cistern Sluice):**
+   Ancient Sinhala engineers invented the world's first hydrostatic pressure-regulating chamber. Water entered an inner stone chamber (Biso-Kotuwa) with heavy stone baffles that absorbed roaring water pressure, slowing the flow to a safe trickle and preventing dam breach!
+
+3. **Trans-Basin Canals (Yoda Ela / Jaya Ganga):**
+   Carried water for **54 miles** from Kala Wewa to Tissa Wewa at a subtle gradient of **less than 6 inches per mile**, irrigating dry-zone villages across hundreds of miles!`;
+
+    const si = `### පියවරෙන් පියවර පැහැදිලි කිරීම: පුරාණ වාරි ශිෂ්ටාචාරය සහ තාක්ෂණය
+**10 ශ්‍රේණිය ඉතිහාසය — 5 වන පරිච්ඡේදය: පුරාණ විද්‍යාව හා තාක්ෂණය (පෙළපොත පිටු 63–80)**
+
+1. **එල්ලංගා වැව් පද්ධතිය:**
+   කඳුකරයෙන් ගලා ආ වැසි ජලය අනුපිළිවෙලින් කුඩා වැව්වල සිට මහා වැව් (කලා වැව, මින්නේරිය) දක්වා රඳවා ගත් අපූර්ව ජල කළමනාකරණය.
+
+2. **බිසෝකොටුව (Cistern Sluice):**
+   මහා ජල කඳක ඇති දැවැන්ත පීඩනය පාලනය කරමින් වැව් බැම්ම කැඩීයාම වළක්වා ගැනීමට සිංහල ඉංජිනේරුවන් ලොව ප්‍රථම වරට නිපදවූ පීඩන පාලක කුටීරය.
+
+3. **යෝධ ඇළ (ජය ගඟ):**
+   කලා වැවේ සිට අනුරාධපුර තිසා වැව දක්වා **සැතපුම් 54 ක්** පුරා සැතපුමකට **අඟල් 6 කට අඩු** සියුම් බෑවුමකින් ජලය ගෙනගිය විශ්මිත වාරි ඇළ මාර්ගය!`;
+
+    const ta = `### படிமுறை விளக்கம்: பண்டைய நீர்ப்பாசன நாகரிகம் (அத்தியாயம் 5)
+1. வாவிகள் அமைப்பு ➔ 2. பிசோகொட்டுவ (நீரமுக்கக் கட்டுப்பாட்டு அறை) ➔ 3. யோத எல (54 மைல் கால்வாய்).`;
+
+    return {
+      answer: lang === 'si' ? si : lang === 'ta' ? ta : en,
+      sources,
+      suggestedFollowUps: [
+        'How does a Bisokotuwa control water pressure?',
+        'Engineering behind the 54-mile Yoda Ela',
+        'Quiz me on ancient hydraulics'
+      ]
+    };
+  }
+
+  private handleHistoricalKnowledgeClarify(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    const sources: SourceCitation[] = [
+      {
+        documentId: 'sl-moe-history-gr10',
+        source: 'Grade 10 History Textbook — Chapter 6: Historical Knowledge and Practical Application (pp. 81–92)',
+        pageNumber: 81,
+        distance: 0.08
+      }
+    ];
+
+    const en = `### Step-by-Step Breakdown: Historical Knowledge & Practical Application
+**Grade 10 History — Chapter 6 (Textbook pp. 81–92)**
+
+1. **Ecological Conservation from History:** Learning how ancient cascade tank systems preserved ground moisture and prevented soil erosion.
+2. **Social Harmony:** Understanding historical intercultural synthesis between Sinhala, Tamil, and trade communities.
+3. **Legal Traditions:** Inscriptions like Badulla Pillar Inscription preserving consumer rights and unbiased local governance.`;
+
+    const si = `### පියවරෙන් පියවර පැහැදිලි කිරීම: ඓතිහාසික දැනුම සහ එහි ප්‍රායෝගික භාවිතය
+**10 ශ්‍රේණිය ඉතිහාසය — 6 වන පරිච්ඡේදය (පෙළපොත පිටු 81–92)**
+
+1. **පාරිසරික සංරක්ෂණය:** පුරාණ එල්ලංගා වැව් පද්ධති මඟින් නියඟ පාලනය කළ අයුරු නූතන දේශගුණික විපර්යාසයන්ට මුහුණ දීමට ප්‍රායෝගික ආදර්ශ සපයයි.
+2. **සමාජ සහජීවනය:** අතීතයේ පැවති සුහද වෙළඳ හා සංස්කෘතික සබඳතා අධ්‍යයනයෙන් ජාතික සමගිය තහවුරු කර ගැනීම.
+3. **නීතිය සහ පාලනය:** බදුලු ටැම් ලිපිය වැනි සෙල්ලිපි මඟින් පාරිභෝගික අයිතීන් හා සාධාරණ වෙළඳ නීති ක්‍රියාත්මක වූ ආකාරය අවබෝධ කර ගැනීම.`;
+
+    const ta = `### படிமுறை விளக்கம்: வரலாற்று அறிவின் நடைமுறைப் பயன்பாடு (அத்தியாயம் 6)
+சூழல் முகாமைத்துவம், சமூக நல்லிணக்கம் மற்றும் பாரம்பரிய சட்ட ஒழுங்கு.`;
+
+    return {
+      answer: lang === 'si' ? si : lang === 'ta' ? ta : en,
+      sources,
+      suggestedFollowUps: [
+        'How does ancient irrigation help modern ecological management?',
+        'Badulla pillar inscription legal principles',
+        'Quiz me on Chapter 6'
+      ]
+    };
+  }
+
+  private handleSouthWestKingdomsClarify(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    return this.handleSouthWestKingdoms(lang, 'clarify');
+  }
+
+  private handleKandyanKingdomClarify(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    return this.handleKandyanKingdom(lang, 'clarify');
+  }
+
+  private handleRenaissanceClarify(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    return this.handleRenaissance(lang, 'clarify');
+  }
+
+  private handleWesternWorldClarify(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    return this.handleWesternWorld(lang, 'clarify');
+  }
+
+  private handleHistorySimpler(lang: 'en' | 'si' | 'ta', context: LearningContext): RAGResponse {
+    const topicId = context.topicId || 'history-gr10-sources';
+
+    if (topicId === 'history-gr10-sources' || topicId === 'history-gr10-ancient-heritage') {
+      const en = `### Super Simple Version: Why Inscriptions (Sellipi) Matter
+Think of writing on a piece of paper versus carving words into solid stone:
+- **Paper:** Fades, tears, burns, or gets re-written with mistakes over hundreds of years.
+- **Stone (Sellipi):** Even after 2,200 years of rain and wind, the letters cut beneath the cave drip-ledge look almost exactly as they did on the day the ancient stonemason finished carving them!
+
+That is why historians trust **Sellipi** as primary truth: nobody could secretly change what King Vijayabahu carved in copper or what ancient monks carved into the cave rock!`;
+
+      const si = `### අතිශය සරල පැහැදිලි කිරීම: සෙල්ලිපි වල වැදගත්කම
+කොළයක ලියන දේකට වඩා ගලක කොටන දේක තියෙන වෙනස හිතන්න:
+- **කොළයක ලියූ විට:** අවුරුදු ගණනක් යද්දී දිරාපත් වෙන්න, ගිනි ගන්න, හෝ පිටපත් කරද්දී වැරදි එකතු වෙන්න පුළුවන්.
+- **ගලක කෙටූ සෙල්ලිපි (Sellipi):** අවුරුදු 2,200 කට පස්සෙත්, ලෙන් කටාරම් යට කෙටූ අකුරු කිසිම වෙනසක් නැතුව එදා කොටපු විදිහටම අදටත් කියවන්න පුළුවන්!
+
+ඉතිහාසඥයන් සෙල්ලිපි **ප්‍රාථමික මූලාශ්‍ර** විදිහට සලකන්නේ ඒ නිසයි: රජවරුන් සහ ජනතාව එදා සත්‍ය වශයෙන්ම කළ කී දෑ කාටවත් වෙනස් කරන්න බැරි විදිහට ගල් මත සදාකාලිකව ඉතිරි වෙලා තියෙනවා!`;
+
+      const ta = `### மிக எளிய விளக்கம்: கல்வெட்டுகளின் முக்கியத்துவம்
+காகிதத்தில் எழுதுவதற்கும் கல்லில் செதுக்குவதற்கும் உள்ள வேறுபாட்டை எண்ணிப்பாருங்கள். 2,200 ஆண்டுகள் கடந்த பின்னரும் கல்வெட்டுகள் உண்மையான வரலாற்றை அழியாமல் பாதுகாக்கின்றன!`;
+
+      return {
+        answer: lang === 'si' ? si : lang === 'ta' ? ta : en,
+        sources: [{ source: 'Grade 10 History Textbook — Chapter 1', pageNumber: 3 }],
+        suggestedFollowUps: [
+          'Clarify more: 5 types of stone inscriptions',
+          'Sri Lankan Example: The Panakaduwa Copper Plate story',
+          'Quiz me on history'
+        ]
+      };
+    }
+
+    if (topicId === 'history-gr10-settlements') {
+      const en = `### Super Simple Version: From Cave Dwellers to Village Farmers
+- **Pre-Historic (Stone Age):** Humans lived as hunter-gatherers inside natural caves like Fa-Hien and Batadombalena, hunting monkeys and eating wild plants using sharp quartz tools (microliths).
+- **Proto-Historic (Iron Age):** Humans discovered iron, stopped wandering, built permanent farming villages, grew paddy, made Black and Red pottery, and buried their ancestors in stone boxes called megalithic cists at Ibbankatuwa!`;
+      const si = `### අතිශය සරල පැහැදිලි කිරීම: ලෙන් වැසියන්ගේ සිට ගම්මාන දක්වා
+- **ප්‍රාග් ඓතිහාසික (ශිලා යුගය):** පාහියන්ගල සහ බටදොඹලෙන වැනි ගල් ලෙන්වල විසූ බලංගොඩ මානවයා ක්ෂුද්‍ර ශිලා මෙවලම් භාවිත කරමින් දඩයමින් ජීවත් වූහ.
+- **පූර්ව ඓතිහාසික (යකඩ යුගය):** යකඩ සොයාගැනීමත් සමඟ මිනිසුන් ස්ථිර ගම්මාන සාදා ගොවිතැන් කළහ, කළු සහ රතු මැටි බඳුන් නිපදවූහ, ඉබ්බන්කටුව වැනි ගල් පෙට්ටි සුසානවල භෂ්මාවශේෂ තැන්පත් කළහ!`;
+      const ta = `### மிக எளிய விளக்கம்: குகை வாழ்விலிருந்து கிராமங்கள் வரை
+பாகியன்கல குகை வேட்டைக்காரர்கள் இரும்பு காலத்தின் பின் இப்பத்கட்டுவ போன்ற இடங்களில் நிலையான விவசாய கிராமங்களை அமைத்தனர்!`;
+      return {
+        answer: lang === 'si' ? si : lang === 'ta' ? ta : en,
+        sources: [{ source: 'Grade 10 History Textbook — Chapter 2', pageNumber: 15 }],
+        suggestedFollowUps: [
+          'What was discovered at Ibbankatuwa?',
+          'Fa-Hien cave archaeological findings',
+          'Quiz me on settlements'
+        ]
+      };
+    }
+
+    if (topicId === 'history-gr10-political-power') {
+      const en = `### Super Simple Version: How Kings Rose to Power in Sri Lanka
+Imagine a ladder with 4 steps:
+1. **Gamika:** Headman of a single village.
+2. **Parumaka:** Wealthy chieftain who built tanks, owned land, and led warriors across multiple villages.
+3. **Aya:** Regional prince ruling a whole district like Ruhuna.
+4. **Raja:** Supreme king (like Dutugemunu) who united all regional Parumakas under one central throne!`;
+      const si = `### අතිශය සරල පැහැදිලි කිරීම: දේශපාලන බලය විකාශනය වූ පියවර 4
+පියවර 4 කින් යුත් ඉණිමඟක් සිතන්න:
+1. **ගාමික:** එක් ගමක ප්‍රධානියා.
+2. **පරුමක:** ගම්මාන කිහිපයක වැව් හිමි, ඉඩම් හිමි, ප්‍රභූ නායකයන් හා ඇමතිවරුන්.
+3. **ආය:** රුහුණ වැනි විශාල ප්‍රදේශ පාලනය කළ ප්‍රාදේශීය කුමාරවරුන්.
+4. **රජ:** දුටුගැමුණු රජු මෙන් මුළු රටම එක්සේසත් කළ මහා රජවරුන්!`;
+      const ta = `### மிக எளிய விளக்கம்: அரசியல் அதிகாரம் வளர்ச்சி
+1. காமிக ➔ 2. பருமக ➔ 3. ஆய ➔ 4. ராஜா.`;
+      return {
+        answer: lang === 'si' ? si : lang === 'ta' ? ta : en,
+        sources: [{ source: 'Grade 10 History Textbook — Chapter 3', pageNumber: 35 }],
+        suggestedFollowUps: [
+          'Why did Parumakas donate caves to the Sangha?',
+          'Who were the female chieftains (Parumakalu)?',
+          'Quiz me on political power'
+        ]
+      };
+    }
+
+    if (topicId === 'history-gr10-science-tech' || topicId === 'ancient-hydraulics' || topicId === 'history-gr10-hydraulic-society') {
+      return {
+        answer: `### Super Simple Version: The Bisokotuwa Sluice Gate
+Imagine blowing water through a straw with full force: it blasts out wildly. But if you blow into a cup with tiny holes first, the water flows out smoothly without splashing.
+
+Ancient Sinhala engineers built stone chambers inside reservoirs called **Bisokotuwa**. It trapped the roaring water pressure so it wouldn't smash the mud dam, letting smooth water flow safely to the farmers!`,
+        sources: [{ source: 'Grade 10 History Textbook — Chapter 5', pageNumber: 65 }],
+        suggestedFollowUps: [
+          'How does the 54-mile Yoda Ela work?',
+          'Wind-powered iron furnaces of Samanalawewa',
+          'Quiz me on ancient hydraulics'
+        ]
+      };
+    }
+
+    // Default History simpler
+    return {
+      answer: lang === 'si'
+        ? `10 ශ්‍රේණිය ඉතිහාසය විෂය නිර්දේශයේ පාඩම් වල මූලික සංකල්ප, සිදුවීම් සහ කාලවකවානු සරලව අවබෝධ කර ගැනීම සඳහා නිල පෙළපොත පදනම් කරගත් සාරාංශයක් ලබාදීමට මම සූදානම්. ඔබට අවශ්‍ය පරිච්ඡේදය තෝරන්න!`
+        : `Let's break down your Grade 10 History lessons in a clear, memorable way grounded directly in your Sri Lankan textbook! Which topic would you like to explore?`,
+      sources: [{ source: 'Grade 10 History Textbook', pageNumber: 1 }],
+      suggestedFollowUps: [
+        'Chapter 1: Sources & Sellipi',
+        'Chapter 3: Parumakas & Political Power',
+        'Chapter 5: Ancient Hydraulic Technology'
+      ]
+    };
+  }
+
+  private handleHistoryExample(lang: 'en' | 'si' | 'ta', context: LearningContext): RAGResponse {
+    const topicId = context.topicId || 'history-gr10-sources';
+
+    if (topicId === 'history-gr10-sources' || topicId === 'history-gr10-ancient-heritage') {
+      const en = `**A Real-World Sri Lankan Example: The Panakaduwa Copper Plate**
+In 1948, a farmer in Panakaduwa (near Morawaka in Southern Sri Lanka) dug up three inscribed copper plates tied with a royal seal. 
+Upon deciphering by Prof. Senarath Paranavitana, it was revealed to be a direct decree by **King Vijayabahu I (1055–1110 CE)**!
+The King recorded heartfelt gratitude to **Lord Budalna (Ruhunu Dandanayaka Budalna)**, who carried the young child-prince Vijayabahu on his shoulders through the dense mountains and protected him from Chola assassins. The copper plate granted Lord Budalna's lineage permanent immunity from all taxes, arrest, and penalties!
+
+This real copper artifact is now preserved at the **Colombo National Museum** as one of Sri Lanka's greatest national treasures.`;
+
+      const si = `**ශ්‍රී ලාංකේය සැබෑ උදාහරණයක්: පනාකඩුව තඹ සන්නස**
+1948 දී දකුණු පළාතේ මොරවක පනාකඩුව ගමේ ගොවි මහතෙකුට දිය අගලක් කපද්දී තඹ තහඩු තුනක් හමුවිය.
+මහාචාර්ය සෙනරත් පරණවිතාන මහතා විසින් මෙය කියවා බැලූ විට, එය **1 වන විජයබාහු රජු (ක්‍රි.ව. 1055–1110)** විසින් නිකුත් කරන ලද සුවිශේෂී රාජකීය ආඥාවක් බව හෙළි විය!
+චෝළ ආක්‍රමණිකයන්ගෙන් බේරී කුඩා විජයබාහු කුමරු කරපිට තබාගෙන කැලෑවල රැකවරණය දුන් **රුහුණු දණ්ඩනායක බුදල්නාවන්** වෙත කළගුණ සැලකීමක් ලෙස, බුදල්නාගේ පරපුරට සියලු බදු නිදහස සහ වැරදිවලට දඬුවම් නොකිරීමේ වරප්‍රසාද පිරිනමමින් මෙම සන්නස ලබා දී ඇත.
+
+මෙම සැබෑ ඓතිහාසික තඹ සන්නස අදටත් **කොළඹ ජාතික කෞතුකාගාරයේ** සුරක්ෂිතව ප්‍රදර්ශනය කෙරේ.`;
+
+      const ta = `**இலங்கை வரலாற்று உதாரணம்: பனக்கடுவ செப்புப் பட்டயம்**
+முதலாம் விஜயபாகு மன்னன் தனது சிறுவயதில் தன்னைப் பாதுகாத்த புதல்நாவிற்கு (Budalna) நன்றிக்கடனாக வழங்கிய பனக்கடுவ செப்புப் பட்டயம், இன்றும் கொழும்பு தேசிய அருங்காட்சியகத்தில் வைக்கப்பட்டுள்ளது!`;
+
+      return {
+        answer: lang === 'si' ? si : lang === 'ta' ? ta : en,
+        sources: [{ source: 'Grade 10 History Textbook — Chapter 1, Page 5 (Table 1.4: Epigraphical Media)', pageNumber: 5 }],
+        suggestedFollowUps: [
+          'What is the Galpotha Inscription at Polonnaruwa?',
+          'Tell me about Sigiriya Graffiti (Kurutu Gee)',
+          'Quiz me on Sri Lankan historical media'
+        ]
+      };
+    }
+
+    if (topicId === 'history-gr10-science-tech' || topicId === 'ancient-hydraulics' || topicId === 'history-gr10-hydraulic-society') {
+      const en = `**A Real-World Sri Lankan Example: The 54-Mile Yoda Ela (Jaya Ganga)**
+Built in the 5th century CE by King Dhatusena, the **Yoda Ela** is an engineering miracle:
+- It carries water across **54 miles (87 km)** from Kala Wewa to the Tissa Wewa in Anuradhapura.
+- The slope (gradient) is less than **6 inches per mile** (10 cm per km)!
+- Modern irrigation engineers with laser-guided satellite sensors marvel at how ancient Sinhala surveyors achieved such subtle, precise slope across dense jungle terrain over 1,500 years ago!`;
+
+      const si = `**ශ්‍රී ලාංකේය සැබෑ උදාහරණයක්: සැතපුම් 54 ක් දිග යෝධ ඇළ (ජය ගඟ)**
+ක්‍රි.ව. 5 වන සියවසේදී ධාතුසේන රජු විසින් ඉදිකළ **යෝධ ඇළ** ලෝකයේ විස්මිත වාරි නිර්මාණයකි:
+- එය කලා වැවේ සිට අනුරාධපුර තිසා වැව දක්වා **සැතපුම් 54 ක් (කි.මී. 87 ක්)** ජලය ගෙන යයි.
+- එහි බැස්ම සැතපුමකට **අඟල් 6 කට වඩා අඩුය** (කිලෝමීටරයකට සෙන්ටිමීටර 10 කට අඩු බැස්මක්)!
+- නවීන ලේසර් හා චන්ද්‍රිකා තාක්ෂණය ඇති ඉංජිනේරුවන්ද, මීට වසර 1,500 කට පෙර ඝන වනාන්තර මැද මෙතරම් සියුම් බෑවුමක් නිර්මාණය කළ අයුරු දැක මවිතයට පත් වෙති!`;
+
+      const ta = `**இலங்கை வரலாற்று உதாரணம்: 54 மைல் நீள யோத எல (ஜய கங்கை)**
+தாதுசேன மன்னனால் கட்டப்பட்ட யோத எல, கலா வாவியிலிருந்து அனுராதபுரத்திற்கு 54 மைல்கள் பாய்கிறது. இதன் சாய்வு ஒரு மைலுக்கு 6 அங்குலத்திற்கும் குறைவானது!`;
+
+      return {
+        answer: lang === 'si' ? si : lang === 'ta' ? ta : en,
+        sources: [{ source: 'Grade 10 History Textbook — Chapter 5, Page 72', pageNumber: 72 }],
+        suggestedFollowUps: [
+          'How does the Bisokotuwa control water pressure?',
+          'Wind-powered iron furnaces at Samanalawewa',
+          'Quiz me on ancient hydraulics'
+        ]
+      };
+    }
+
+    // Default History Example
+    return {
+      answer: lang === 'si'
+        ? `**ශ්‍රී ලංකා ඉතිහාසයේ ප්‍රායෝගික උදාහරණයක්:**
+සීගිරිය කැඩපත් පවුර මත ලියැවුණු සීගිරි කුරුටු ගී (Sigiriya Graffiti) මඟින්, ක්‍රි.ව. 8–10 සියවස් වල සාමාන්‍ය ජනයා කවි ලියූ අයුරු, එකල සිංහල භාෂාව සහ සමාජයේ සාක්ෂරතාව විදහා දක්වයි!`
+        : `**Real-World Sri Lankan Example:**
+The Sigiriya Mirror Wall contains over 685 deciphered poetic graffiti verses (*Kurutu Gee*) written by ordinary ancient visitors between the 8th and 10th centuries, proving high literacy rates in ancient Sri Lanka!`,
+      sources: [{ source: 'Grade 10 History Textbook — Chapter 1 & 4', pageNumber: 5 }],
+      suggestedFollowUps: [
+        'Read a Sigiriya graffiti verse',
+        'Tell me about Panakaduwa Copper Plate',
+        'Quiz me on Sri Lankan history'
+      ]
+    };
+  }
+
+  private handleHistoryRepeat(lang: 'en' | 'si' | 'ta', context?: LearningContext): RAGResponse {
+    const topicId = context?.topicId || 'history-gr10-sources';
+
+    if (topicId === 'history-gr10-sources' || topicId === 'history-gr10-ancient-heritage') {
+      return {
+        answer: lang === 'si'
+          ? `සතුටින් නැවත මතක් කර ගනිමු! 10 ශ්‍රේණිය 1 වන පරිච්ඡේදයේ ප්‍රධානම කරුණු:
+1. **සෙල්ලිපි (Sellipi)** යනු වෙනස් නොවූ ප්‍රාථමික පුරාවිද්‍යාත්මක මූලාශ්‍ර වේ.
+2. **ගල්වල හැඩය අනුව වර්ග 5:** ලෙන්, ගිරි, ටැම්, පුවරු, සහ ආසන ලිපි.
+3. **පැරණිතම සෙල්ලිපි:** ක්‍රි.පූ. 3 - 2 සියවස්වල ලෙන් කටාරම් යට කෙටූ බ්‍රාහ්මී ලෙන් ලිපි (සංඝයාට ලෙන් පිදීම).
+4. **වෙනත් මාධ්‍ය:** පනාකඩුව (තඹ), වල්ලිපුරම් (රන්), සීගිරි කුරුටු ගී (බිත්ති).`
+          : `Let's recap the core facts of Grade 10 History Chapter 1:
+1. **Inscriptions (Sellipi)** are primary, contemporaneous archaeological sources that were never edited.
+2. **5 Stone Shape Types:** Cave, Rock, Pillar, Slab, and Seat inscriptions.
+3. **Earliest Inscriptions:** Early Brahmi cave inscriptions under drip-ledges (3rd–2nd Century B.C.) recording cave donations to the Sangha.
+4. **Epigraphical Media:** Panakaduwa (Copper), Vallipuram (Gold), Sigiriya Mirror Wall (Plastered Wall Graffiti).`,
+        sources: [{ source: 'Grade 10 History Textbook — Chapter 1', pageNumber: 3 }],
+        suggestedFollowUps: [
+          'ගිරි ලිපි සහ ටැම් ලිපි අතර වෙනස කුමක්ද?',
+          'පනාකඩුව තඹ සන්නස ගැන විස්තර කරන්න',
+          'සෙල්ලිපි වලින් විභාග ප්‍රශ්නයක් අසන්න'
+        ]
+      };
+    }
+
+    return {
+      answer: lang === 'si'
+        ? `10 ශ්‍රේණිය ඉතිහාසය විෂය නිර්දේශයේ මූලික සංකල්ප නැවත සමාලෝචනය කරමු. ඔබ ඉගෙන ගන්නා පරිච්ඡේදයේ ප්‍රධාන කරුණු සාරාංශයක් අවශ්‍ය නම් මා වෙත දන්වන්න!`
+        : `Let's recap your Grade 10 History syllabus! Inscriptions, settlements, political power, and ancient technology all connect together to form Sri Lanka's rich national heritage. Which chapter would you like to review?`,
+      sources: [{ source: 'Grade 10 History Textbook', pageNumber: 1 }],
+      suggestedFollowUps: [
+        'Recap Chapter 1: Sources & Sellipi',
+        'Recap Chapter 3: Parumakas',
+        'Recap Chapter 5: Hydraulic Technology'
+      ]
+    };
+  }
+
+  private handleHistoryQuiz(lang: 'en' | 'si' | 'ta', context?: LearningContext): RAGResponse {
+    const topicId = context?.topicId || 'history-gr10-sources';
+
+    if (topicId === 'history-gr10-sources' || topicId === 'history-gr10-ancient-heritage') {
+      return {
+        answer: lang === 'si'
+          ? `**ඔබේ දැනුම පරීක්ෂා කරමු! (10 ශ්‍රේණිය ඉතිහාසය — 1 වන පරිච්ඡේදය)**
+1 වන විජයබාහු රජු තමන්ට ළමා වියේදී රැකවරණය දුන් බුදල්නාවන්ට වරප්‍රසාද පිරිනමමින් ලබාදුන් ලේඛනය කුමක්ද?
+
+1. මිහින්තලා පුවරු ලිපිය
+2. පනාකඩුව තඹ සන්නස
+3. බදුලු ටැම් ලිපිය
+4. වල්ලිපුරම් රන් පත
+
+*(පිළිතුර සටහන් කර ඔබ සිතන නිවැරදි අංකය එවන්න!)*`
+          : `**Test Your Understanding! (Grade 10 History — Chapter 1)**
+Which historical document was issued by King Vijayabahu I granting special hereditary privileges to Lord Budalna for protecting the young king during his childhood?
+
+1. Mihintale Slab Inscription
+2. Panakaduwa Copper Plate
+3. Badulla Pillar Inscription
+4. Vallipuram Golden Plate
+
+*(Reply with your chosen number to check your answer!)*`,
+        sources: [{ source: 'Grade 10 History Textbook — Chapter 1, Page 5', pageNumber: 5 }],
+        suggestedFollowUps: [
+          'The answer is 2: Panakaduwa Copper Plate',
+          'Explain why Panakaduwa is copper and not stone',
+          'Give me another history question'
+        ]
+      };
+    }
+
+    if (topicId === 'history-gr10-political-power') {
+      return {
+        answer: lang === 'si'
+          ? `**විභාග ප්‍රශ්නයක්! (10 ශ්‍රේණිය ඉතිහාසය — 3 වන පරිච්ඡේදය)**
+මුල් බ්‍රාහ්මී ලෙන් ලිපි වලින් 70% කට වඩා වැඩි ප්‍රමාණයක සඳහන් වන, වැව් හිමිකාරිත්වය දැරූ ප්‍රභූ නායකයන් හැඳින්වූ ගෞරව නාමය කුමක්ද?
+
+1. ගාමික
+2. පරුමක
+3. ආය
+4. දූතක`
+          : `**Exam Practice Question! (Grade 10 History — Chapter 3)**
+Which title, appearing in over 70% of Early Brahmi cave inscriptions, was held by prominent clan chieftains, tank custodians, and ministers?
+
+1. Gamika
+2. Parumaka
+3. Aya
+4. Dutaka`,
+        sources: [{ source: 'Grade 10 History Textbook — Chapter 3, Page 34', pageNumber: 34 }],
+        suggestedFollowUps: [
+          'The answer is 2: Parumaka',
+          'Who were the Gamika?',
+          'Give me another history question'
+        ]
+      };
+    }
+
+    // Default History Quiz
+    return {
+      answer: lang === 'si'
+        ? `**ඉතිහාසය ප්‍රශ්නයක්!**
+ලංකාවේ ස්වභාවික ගල් ලෙන්වල වැසි දිය කාන්දු වීම වැළැක්වීම සඳහා ගලේ කොටන ලද කාණුව හඳුන්වන්නේ කවර නමකින්ද?
+
+1. පුවරුව
+2. කටාරම
+3. ටැඹ
+4. සන්නස`
+        : `**Quick History Quiz!**
+What is the Sinhalese architectural term for the drip-ledge carved above rock caves to prevent rain water from entering monk dwellings?
+
+1. Puwaruwa
+2. Katārama
+3. Tämba
+4. Sannasa`,
+      sources: [{ source: 'Grade 10 History Textbook — Chapter 1, Page 3', pageNumber: 3 }],
+      suggestedFollowUps: [
+        'The answer is 2: Katārama',
+        'Tell me more about early cave dwellings',
+        'Give me another question'
+      ]
+    };
+  }
+
+  private handleHistoricalKnowledge(lang: 'en' | 'si' | 'ta', _question: string): RAGResponse {
+    const sources: SourceCitation[] = [
+      {
+        documentId: 'sl-moe-history-gr10',
+        source: 'Grade 10 History Textbook — Chapter 6: Historical Knowledge and Its Practical Application (pp. 81–92)',
+        fileType: 'PDF',
+        pageNumber: 81,
+        chunkNumber: 22,
+        distance: 0.08,
+        excerpt: 'Historical Knowledge: Practical application in sustainable ecological management, customary legal traditions, social cohesion, and national heritage preservation.'
+      }
+    ];
+
+    const en = `### Historical Knowledge and Its Practical Application
+**Grade 10 History — Chapter 6 (Textbook pp. 81–92)**
+
+Historical study is not merely memorizing past dates; it provides vital practical guidance for modern society:
+
+#### 1. Sustainable Ecological & Water Management:
+- Ancient Sri Lankan cascade reservoir networks (*Ellangawa*) demonstrate how to collect, recycle, and conserve ground moisture across arid zones without depleting aquifers.
+- Modern engineers and environmentalists study these ancient micro-catchments to combat droughts and climate change.
+
+#### 2. Social Cohesion & Cultural Tolerance:
+- Historical records show centuries of peaceful coexistence, trade, and cultural synthesis between Sinhala, Tamil, Muslim, and international maritime trading communities.
+
+#### 3. Customary Law & Justice:
+- Inscriptions such as the **Badulla Pillar Inscription** illustrate fair market taxation, consumer protection, and impartial village justice.`;
+
+    const si = `### ඓතිහාසික දැනුම හා එහි ප්‍රායෝගික භාවිතය
+**10 ශ්‍රේණිය ඉතිහාසය — 6 වන පරිච්ඡේදය (පෙළපොත පිටු 81–92)**
+
+ඉතිහාසය හැදෑරීම යනු අතීත සිදුවීම් සහ දිනයන් මතක තබා ගැනීම පමණක් නොව, නූතන සමාජය යහපත් කර ගැනීමට අතීතයෙන් ප්‍රායෝගික පාඩම් උකහා ගැනීමයි:
+
+#### 1. තිරසාර පාරිසරික හා ජල කළමනාකරණය:
+- පුරාණ එල්ලංගා වැව් පද්ධති මඟින් පරිසරයට හානියක් නොකර භූගත ජලය සංරක්ෂණය කළ අයුරු නූතන නියඟ සහ දේශගුණික විපර්යාසයන්ට මුහුණ දීමට ප්‍රායෝගික මඟපෙන්වීමක් සපයයි.
+
+#### 2. ජාතික සමගිය හා සංස්කෘතික සහජීවනය:
+- ඉතිහාසය හැදෑරීමෙන් විවිධ ජාතීන් සහ ආගම් අතර අතීතයේ පැවති සුහද වෙළඳ සහ සංස්කෘතික සබඳතා තේරුම් ගෙන අනාගත සාමය ගොඩනැගීමට හැකි වේ.
+
+#### 3. සාම්ප්‍රදායික නීතිය සහ යුක්තිය:
+- බදුලු ටැම් ලිපිය වැනි සෙල්ලිපි මඟින් සාධාරණ බදු ක්‍රම, වෙළඳ නීති සහ පාරිභෝගික අයිතීන් ආරක්ෂා කළ අයුරු පෙන්වා දෙයි.`;
+
+    const ta = `### வரலாற்று அறிவும் அதன் நடைமுறைப் பயன்பாடும்
+**தரம் 10 வரலாறு — அத்தியாயம் 6 (பக். 81–92)**
+வரலாற்று அறிவு தற்கால சூழல் முகாமைத்துவம், சமாதான சகவாழ்வு மற்றும் சட்ட ஒழுங்கு ஆகியவற்றுக்கான நடைமுறை வழிகாட்டல்களை வழங்குகிறது.`;
+
+    return {
+      answer: lang === 'si' ? si : lang === 'ta' ? ta : en,
+      sources,
+      suggestedFollowUps: [
+        'How does ancient irrigation help modern ecological management?',
+        'Badulla pillar inscription legal principles',
+        'Quiz me on Chapter 6'
+      ]
     };
   }
 
