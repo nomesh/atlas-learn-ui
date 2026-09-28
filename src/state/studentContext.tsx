@@ -66,6 +66,27 @@ const StudentContext = createContext<StudentContextValue | undefined>(undefined)
 export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { i18n } = useTranslation();
 
+  // One-time migration for legacy test profiles in localStorage
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const rawSession = localStorage.getItem('atlas_student_session');
+      if (rawSession && rawSession.includes('Nimali')) {
+        const parsed = JSON.parse(rawSession);
+        if (parsed.displayName?.includes('Nimali') || parsed.id?.includes('nimali')) {
+          parsed.id = 'stu-ol-10-osad';
+          parsed.displayName = 'Osad De Silva';
+          localStorage.setItem('atlas_student_session', JSON.stringify(parsed));
+        }
+      }
+      const rawName = localStorage.getItem('atlas_student_name');
+      if (rawName && (rawName.includes('Nimali') || rawName === 'Nimali')) {
+        localStorage.setItem('atlas_student_name', 'Osad De Silva');
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   const [session, setSession] = useState<LearnSessionData | null>(null);
 
   const [localStudentSession, setLocalStudentSession] = useState<StudentSignInData | null>(() => {
