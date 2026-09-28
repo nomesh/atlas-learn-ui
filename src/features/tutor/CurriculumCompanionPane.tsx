@@ -104,28 +104,45 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
   onSelectTopic,
 }) => {
   const { grade: studentGrade } = useStudent();
-  const currentSubject = MOCK_SUBJECTS.find((s) => s.id === subjectId) || MOCK_SUBJECTS[0];
+  // Resolve topic if topicId was provided
+  const targetTopic = topicId ? MOCK_TOPICS.find((t) => t.id === topicId) : null;
+  // Current subject: from explicit subjectId, or deduced from target topic, or fallback
+  const currentSubject = 
+    MOCK_SUBJECTS.find((s) => s.id === subjectId) || 
+    (targetTopic ? MOCK_SUBJECTS.find((s) => s.id === targetTopic.subjectId) : null) ||
+    MOCK_SUBJECTS[0];
+
+  // Grade filter logic: ICT core topics apply across grades 8-11
+  const isMatchingGrade = (t: (typeof MOCK_TOPICS)[0]) => {
+    if (!t.grade || !studentGrade) return true;
+    if (t.grade === studentGrade) return true;
+    if (t.subjectId === 'ict' && (studentGrade === 'grade-10' || studentGrade === 'grade-11' || studentGrade === 'grade-8' || studentGrade === 'grade-9')) {
+      return true;
+    }
+    return false;
+  };
+
   const gradeFilteredTopics = MOCK_TOPICS.filter(
-    (t) => t.subjectId === currentSubject.id && (!t.grade || t.grade === studentGrade)
+    (t) => t.subjectId === currentSubject.id && isMatchingGrade(t)
   );
   const subjectTopics = gradeFilteredTopics.length > 0
     ? gradeFilteredTopics
-    : (studentGrade ? [] : MOCK_TOPICS.filter((t) => t.subjectId === currentSubject.id));
+    : MOCK_TOPICS.filter((t) => t.subjectId === currentSubject.id);
 
-  // Active topic or first topic of subject
+  // Active topic or first topic of subject - strictly within currentSubject
   const activeTopic = 
-    (topicId ? subjectTopics.find((t) => t.id === topicId) : null) || 
+    (topicId ? (subjectTopics.find((t) => t.id === topicId) || MOCK_TOPICS.find((t) => t.id === topicId && t.subjectId === currentSubject.id)) : null) || 
     subjectTopics[0] || 
-    MOCK_TOPICS.find((t) => (!t.grade || t.grade === studentGrade)) ||
+    MOCK_TOPICS.find((t) => t.subjectId === currentSubject.id) ||
     MOCK_TOPICS[0];
 
   const steps = getLessonStepsForTopic(activeTopic.id);
   const [activeStepTab, setActiveStepTab] = useState(0);
 
   const currentStep = steps[activeStepTab] || steps[0];
-  const gradeDisplay = activeTopic.grade
-    ? activeTopic.grade.replace('grade-', 'Grade ')
-    : (studentGrade ? studentGrade.replace('grade-', 'Grade ') : 'Grade 10');
+  const gradeDisplay = studentGrade
+    ? studentGrade.replace('grade-', 'Grade ')
+    : (activeTopic.grade ? activeTopic.grade.replace('grade-', 'Grade ') : 'Grade 10');
 
   return (
     <aside className="h-full flex flex-col bg-slate-900 border border-slate-800 rounded-3xl shadow-xl overflow-hidden text-white">
@@ -228,7 +245,7 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
           )}
 
           {/* Interactive Subject Concept Visualizer for Maths, Science, History, etc. */}
-          {!['number-systems', 'configuring-formatting-computer', 'programming', 'physical-computing', 'internet', 'word-processing'].includes(activeTopic.id) && (
+          {currentSubject.id !== 'ict' && !['number-systems', 'configuring-formatting-computer', 'programming', 'physical-computing', 'internet', 'word-processing'].includes(activeTopic.id) && (
             <SubjectConceptVisualizer
               topicId={activeTopic.id}
               subjectId={currentSubject.id}

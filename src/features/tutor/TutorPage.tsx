@@ -42,6 +42,184 @@ import {
 } from '../../api/authApi';
 import type { ChatMessage, SourceCitation, TutorAction, Language } from '../../types';
 
+export const detectCurriculumContextFromMessage = (
+  message: string,
+  currentSubject?: string
+): { subjectId: string; topicId: string } | null => {
+  const lower = message.toLowerCase();
+
+  // 1. ICT Chapter 4: Programming / Scratch
+  if (
+    lower.includes('scratch') ||
+    lower.includes('programming') ||
+    lower.includes('ක්‍රමලේඛන') ||
+    lower.includes('නිරலாக்கம்') ||
+    lower.includes('variable') ||
+    lower.includes('විචල්‍ය') ||
+    lower.includes('sprite') ||
+    lower.includes('ස්ප්‍රයිට්') ||
+    lower.includes('repeat loop') ||
+    lower.includes('if-then') ||
+    ((lower.includes('chapter 4') || lower.includes('4 වන පාඩම') || lower.includes('பாடம் 4') || lower.includes('ch 4')) &&
+      (currentSubject === 'ict' || lower.includes('ict') || lower.includes('computer') || lower.includes('code') || lower.includes('loops') || lower.includes('arithmetic')))
+  ) {
+    return { subjectId: 'ict', topicId: 'programming' };
+  }
+
+  // 2. ICT Chapter 1: Number Systems
+  if (
+    lower.includes('binary') ||
+    lower.includes('number system') ||
+    lower.includes('decimal and binary') ||
+    lower.includes('place value') ||
+    lower.includes('powers of 2') ||
+    lower.includes('සංඛ්‍යා පද්ධති') ||
+    lower.includes('ද්විමය') ||
+    lower.includes('දශමය') ||
+    lower.includes('எண் முறை') ||
+    lower.includes('இருமம்') ||
+    ((lower.includes('chapter 1') || lower.includes('1 වන පාඩම') || lower.includes('பாடம் 1') || lower.includes('ch 1')) &&
+      (currentSubject === 'ict' || lower.includes('ict')))
+  ) {
+    return { subjectId: 'ict', topicId: 'number-systems' };
+  }
+
+  // 3. ICT Chapter 2: Configuring & Formatting Computer
+  if (
+    lower.includes('desktop customization') ||
+    lower.includes('screen resolution') ||
+    lower.includes('formatting storage') ||
+    lower.includes('formatting a computer') ||
+    lower.includes('වින්‍යාසගත') ||
+    lower.includes('පරිගණක වින්‍යාසය') ||
+    lower.includes('விசைப்பலகை') ||
+    ((lower.includes('chapter 2') || lower.includes('2 වන පාඩම') || lower.includes('பாடம் 2') || lower.includes('ch 2')) &&
+      (currentSubject === 'ict' || lower.includes('ict')))
+  ) {
+    return { subjectId: 'ict', topicId: 'configuring-formatting-computer' };
+  }
+
+  // 4. ICT Chapter 3: Word Processing
+  if (
+    lower.includes('word processing') ||
+    lower.includes('justify margins') ||
+    lower.includes('paragraph alignment') ||
+    lower.includes('document creation') ||
+    lower.includes('වදන් සැකසුම') ||
+    lower.includes('சொல் செயலாக்கம்') ||
+    ((lower.includes('chapter 3') || lower.includes('3 වන පාඩම') || lower.includes('பாடம் 3') || lower.includes('ch 3')) &&
+      (currentSubject === 'ict' || lower.includes('ict')))
+  ) {
+    return { subjectId: 'ict', topicId: 'word-processing' };
+  }
+
+  // 5. ICT Chapter 5: Physical Computing
+  if (
+    lower.includes('physical computing') ||
+    lower.includes('microbit') ||
+    lower.includes('micro:bit') ||
+    lower.includes('arduino') ||
+    lower.includes('sensor') ||
+    lower.includes('actuator') ||
+    lower.includes('භෞතික පරිගණන') ||
+    lower.includes('සංවේදක') ||
+    lower.includes('பௌதீகக் கணினியியல்') ||
+    ((lower.includes('chapter 5') || lower.includes('5 වන පාඩම') || lower.includes('பாடம் 5') || lower.includes('ch 5')) &&
+      (currentSubject === 'ict' || lower.includes('ict')))
+  ) {
+    return { subjectId: 'ict', topicId: 'physical-computing' };
+  }
+
+  // 6. ICT Chapter 6: Internet
+  if (
+    lower.includes('world wide web') ||
+    lower.includes('web browser') ||
+    lower.includes('url anatomy') ||
+    lower.includes('cyber safety') ||
+    lower.includes('අන්තර්ජාලය') ||
+    lower.includes('இணையம்') ||
+    ((lower.includes('chapter 6') || lower.includes('6 වන පාඩම') || lower.includes('பாடம் 6') || lower.includes('ch 6')) &&
+      (currentSubject === 'ict' || lower.includes('ict')))
+  ) {
+    return { subjectId: 'ict', topicId: 'internet' };
+  }
+
+  // General ICT
+  if (
+    lower.includes('ict') ||
+    lower.includes('information technology') ||
+    lower.includes('තොරතුරු තාක්ෂණය') ||
+    lower.includes('தகவல் தொழில்நுட்பம்')
+  ) {
+    return { subjectId: 'ict', topicId: 'number-systems' };
+  }
+
+  // History Chapter 1: Inscriptions & Sources
+  if (
+    lower.includes('sellipi') ||
+    lower.includes('inscription') ||
+    lower.includes('සෙල්ලිපි') ||
+    lower.includes('கல்வெட்டு') ||
+    lower.includes('brahmi') ||
+    lower.includes('panakaduwa') ||
+    lower.includes('galpotha') ||
+    ((lower.includes('chapter 1') || lower.includes('1 වන පාඩම') || lower.includes('பாடம் 1')) &&
+      (currentSubject === 'history' || lower.includes('history') || lower.includes('ඉතිහාසය') || lower.includes('வரலாறு')))
+  ) {
+    return { subjectId: 'history', topicId: 'history-gr10-sources' };
+  }
+
+  // History general
+  if (
+    lower.includes('history') ||
+    lower.includes('ඉතිහාසය') ||
+    lower.includes('வரலாறு') ||
+    lower.includes('settlements') ||
+    lower.includes('anuradhapura') ||
+    lower.includes('king') ||
+    lower.includes('kingdom')
+  ) {
+    return { subjectId: 'history', topicId: 'history-gr10-sources' };
+  }
+
+  // Maths: Pythagoras
+  if (
+    lower.includes('pythagor') ||
+    lower.includes('hypotenuse') ||
+    lower.includes('a² + b²') ||
+    lower.includes('right-angled triangle') ||
+    lower.includes('පයිතගරස්') ||
+    lower.includes('සෘජුකෝණී ත්‍රිකෝණ') ||
+    lower.includes('பைதகரசு')
+  ) {
+    return { subjectId: 'maths', topicId: 'maths-gr10-ch08-pythagoras' };
+  }
+
+  // Maths: Perimeter
+  if (
+    lower.includes('perimeter') ||
+    lower.includes('පරිමිතිය') ||
+    lower.includes('சுற்றளவு') ||
+    lower.includes('sector of a circle') ||
+    lower.includes('arc length')
+  ) {
+    return { subjectId: 'maths', topicId: 'maths-gr10-ch1-perimeter' };
+  }
+
+  // Science: Photosynthesis
+  if (
+    lower.includes('photosynthesis') ||
+    lower.includes('stomata') ||
+    lower.includes('chlorophyll') ||
+    lower.includes('ප්‍රභාසංස්ලේෂණය') ||
+    lower.includes('ஒளித்தொகுப்பு')
+  ) {
+    return { subjectId: 'science', topicId: 'photosynthesis' };
+  }
+
+  return null;
+};
+
 export const TutorPage: React.FC = () => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -234,19 +412,20 @@ export const TutorPage: React.FC = () => {
 
   const getInitialGreeting = (): string => {
     if (activeSubjectId === 'ict') {
+      const studentGradeLabel = grade ? grade.replace('grade-', 'Grade ') : 'Grade 10';
       if (language === 'si') {
         return `ආයුබෝවන් ${studentName}! මම ඔබගේ **තොරතුරු හා සන්නිවේදන තාක්ෂණය (ICT)** ගුරුතුමා. 
-ඔබගේ 8 ශ්‍රේණියේ නිල පෙළපොතෙහි පරිච්ඡේද 6 (සංඛ්‍යා පද්ධති, පරිගණක වින්‍යාසය, වදන් සැකසුම, Scratch ක්‍රමලේඛනය, භෞතික පරිගණනය සහ අන්තර්ජාලය) පිළිබඳ ඕනෑම කරුණක් මා සමඟ සාකච්ඡා කළ හැක.
+ඔබගේ නිල පෙළපොතෙහි පරිච්ඡේද 6 (සංඛ්‍යා පද්ධති, පරිගණක වින්‍යාසය, වදන් සැකසුම, Scratch ක්‍රමලේඛනය, භෞතික පරිගණනය සහ අන්තර්ජාලය) පිළිබඳ ඕනෑම කරුණක් මා සමඟ සාකච්ඡා කළ හැක.
 
 අද අපි කුමන ICT පාඩමෙන් පටන් ගනිමුද?`;
       }
       if (language === 'ta') {
         return `வணக்கம் ${studentName}! நான் உங்கள் **தகவல் தொழில்நுட்ப (ICT)** ஆசிரியர். 
-உங்கள் தரம் 8 பாடநூலின் அத்தியாயங்கள் (எண் முறைகள், கணினி உள்ளமைவு, சொல் செயலாக்கம், Scratch நிரலாக்கம், பௌதீகக் கணினியியல் மற்றும் இணையம்) தொடர்பான உங்கள் சந்தேகங்களைக் கேளுங்கள்.
+உங்கள் பாடநூலின் அத்தியாயங்கள் (எண் முறைகள், கணினி உள்ளமைவு, சொல் செயலாக்கம், Scratch நிரலாக்கம், பௌதீகக் கணினியியல் மற்றும் இணையம்) தொடர்பான உங்கள் சந்தேகங்களைக் கேளுங்கள்.
 
 நாம் இன்று எந்த ICT பாடத்திலிருந்து தொடங்கலாம்?`;
       }
-      return `Ayubowan ${studentName}! I am your **ATLAS Tutor for Grade 8 ICT**. 
+      return `Ayubowan ${studentName}! I am your **ATLAS Tutor for ${studentGradeLabel} ICT**. 
 I'm here to help you learn and master your official **Information & Communication Technology** curriculum: Number Systems, Configuring Computers, Word Processing, Scratch Programming, Physical Computing, and the Internet.
 
 What ICT topic would you like to explore together today?`;
@@ -279,6 +458,7 @@ Would you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore an
   };
 
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const studentGradeLabel = grade ? grade.replace('grade-', 'Grade ') : 'Grade 10';
     return [
       {
         id: 'msg-init-1',
@@ -289,13 +469,13 @@ Would you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore an
         languageVersions: {
           en: activeSubjectId === 'history'
             ? `Ayubowan ${studentName}! I am your **ATLAS Tutor for Grade 10 History**. I'm here to guide you through your official 10 chapters: Sources of Studying History (Inscriptions & Epigraphy), Ancient Settlements, Political Power, Ancient Society, Science & Technology, Historical Knowledge, Decline of Dry Zone & South-West Kingdoms, Kandyan Kingdom, Renaissance, and Sri Lanka & the Western World.\n\nWould you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore another topic?`
-            : (activeSubjectId === 'ict' ? `Ayubowan ${studentName}! I am your **ATLAS Tutor for Grade 8 ICT**. I'm here to help you learn and master your official Information & Communication Technology curriculum: Number Systems, Configuring Computers, Word Processing, Scratch Programming, Physical Computing, and the Internet.\n\nWhat ICT topic would you like to explore together today?` : getInitialGreeting()),
+            : (activeSubjectId === 'ict' ? `Ayubowan ${studentName}! I am your **ATLAS Tutor for ${studentGradeLabel} ICT**.\nI'm here to help you learn and master your official Information & Communication Technology curriculum: Number Systems, Configuring Computers, Word Processing, Scratch Programming, Physical Computing, and the Internet.\n\nWhat ICT topic would you like to explore together today?` : getInitialGreeting()),
           si: activeSubjectId === 'history'
             ? `ආයුබෝවන් ${studentName}! මම ඔබගේ **10 ශ්‍රේණිය ඉතිහාසය** ගුරුතුමා. ඔබගේ 10 ශ්‍රේණියේ නිල ඉතිහාසය පෙළපොතෙහි පරිච්ඡේද 10 (ඉතිහාසය හැදෑරීමේ මූලාශ්‍ර - සෙල්ලිපි/සාහිත්‍ය මූලාශ්‍ර, මුල් ජනාවාස, දේශපාලන බලය, සමාජය, විද්‍යාව හා තාක්ෂණය, ඓතිහාසික දැනුම, නිරිතදිග රාජධානි, උඩරට රාජධානිය, පුනරුදය, ලංකාව හා යුරෝපා ලෝකය) පිළිබඳ ඕනෑම කරුණක් මා සමඟ සාකච්ඡා කළ හැක.\n\nඅද අපි 1 වන පරිච්ඡේදයේ **සෙල්ලිපි (Inscriptions)** හෝ වෙනත් පාඩමකින් පටන් ගනිමුද?`
-            : (activeSubjectId === 'ict' ? `ආයුබෝවන් ${studentName}! මම ඔබගේ **තොරතුරු හා සන්නිවේදන තාක්ෂණය (ICT)** ගුරුතුමා. ඔබගේ 8 ශ්‍රේණියේ නිල පෙළපොතෙහි පරිච්ඡේද 6 (සංඛ්‍යා පද්ධති, පරිගණක වින්‍යාසය, වදන් සැකසුම, Scratch ක්‍රමලේඛනය, භෞතික පරිගණනය සහ අන්තර්ජාලය) පිළිබඳ ඕනෑම කරුණක් මා සමඟ සාකච්ඡා කළ හැක.\n\nඅද අපි කුමන ICT පාඩමෙන් පටන් ගනිමුද?` : getInitialGreeting()),
+            : (activeSubjectId === 'ict' ? `ආයුබෝවන් ${studentName}! මම ඔබගේ **තොරතුරු හා සන්නිවේදන තාක්ෂණය (ICT)** ගුරුතුමා. ඔබගේ නිල පෙළපොතෙහි පරිච්ඡේද 6 (සංඛ්‍යා පද්ධති, පරිගණක වින්‍යාසය, වදන් සැකසුම, Scratch ක්‍රමලේඛනය, භෞතික පරිගණනය සහ අන්තර්ජාලය) පිළිබඳ ඕනෑම කරුණක් මා සමඟ සාකච්ඡා කළ හැක.\n\nඅද අපි කුමන ICT පාඩමෙන් පටන් ගනිමුද?` : getInitialGreeting()),
           ta: activeSubjectId === 'history'
             ? `வணக்கம் ${studentName}! நான் உங்கள் **தரம் 10 வரலாறு** ஆசிரியர். உங்கள் தரம் 10 வரலாற்றுப் பாடநூலின் 10 அத்தியாயங்கள் (வரலாற்று ஆதாரங்கள் - கல்வெட்டுகள், ஆரம்பகாலக் குடியேற்றங்கள், அரசியல் அதிகாரம், சமூகம், அறிவியல் & தொழில்நுட்பம், வரலாற்று அறிவு, தென்மேற்கு அரசுகள், கண்டி இராச்சியம், மறுமலர்ச்சி, மற்றும் மேலை உலகம்) தொடர்பான எந்தவொரு கேள்வியையும் கேட்கலாம்.\n\nநாம் இன்று அத்தியாயம் 1 இன் **கல்வெட்டுகள் (Sellipi)** பற்றித் தொடங்கலாமா?`
-            : (activeSubjectId === 'ict' ? `வணக்கம் ${studentName}! நான் உங்கள் **தகவல் தொழில்நுட்ப (ICT)** ஆசிரியர். உங்கள் தரம் 8 பாடநூலின் அத்தியாயங்கள் (எண் முறைகள், கணினி உள்ளமைவு, சொல் செயலாக்கம், Scratch நிரலாக்கம், பௌதீகக் கணினியியல் மற்றும் இணையம்) தொடர்பான உங்கள் சந்தேகங்களைக் கேளுங்கள்.\n\nநாம் இன்று எந்த ICT பாடத்திலிருந்து தொடங்கலாம்?` : getInitialGreeting()),
+            : (activeSubjectId === 'ict' ? `வணக்கம் ${studentName}! நான் உங்கள் **தகவல் தொழில்நுட்ப (ICT)** ஆசிரியர். உங்கள் பாடநூலின் அத்தியாயங்கள் (எண் முறைகள், கணினி உள்ளமைவு, சொல் செயலாக்கம், Scratch நிரலாக்கம், பௌதீகக் கணினியியல் மற்றும் இணையம்) தொடர்பான உங்கள் சந்தேகங்களைக் கேளுங்கள்.\n\nநாம் இன்று எந்த ICT பாடத்திலிருந்து தொடங்கலாம்?` : getInitialGreeting()),
         },
         activeLang: language,
         keyPoints: activeSubjectId === 'history' ? [
@@ -445,6 +625,19 @@ Would you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore an
 
     const studentMessageText = text || (language === 'si' ? 'කරුණාකර මෙම පෙළපොත් ප්‍රශ්නය හෝ රූප සටහන පියවරෙන් පියවර විසඳා පෙන්වන්න' : language === 'ta' ? 'தயவுசெய்து இந்த பாடநூல் வினா அல்லது வரைபடத்தை படிப்படியாக விளக்குக' : 'Please analyze and solve this textbook question/diagram step by step');
 
+    // Context detection: automatically detect subject and chapter/topic from question
+    const detected = detectCurriculumContextFromMessage(studentMessageText, activeSubjectId);
+    const targetSubjectId = detected?.subjectId || activeSubjectId;
+    const targetTopicId = detected?.topicId || activeTopicId || defaultTopicForSubject(targetSubjectId);
+
+    if (detected) {
+      setCurriculumSubject(detected.subjectId, detected.topicId);
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.set('subject', detected.subjectId);
+      nextParams.set('topic', detected.topicId);
+      setSearchParams(nextParams, { replace: true });
+    }
+
     const studentMsg: ChatMessage = {
       id: generateMsgId('student'),
       role: 'student',
@@ -460,8 +653,8 @@ Would you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore an
     try {
       const response = await tutorService.askTutor(studentMessageText, {
         ...learningContext,
-        subjectId: activeSubjectId,
-        topicId: activeTopicId,
+        subjectId: targetSubjectId,
+        topicId: targetTopicId,
         imageUrl: currentImg?.previewUrl,
       });
 
@@ -477,7 +670,7 @@ Would you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore an
       setTutorState(nextState);
 
       // Resolve topic-sensitive suggested action pills
-      let actionPills: TutorAction[] = starterTopicPills;
+      let actionPills: TutorAction[] = getSubjectStarterPills(targetSubjectId);
       if (response.suggestedFollowUps && response.suggestedFollowUps.length > 0) {
         actionPills = response.suggestedFollowUps.map((item, idx) => {
           if (typeof item === 'string') {

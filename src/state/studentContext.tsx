@@ -112,7 +112,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return (
       localStudentSession?.displayName ||
       localStorage.getItem('atlas_student_name') ||
-      'Nimali'
+      'Osad De Silva'
     );
   });
 

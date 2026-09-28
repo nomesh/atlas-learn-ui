@@ -32,8 +32,8 @@ interface PilotStudentProfile {
 
 const PILOT_PROFILES: PilotStudentProfile[] = [
   {
-    id: 'stu-ol-10-nimali',
-    name: 'Nimali Perera',
+    id: 'stu-ol-10-osad',
+    name: 'Osad De Silva',
     grade: 'grade-10',
     gradeLabel: 'Grade 10 (G.C.E. O/L)',
     language: 'en',
@@ -306,7 +306,7 @@ export const StudentSignInModal: React.FC = () => {
                     required
                     value={studentNameInput}
                     onChange={(e) => setStudentNameInput(e.target.value)}
-                    placeholder="e.g. Nimali Perera"
+                    placeholder="e.g. Osad De Silva"
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
                   />
                 </div>

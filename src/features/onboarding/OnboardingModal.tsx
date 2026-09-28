@@ -133,7 +133,7 @@ export const OnboardingModal: React.FC = () => {
               type="text"
               value={localName}
               onChange={(e) => setLocalName(e.target.value)}
-              placeholder="e.g. Nimali, Kaveen, Priya..."
+              placeholder="e.g. Osad, Kaveen, Priya..."
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-atlas-cyan/50 focus:border-atlas-cyan transition-all"
             />
           </div>

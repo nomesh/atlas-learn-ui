@@ -27,10 +27,20 @@ export const StudentHomePage: React.FC = () => {
   const navigate = useNavigate();
   const { studentName, grade, language, streakDays, tutorState, setCurriculumSubject, learningContext } = useStudent();
 
+  const isMatchingGrade = (t: (typeof MOCK_TOPICS)[0]) => {
+    if (!t.grade || !grade) return true;
+    if (t.grade === grade) return true;
+    if (t.subjectId === 'ict' && (grade === 'grade-10' || grade === 'grade-11' || grade === 'grade-8' || grade === 'grade-9')) {
+      return true;
+    }
+    return false;
+  };
+
   const continueTopic =
-    (learningContext?.topicId ? MOCK_TOPICS.find((t) => t.id === learningContext.topicId && (!t.grade || t.grade === grade)) : null) ||
-    (learningContext?.subjectId ? MOCK_TOPICS.find((t) => t.subjectId === learningContext.subjectId && (!t.grade || t.grade === grade)) : null) ||
-    MOCK_TOPICS.find((t) => (!t.grade || t.grade === grade)) ||
+    (learningContext?.topicId ? MOCK_TOPICS.find((t) => t.id === learningContext.topicId && isMatchingGrade(t)) : null) ||
+    (learningContext?.subjectId ? MOCK_TOPICS.find((t) => t.subjectId === learningContext.subjectId && isMatchingGrade(t)) : null) ||
+    (learningContext?.subjectId ? MOCK_TOPICS.find((t) => t.subjectId === learningContext.subjectId) : null) ||
+    MOCK_TOPICS.find((t) => isMatchingGrade(t)) ||
     MOCK_TOPICS[0];
   const continueSubject = MOCK_SUBJECTS.find((s) => s.id === continueTopic.subjectId) || MOCK_SUBJECTS[0];
 

@@ -1034,7 +1034,7 @@ export class MockTutorAdapter implements TutorAdapter {
       // ICT topic context
       if (context.topicId === 'word-processing') return this.handleWordProcessing(lang);
       if (context.topicId === 'number-systems') return this.handleNumberSystems(lang);
-      if (context.topicId === 'configuring-computer') return this.handleConfiguringComputer(lang);
+      if (context.topicId === 'configuring-computer' || context.topicId === 'configuring-formatting-computer') return this.handleConfiguringComputer(lang);
       if (context.topicId === 'programming') return this.handleProgramming(lang);
       if (context.topicId === 'physical-computing') return this.handlePhysicalComputing(lang);
       if (context.topicId === 'internet') return this.handleInternet(lang);

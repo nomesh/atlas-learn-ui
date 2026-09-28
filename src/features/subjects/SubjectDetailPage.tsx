@@ -68,12 +68,20 @@ export const SubjectDetailPage: React.FC = () => {
   }, [subjectId, grade]);
 
   const subject = MOCK_SUBJECTS.find((s) => s.id === subjectId) || MOCK_SUBJECTS[0];
+  const isMatchingGrade = (t: (typeof MOCK_TOPICS)[0]) => {
+    if (!t.grade || !grade) return true;
+    if (t.grade === grade) return true;
+    if (t.subjectId === 'ict' && (grade === 'grade-10' || grade === 'grade-11' || grade === 'grade-8' || grade === 'grade-9')) {
+      return true;
+    }
+    return false;
+  };
   const gradeFilteredTopics = MOCK_TOPICS.filter(
-    (t) => t.subjectId === subject.id && (!t.grade || t.grade === grade)
+    (t) => t.subjectId === subject.id && isMatchingGrade(t)
   );
   const topics = (remoteTopics && remoteTopics.length > 0)
     ? remoteTopics
-    : gradeFilteredTopics;
+    : (gradeFilteredTopics.length > 0 ? gradeFilteredTopics : MOCK_TOPICS.filter((t) => t.subjectId === subject.id));
   const primaryTopic = topics[0];
   const studentGradeNum = grade ? parseInt(grade.replace(/\D/g, ''), 10) : undefined;
   const matchingBooks = uploadedBooks.filter((book) =>
