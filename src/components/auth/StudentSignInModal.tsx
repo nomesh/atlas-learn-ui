@@ -81,7 +81,7 @@ export const StudentSignInModal: React.FC = () => {
     setIsOnboardingOpen,
   } = useStudent();
 
-  const [activeTab, setActiveTab] = useState<'pilot' | 'manual'>('pilot');
+  const [activeTab, setActiveTab] = useState<'pilot' | 'manual'>('manual');
   const [selectedPilotId, setSelectedPilotId] = useState<string>(PILOT_PROFILES[0].id);
 
   // Manual Credentials Form State
@@ -200,18 +200,6 @@ export const StudentSignInModal: React.FC = () => {
           <div className="mt-5 flex gap-2 p-1 bg-black/20 rounded-2xl backdrop-blur-sm border border-white/10">
             <button
               type="button"
-              onClick={() => setActiveTab('pilot')}
-              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                activeTab === 'pilot'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-cyan-100 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-cyan-500" />
-              <span>Quick Demo Profiles</span>
-            </button>
-            <button
-              type="button"
               onClick={() => setActiveTab('manual')}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 activeTab === 'manual'
@@ -222,6 +210,18 @@ export const StudentSignInModal: React.FC = () => {
               <UserPlus className="w-3.5 h-3.5 text-cyan-500" />
               <span>Create New Account</span>
             </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('pilot')}
+              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                activeTab === 'pilot'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-cyan-100 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-500" />
+              <span>Demo Profiles (Testing)</span>
+            </button>
           </div>
         </div>
 
@@ -231,7 +231,7 @@ export const StudentSignInModal: React.FC = () => {
             <div className="space-y-4">
               <div className="text-xs text-slate-500 flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-teal-600 flex-shrink-0" />
-                <span>Select an authorized pilot student profile to authenticate instantly:</span>
+                <span>Select an authorized pilot profile for sandbox testing & evaluation:</span>
               </div>
 
               <div className="grid gap-3">
