@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, Sparkles, User, GraduationCap, Globe, LogIn } from 'lucide-react';
+import { Check, Sparkles, User, GraduationCap, Globe, LogIn, UserPlus } from 'lucide-react';
 import { useStudent } from '../../state/studentContext';
 import { ATLAS_MARK, NEURAL_WORKS_LOGO } from '../../brand/assets';
 import type { Grade, Language } from '../../types';
@@ -18,11 +18,17 @@ export const OnboardingModal: React.FC = () => {
     setIsOnboardingOpen,
     saveProfileToServer,
     isAuthenticated,
+    signInStudent,
     login,
     enableGuestPreview,
   } = useStudent();
 
-  const [localName, setLocalName] = useState(studentName);
+  const [localName, setLocalName] = useState(() => {
+    if (!studentName || studentName === 'Nimali' || studentName.includes('Nimali')) {
+      return 'Amila';
+    }
+    return studentName;
+  });
   const [selectedLang, setSelectedLang] = useState<Language>(language);
   const [selectedGrade, setSelectedGrade] = useState<Grade>(grade);
 
@@ -46,8 +52,21 @@ export const OnboardingModal: React.FC = () => {
   ];
 
   const handleComplete = async () => {
-    const finalName = localName.trim() || studentName;
-    await saveProfileToServer(finalName, selectedGrade, selectedLang);
+    const finalName = localName.trim() || 'Amila';
+    if (!isAuthenticated) {
+      signInStudent({
+        id: `STU-${Date.now().toString().slice(-6)}`,
+        displayName: finalName,
+        grade: selectedGrade,
+        language: selectedLang,
+        school: 'Sri Lanka National Curriculum School',
+        curriculumCode: 'SL-MOE',
+        enrolledSubjects: ['History', 'Science', 'Mathematics', 'ICT'],
+      });
+    } else {
+      await saveProfileToServer(finalName, selectedGrade, selectedLang);
+    }
+    localStorage.setItem('atlas_onboarding_completed', 'true');
     setIsOnboardingOpen(false);
   };
 
@@ -92,26 +111,42 @@ export const OnboardingModal: React.FC = () => {
           </div>
         </div>
 
-        {/* If unauthenticated, offer direct Student Sign In */}
+        {/* If unauthenticated, offer direct Student Sign In and Account Creation */}
         {!isAuthenticated && (
           <div className="mx-6 mt-6 p-4 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md border border-slate-800">
             <div>
               <div className="flex items-center gap-1.5 text-xs font-bold text-cyan-300">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Existing Student or School Account?</span>
+                <span>Student Sign In &amp; Registration</span>
               </div>
               <p className="text-[11px] text-slate-300 mt-0.5">
                 Sign in to save your learning progress, streak, and access full AI Tutoring.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={login}
-              className="px-4 py-2 bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-sm transition-all flex-shrink-0"
-            >
-              <LogIn className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Sign In</span>
-            </button>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOnboardingOpen(false);
+                  login('manual');
+                }}
+                className="px-3.5 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+              >
+                <UserPlus className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>Create Account</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOnboardingOpen(false);
+                  login('pilot');
+                }}
+                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+              >
+                <LogIn className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>Sign In</span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -119,7 +154,7 @@ export const OnboardingModal: React.FC = () => {
         <div className="p-6 space-y-6">
           {!isAuthenticated && (
             <div className="text-xs font-bold uppercase tracking-wider text-slate-400 pb-1 border-b border-slate-100">
-              Or Configure Guest Student Profile (Evaluation Mode)
+              Or Customize Your Profile Below
             </div>
           )}
 
@@ -133,7 +168,7 @@ export const OnboardingModal: React.FC = () => {
               type="text"
               value={localName}
               onChange={(e) => setLocalName(e.target.value)}
-              placeholder="e.g. Osad, Kaveen, Priya..."
+              placeholder="e.g. Amila, Kaveen, Priya..."
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-atlas-cyan/50 focus:border-atlas-cyan transition-all"
             />
           </div>
@@ -208,14 +243,14 @@ export const OnboardingModal: React.FC = () => {
             <button
               type="button"
               onClick={handleComplete}
-              className="w-full py-3.5 px-6 bg-gradient-to-r from-atlas-deep to-atlas-blue hover:from-slate-900 hover:to-atlas-deep text-white font-bold rounded-2xl shadow-lg shadow-atlas-blue/20 flex items-center justify-center gap-2 transition-all transform active:scale-[0.99]"
+              className="w-full py-3.5 px-6 bg-gradient-to-r from-atlas-deep to-atlas-blue hover:from-slate-900 hover:to-atlas-deep text-white font-bold rounded-2xl shadow-lg shadow-atlas-blue/20 flex items-center justify-center gap-2 transition-all transform active:scale-[0.99] cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-cyan-300" />
-              <span>{isAuthenticated ? t('onboarding.getStarted') : 'Save Preferences & Browse Curriculum'}</span>
+              <span>{isAuthenticated ? t('onboarding.getStarted') : `Start Learning as ${localName.trim() || 'Amila'}`}</span>
             </button>
             {!isAuthenticated && (
               <p className="text-[11px] text-slate-500 text-center">
-                Interactive AI Tutoring and Exam Practice require student authentication. You can sign in anytime from the top bar.
+                Sets up your personalized profile with full access to ATLAS AI Tutoring, exam prep, and lesson guides.
               </p>
             )}
           </div>

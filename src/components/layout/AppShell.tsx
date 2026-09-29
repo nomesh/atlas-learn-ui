@@ -4,6 +4,7 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 import { MobileBottomNav } from './MobileBottomNav';
 import { OnboardingModal } from '../../features/onboarding/OnboardingModal';
+import { StudentSignInModal } from '../auth/StudentSignInModal';
 
 export const AppShell: React.FC = () => {
   const location = useLocation();
@@ -37,6 +38,9 @@ export const AppShell: React.FC = () => {
 
       {/* Global First-Time or Edit Onboarding Modal */}
       <OnboardingModal />
+
+      {/* Portal-level Student Authentication & Registration Modal */}
+      <StudentSignInModal />
     </div>
   );
 };

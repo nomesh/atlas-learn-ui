@@ -55,7 +55,9 @@ interface StudentContextValue {
   accountType: 'GUARDIAN' | 'INDEPENDENT_STUDENT' | null;
   learners: LearnerProfile[];
   activeLearner: LearnerProfile | null;
-  login: () => void;
+  signInModalTab: 'pilot' | 'manual';
+  setSignInModalTab: (tab: 'pilot' | 'manual') => void;
+  login: (tabOrEvent?: 'pilot' | 'manual' | unknown) => void;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
   saveProfileToServer: (name: string, grade: Grade, language: Language) => Promise<void>;
@@ -70,17 +72,15 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   if (typeof localStorage !== 'undefined') {
     try {
       const rawSession = localStorage.getItem('atlas_student_session');
-      if (rawSession && rawSession.includes('Nimali')) {
+      if (rawSession && (rawSession.includes('Nimali') || rawSession.includes('nimali'))) {
         const parsed = JSON.parse(rawSession);
-        if (parsed.displayName?.includes('Nimali') || parsed.id?.includes('nimali')) {
-          parsed.id = 'stu-ol-10-osad';
-          parsed.displayName = 'Osad De Silva';
-          localStorage.setItem('atlas_student_session', JSON.stringify(parsed));
-        }
+        parsed.id = 'stu-ol-10-amila';
+        parsed.displayName = 'Amila Jayasinghe';
+        localStorage.setItem('atlas_student_session', JSON.stringify(parsed));
       }
       const rawName = localStorage.getItem('atlas_student_name');
       if (rawName && (rawName.includes('Nimali') || rawName === 'Nimali')) {
-        localStorage.setItem('atlas_student_name', 'Osad De Silva');
+        localStorage.setItem('atlas_student_name', 'Amila');
       }
     } catch {
       // ignore
@@ -92,7 +92,13 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [localStudentSession, setLocalStudentSession] = useState<StudentSignInData | null>(() => {
     try {
       const saved = localStorage.getItem('atlas_student_session');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed?.displayName?.includes('Nimali')) {
+          parsed.displayName = 'Amila Jayasinghe';
+        }
+        return parsed;
+      }
     } catch (e) {
       console.warn('[studentContext] Parse session error:', e);
     }
@@ -113,6 +119,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   });
 
   const [isSignInModalOpen, setIsSignInModalOpen] = useState<boolean>(false);
+  const [signInModalTab, setSignInModalTab] = useState<'pilot' | 'manual'>('pilot');
 
   const [isGuestPreview, setIsGuestPreview] = useState<boolean>(() => {
     return sessionStorage.getItem('atlas_guest_preview') === 'true';
@@ -130,11 +137,11 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   const [studentName, setStudentNameState] = useState<string>(() => {
-    return (
-      localStudentSession?.displayName ||
-      localStorage.getItem('atlas_student_name') ||
-      'Osad De Silva'
-    );
+    const raw = localStudentSession?.displayName || localStorage.getItem('atlas_student_name');
+    if (!raw || raw.includes('Nimali')) {
+      return 'Amila';
+    }
+    return raw;
   });
 
   const [grade, setGradeState] = useState<Grade>(() => {
@@ -291,7 +298,9 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     i18n.changeLanguage(data.language);
   }, [i18n]);
 
-  const login = () => {
+  const login = (tabOrEvent?: 'pilot' | 'manual' | unknown) => {
+    const tab = tabOrEvent === 'manual' ? 'manual' : 'pilot';
+    setSignInModalTab(tab);
     setIsSignInModalOpen(true);
   };
 
@@ -398,6 +407,8 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         accountType: session?.accountType || (localStudentSession ? 'INDEPENDENT_STUDENT' : null),
         learners: session?.learners || (activeLearner ? [activeLearner] : []),
         activeLearner,
+        signInModalTab,
+        setSignInModalTab,
         login,
         logout,
         refreshSession,

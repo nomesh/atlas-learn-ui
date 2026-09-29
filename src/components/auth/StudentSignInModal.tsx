@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   X,
@@ -13,8 +13,12 @@ import {
   ArrowRight,
   School,
   Key,
+  UserPlus,
+  UserCheck,
+  Globe,
 } from 'lucide-react';
 import { useStudent } from '../../state/studentContext';
+import { redirectToLogin } from '../../api/authApi';
 import { ATLAS_MARK, NEURAL_WORKS_LOGO } from '../../brand/assets';
 import type { Grade, Language } from '../../types';
 
@@ -32,12 +36,12 @@ interface PilotStudentProfile {
 
 const PILOT_PROFILES: PilotStudentProfile[] = [
   {
-    id: 'stu-ol-10-osad',
-    name: 'Osad De Silva',
+    id: 'stu-ol-10-amila',
+    name: 'Amila Jayasinghe',
     grade: 'grade-10',
     gradeLabel: 'Grade 10 (G.C.E. O/L)',
     language: 'en',
-    school: 'Visakha Vidyalaya, Colombo',
+    school: 'Ananda College, Colombo',
     curriculum: 'Sri Lankan National Curriculum (O/L Candidate)',
     avatarColor: 'from-sky-500 to-indigo-600',
     subjects: ['History', 'Science', 'Mathematics', 'ICT'],
@@ -71,8 +75,10 @@ export const StudentSignInModal: React.FC = () => {
   const {
     isSignInModalOpen,
     setIsSignInModalOpen,
+    signInModalTab,
     signInStudent,
-    login: institutionalLogin,
+    isAuthenticated,
+    setIsOnboardingOpen,
   } = useStudent();
 
   const [activeTab, setActiveTab] = useState<'pilot' | 'manual'>('pilot');
@@ -87,7 +93,20 @@ export const StudentSignInModal: React.FC = () => {
   const [pinCode, setPinCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (isSignInModalOpen && signInModalTab) {
+      setActiveTab(signInModalTab);
+    }
+  }, [isSignInModalOpen, signInModalTab]);
+
   if (!isSignInModalOpen) return null;
+
+  const handleClose = () => {
+    setIsSignInModalOpen(false);
+    if (!isAuthenticated && !localStorage.getItem('atlas_onboarding_completed')) {
+      setIsOnboardingOpen(true);
+    }
+  };
 
   const handlePilotSignIn = async (profile: PilotStudentProfile) => {
     setIsSubmitting(true);
@@ -101,6 +120,7 @@ export const StudentSignInModal: React.FC = () => {
         curriculumCode: 'SL-MOE',
         enrolledSubjects: profile.subjects,
       });
+      localStorage.setItem('atlas_onboarding_completed', 'true');
       setIsSignInModalOpen(false);
     } finally {
       setIsSubmitting(false);
@@ -109,7 +129,7 @@ export const StudentSignInModal: React.FC = () => {
 
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const finalName = studentNameInput.trim() || 'Student Candidate';
+    const finalName = studentNameInput.trim() || 'Amila Perera';
     const finalId = studentId.trim() || `STU-${Date.now().toString().slice(-6)}`;
     const finalSchool = schoolName.trim() || 'Sri Lanka National School';
 
@@ -124,6 +144,7 @@ export const StudentSignInModal: React.FC = () => {
         curriculumCode: 'SL-MOE',
         enrolledSubjects: ['History', 'Science', 'Mathematics', 'ICT'],
       });
+      localStorage.setItem('atlas_onboarding_completed', 'true');
       setIsSignInModalOpen(false);
     } finally {
       setIsSubmitting(false);
@@ -131,13 +152,13 @@ export const StudentSignInModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
       <div className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden my-6 animate-in zoom-in-95 duration-200">
         {/* Header Ribbon */}
         <div className="bg-gradient-to-r from-[#0B192C] via-[#1E3E62] to-[#0ea5e9] p-6 sm:p-7 text-white relative">
           <button
             type="button"
-            onClick={() => setIsSignInModalOpen(false)}
+            onClick={handleClose}
             className="absolute top-5 right-5 p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors"
             aria-label="Close"
           >
@@ -180,26 +201,26 @@ export const StudentSignInModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveTab('pilot')}
-              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 activeTab === 'pilot'
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-cyan-100 hover:text-white hover:bg-white/10'
               }`}
             >
               <Sparkles className="w-3.5 h-3.5 text-cyan-500" />
-              <span>Pilot Student Sign-In</span>
+              <span>Quick Demo Profiles</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('manual')}
-              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 activeTab === 'manual'
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-cyan-100 hover:text-white hover:bg-white/10'
               }`}
             >
-              <Key className="w-3.5 h-3.5 text-cyan-500" />
-              <span>Student ID & PIN</span>
+              <UserPlus className="w-3.5 h-3.5 text-cyan-500" />
+              <span>Create New Account</span>
             </button>
           </div>
         </div>
@@ -284,7 +305,7 @@ export const StudentSignInModal: React.FC = () => {
                   const p = PILOT_PROFILES.find((x) => x.id === selectedPilotId) || PILOT_PROFILES[0];
                   handlePilotSignIn(p);
                 }}
-                className="w-full py-3.5 px-5 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 hover:from-slate-900 hover:to-slate-800 text-white font-bold text-sm rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all"
+                className="w-full py-3.5 px-5 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 hover:from-slate-900 hover:to-slate-800 text-white font-bold text-sm rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 <Sparkles className="w-4 h-4 text-cyan-400" />
                 <span>
@@ -292,45 +313,47 @@ export const StudentSignInModal: React.FC = () => {
                 </span>
                 <ArrowRight className="w-4 h-4 text-cyan-400 ml-1" />
               </button>
+
+              <div className="pt-2 text-center border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('manual')}
+                  className="text-xs text-sky-600 hover:text-sky-800 font-semibold inline-flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Want to create a custom profile with your own name & grade? Register here</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleManualSubmit} className="space-y-4">
+              <div className="p-3 bg-sky-50 border border-sky-100 rounded-2xl text-xs text-sky-900 flex items-center gap-2">
+                <UserPlus className="w-4 h-4 text-sky-600 flex-shrink-0" />
+                <span>
+                  Register as a new student to unlock full interactive AI Tutoring, exam prep, and study progress.
+                </span>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                     <User className="w-3.5 h-3.5 text-atlas-cyan" />
-                    <span>Student Full Name</span>
+                    <span>Your Full Name *</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={studentNameInput}
                     onChange={(e) => setStudentNameInput(e.target.value)}
-                    placeholder="e.g. Osad De Silva"
+                    placeholder="e.g. Amila Perera"
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                    <Key className="w-3.5 h-3.5 text-atlas-cyan" />
-                    <span>Student Admission / Index No</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={studentId}
-                    onChange={(e) => setStudentId(e.target.value)}
-                    placeholder="e.g. STU-2026-9041"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                     <GraduationCap className="w-3.5 h-3.5 text-atlas-cyan" />
-                    <span>Grade Level</span>
+                    <span>Grade Level *</span>
                   </label>
                   <select
                     value={selectedGrade}
@@ -347,43 +370,77 @@ export const StudentSignInModal: React.FC = () => {
                     <option value="grade-13">Grade 13 (G.C.E. A/L)</option>
                   </select>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                    <Globe className="w-3.5 h-3.5 text-atlas-cyan" />
+                    <span>Preferred Language</span>
+                  </label>
+                  <select
+                    value={selectedLang}
+                    onChange={(e) => setSelectedLang(e.target.value as Language)}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
+                  >
+                    <option value="en">English</option>
+                    <option value="si">Sinhala (සිංහල)</option>
+                    <option value="ta">Tamil (தமிழ்)</option>
+                  </select>
+                </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                     <School className="w-3.5 h-3.5 text-atlas-cyan" />
-                    <span>School / Institution</span>
+                    <span>School / Institution (Optional)</span>
                   </label>
                   <input
                     type="text"
                     value={schoolName}
                     onChange={(e) => setSchoolName(e.target.value)}
-                    placeholder="e.g. Visakha Vidyalaya, Colombo"
+                    placeholder="e.g. Ananda College, Colombo"
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                  <Lock className="w-3.5 h-3.5 text-atlas-cyan" />
-                  <span>Student Security PIN or Password</span>
-                </label>
-                <input
-                  type="password"
-                  value={pinCode}
-                  onChange={(e) => setPinCode(e.target.value)}
-                  placeholder="Enter 4-digit PIN or password (e.g. 2026)"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                    <Key className="w-3.5 h-3.5 text-atlas-cyan" />
+                    <span>Student / Index No (Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={studentId}
+                    onChange={(e) => setStudentId(e.target.value)}
+                    placeholder="Auto-assigned if blank"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                    <Lock className="w-3.5 h-3.5 text-atlas-cyan" />
+                    <span>PIN Code / Password (Optional)</span>
+                  </label>
+                  <input
+                    type="password"
+                    value={pinCode}
+                    onChange={(e) => setPinCode(e.target.value)}
+                    placeholder="e.g. 2026 or leave blank"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
+                  />
+                </div>
               </div>
 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3.5 px-5 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 hover:from-slate-900 hover:to-slate-800 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all"
+                className="w-full py-3.5 px-5 bg-gradient-to-r from-cyan-600 via-sky-600 to-indigo-700 hover:from-cyan-500 hover:to-indigo-600 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
-                <LogIn className="w-4 h-4 text-cyan-400" />
-                <span>Sign In with Student Credentials</span>
+                <UserPlus className="w-4 h-4 text-cyan-200" />
+                <span>Create Student Account &amp; Start Learning</span>
               </button>
             </form>
           )}
@@ -396,8 +453,8 @@ export const StudentSignInModal: React.FC = () => {
             </div>
             <button
               type="button"
-              onClick={institutionalLogin}
-              className="text-xs text-sky-700 hover:text-sky-900 font-bold underline underline-offset-4 transition-colors"
+              onClick={() => redirectToLogin('/')}
+              className="text-xs text-sky-700 hover:text-sky-900 font-bold underline underline-offset-4 transition-colors cursor-pointer"
             >
               Sign In via Institutional Keycloak SSO
             </button>
