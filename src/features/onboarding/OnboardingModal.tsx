@@ -54,15 +54,10 @@ export const OnboardingModal: React.FC = () => {
   const handleComplete = async () => {
     const finalName = localName.trim() || 'Amila';
     if (!isAuthenticated) {
-      signInStudent({
-        id: `STU-${Date.now().toString().slice(-6)}`,
-        displayName: finalName,
-        grade: selectedGrade,
-        language: selectedLang,
-        school: 'Sri Lanka National Curriculum School',
-        curriculumCode: 'SL-MOE',
-        enrolledSubjects: ['History', 'Science', 'Mathematics', 'ICT'],
-      });
+      localStorage.setItem('atlas_onboarding_completed', 'true');
+      setIsOnboardingOpen(false);
+      login('manual');
+      return;
     } else {
       await saveProfileToServer(finalName, selectedGrade, selectedLang);
     }
@@ -246,11 +241,11 @@ export const OnboardingModal: React.FC = () => {
               className="w-full py-3.5 px-6 bg-gradient-to-r from-atlas-deep to-atlas-blue hover:from-slate-900 hover:to-atlas-deep text-white font-bold rounded-2xl shadow-lg shadow-atlas-blue/20 flex items-center justify-center gap-2 transition-all transform active:scale-[0.99] cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-cyan-300" />
-              <span>{isAuthenticated ? t('onboarding.getStarted') : `Start Learning as ${localName.trim() || 'Amila'}`}</span>
+              <span>{isAuthenticated ? t('onboarding.getStarted') : 'Continue to Student Sign In'}</span>
             </button>
             {!isAuthenticated && (
               <p className="text-[11px] text-slate-500 text-center">
-                Sets up your personalized profile with full access to ATLAS AI Tutoring, exam prep, and lesson guides.
+                Sign in or register to get your official Student ID and activate your syllabus &amp; AI Tutor access.
               </p>
             )}
           </div>

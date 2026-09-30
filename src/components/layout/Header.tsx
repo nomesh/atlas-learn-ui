@@ -19,6 +19,9 @@ export const Header: React.FC = () => {
     streakDays,
     setIsOnboardingOpen,
     isAuthenticated,
+    studentId,
+    accountStatus,
+    registeredGrade,
     currentUser,
     accountType,
     login,
@@ -114,43 +117,76 @@ export const Header: React.FC = () => {
 
             {/* Right Controls: Grade, Language, Streak, Profile */}
             <div className="flex items-center gap-2 sm:gap-3">
-              {/* Grade Switcher */}
+              {/* Grade Switcher / Enrolled Grade Indicator */}
               <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsGradeMenuOpen(!isGradeMenuOpen);
-                    setIsLangMenuOpen(false);
-                    setIsUserMenuOpen(false);
-                  }}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition-all"
-                  title="Change Grade"
-                >
-                  <GraduationCap className="w-4 h-4 text-atlas-cyan" />
-                  <span>{grades.find((g) => g.id === grade)?.label.replace('Grade ', 'Gr. ')}</span>
-                </button>
+                {isAuthenticated ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsGradeMenuOpen(!isGradeMenuOpen);
+                      setIsLangMenuOpen(false);
+                      setIsUserMenuOpen(false);
+                    }}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-sky-200 bg-sky-50/70 hover:bg-sky-100 text-xs font-bold text-sky-900 transition-all"
+                    title="Enrolled Grade"
+                  >
+                    <GraduationCap className="w-4 h-4 text-sky-600" />
+                    <span>{grades.find((g) => g.id === (registeredGrade || grade))?.label.replace('Grade ', 'Gr. ')}</span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-sky-200 text-sky-800">
+                      Enrolled
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsGradeMenuOpen(!isGradeMenuOpen);
+                      setIsLangMenuOpen(false);
+                      setIsUserMenuOpen(false);
+                    }}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition-all"
+                    title="Change Grade"
+                  >
+                    <GraduationCap className="w-4 h-4 text-atlas-cyan" />
+                    <span>{grades.find((g) => g.id === grade)?.label.replace('Grade ', 'Gr. ')}</span>
+                  </button>
+                )}
 
                 {isGradeMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-44 bg-white rounded-2xl shadow-xl border border-slate-100 py-1 z-50 animate-in fade-in zoom-in-95">
-                    <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                      Select Grade
-                    </div>
-                    {grades.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => {
-                          setGrade(item.id);
-                          setIsGradeMenuOpen(false);
-                        }}
-                        className={`w-full text-left px-3 py-2 text-xs font-semibold flex items-center justify-between hover:bg-slate-50 ${
-                          grade === item.id ? 'text-atlas-blue font-bold bg-sky-50' : 'text-slate-700'
-                        }`}
-                      >
-                        {item.label}
-                        {grade === item.id && <span className="w-2 h-2 rounded-full bg-atlas-blue" />}
-                      </button>
-                    ))}
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-50 animate-in fade-in zoom-in-95">
+                    {isAuthenticated ? (
+                      <div className="p-2 space-y-1">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                          <GraduationCap className="w-4 h-4 text-sky-600" />
+                          <span>{grades.find((g) => g.id === (registeredGrade || grade))?.label}</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 leading-relaxed pt-1">
+                          You are enrolled in this grade. Your syllabus and AI Tutor are strictly aligned with this level. Contact WhatsApp support to transfer grades.
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                          Select Grade
+                        </div>
+                        {grades.map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => {
+                              setGrade(item.id);
+                              setIsGradeMenuOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 text-xs font-semibold flex items-center justify-between hover:bg-slate-50 rounded-lg ${
+                              grade === item.id ? 'text-atlas-blue font-bold bg-sky-50' : 'text-slate-700'
+                            }`}
+                          >
+                            {item.label}
+                            {grade === item.id && <span className="w-2 h-2 rounded-full bg-atlas-blue" />}
+                          </button>
+                        ))}
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -230,19 +266,37 @@ export const Header: React.FC = () => {
                   </button>
 
                   {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in-95">
-                      <div className="px-4 py-2 border-b border-slate-100">
-                        <p className="text-xs font-bold text-slate-900 truncate">
-                          {currentUser?.displayName || studentName}
-                        </p>
-                        {currentUser?.email && (
-                          <p className="text-[11px] text-slate-500 truncate mt-0.5">
-                            {currentUser.email}
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in-95">
+                      <div className="px-4 py-2.5 border-b border-slate-100 space-y-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-xs font-bold text-slate-900 truncate">
+                            {currentUser?.displayName || studentName}
                           </p>
+                          {accountStatus && (
+                            <span
+                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase flex-shrink-0 ${
+                                accountStatus === 'ACTIVE'
+                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                  : accountStatus === 'PENDING_PAYMENT'
+                                  ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                  : 'bg-red-100 text-red-800 border border-red-200'
+                              }`}
+                            >
+                              {accountStatus.replace('_', ' ')}
+                            </span>
+                          )}
+                        </div>
+
+                        {studentId && (
+                          <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded w-fit">
+                            <span>ID: {studentId}</span>
+                          </div>
                         )}
-                        <span className="inline-block mt-1 text-[10px] font-semibold uppercase bg-cyan-50 text-cyan-700 px-1.5 py-0.5 rounded">
-                          {accountType === 'GUARDIAN' ? 'Guardian Account' : 'Student Account'}
-                        </span>
+
+                        <div className="text-[10px] text-slate-500">
+                          <span>{grades.find((g) => g.id === (registeredGrade || grade))?.label || 'Grade 10'}</span>
+                          <span> &bull; Sri Lanka National Curriculum</span>
+                        </div>
                       </div>
 
                       <div className="py-1">

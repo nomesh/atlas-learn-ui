@@ -19,6 +19,9 @@ export interface StudentSignInData {
   school?: string;
   curriculumCode?: string;
   enrolledSubjects?: string[];
+  studentId?: string;
+  accountStatus?: string;
+  registeredGrade?: string;
 }
 
 interface StudentContextValue {
@@ -47,6 +50,9 @@ interface StudentContextValue {
 
   // Real Authentication & Session fields
   session: LearnSessionData | null;
+  studentId: string | null;
+  accountStatus: string | null;
+  registeredGrade: string | null;
   isAuthenticated: boolean;
   isGuestPreview: boolean;
   enableGuestPreview: () => void;
@@ -214,13 +220,16 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setIsAuthenticated(data.authenticated);
 
       if (data.authenticated) {
+        if (data.registeredGrade) {
+          setGradeState(data.registeredGrade as Grade);
+          localStorage.setItem('atlas_student_grade', data.registeredGrade);
+        } else if (data.activeLearner?.grade) {
+          setGradeState(data.activeLearner.grade as Grade);
+          localStorage.setItem('atlas_student_grade', data.activeLearner.grade);
+        }
         if (data.activeLearner) {
           setStudentNameState(data.activeLearner.displayName);
           localStorage.setItem('atlas_student_name', data.activeLearner.displayName);
-          if (data.activeLearner.grade) {
-            setGradeState(data.activeLearner.grade as Grade);
-            localStorage.setItem('atlas_student_grade', data.activeLearner.grade);
-          }
           if (data.activeLearner.preferredLanguage) {
             setLanguageState(data.activeLearner.preferredLanguage as Language);
             localStorage.setItem('atlas_learn_lang', data.activeLearner.preferredLanguage);
@@ -287,6 +296,10 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const setGrade = (newGrade: Grade) => {
+    if (isAuthenticated && session?.registeredGrade && session.registeredGrade !== newGrade) {
+      console.warn(`[studentContext] Enrolled for ${session.registeredGrade}. Grade changes are locked.`);
+      return;
+    }
     setGradeState(newGrade);
     localStorage.setItem('atlas_student_grade', newGrade);
     if (isAuthenticated) {
@@ -426,6 +439,9 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTutorState,
 
         session,
+        studentId: session?.studentId || localStudentSession?.studentId || null,
+        accountStatus: session?.accountStatus || (isAuthenticated ? 'ACTIVE' : null),
+        registeredGrade: session?.registeredGrade || (isAuthenticated ? grade : null),
         isAuthenticated,
         isGuestPreview,
         enableGuestPreview,

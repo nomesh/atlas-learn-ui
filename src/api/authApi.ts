@@ -17,6 +17,9 @@ export interface LearnSessionData {
   email: string | null;
   displayName: string | null;
   accountId: string | null;
+  studentId?: string | null;
+  accountStatus?: 'PENDING_PAYMENT' | 'ACTIVE' | 'SUSPENDED' | 'EXPIRED' | string | null;
+  registeredGrade?: string | null;
   accountType: 'GUARDIAN' | 'INDEPENDENT_STUDENT' | null;
   activeLearner: LearnerProfile | null;
   learners: LearnerProfile[];
@@ -88,12 +91,27 @@ export function redirectToLogin(returnPath: string = '/'): void {
 // ─── Direct-grant Registration & Login ────────────────────────────────────────
 
 export interface RegisterRequest {
+  fullName: string;
   username: string;
   password: string;
-  name?: string;
-  grade?: string;
-  language?: string;
+  mobileNumber: string;
+  grade: string;
+  preferredLanguage: string;
   email?: string;
+  name?: string;
+  language?: string;
+}
+
+export interface RegisterResponse {
+  studentId: string;
+  fullName: string;
+  username: string;
+  mobileNumber: string;
+  grade: string;
+  preferredLanguage: string;
+  status: 'PENDING_PAYMENT' | 'ACTIVE' | 'SUSPENDED' | 'EXPIRED';
+  whatsappSupportNumber: string;
+  message: string;
 }
 
 export interface LoginRequest {
@@ -103,21 +121,38 @@ export interface LoginRequest {
 
 /**
  * Registers a new student account via the BFF.
- * On success the backend provisions Keycloak + DB and sets HttpOnly session cookies.
- * Returns the active LearnSessionData for immediate in-app sign-in.
+ * On success returns student registration details with generated Student ID (e.g. ATL-26-XXXXXX)
+ * and WhatsApp instructions for payment slip activation.
  */
-export async function registerStudent(req: RegisterRequest): Promise<LearnSessionData> {
-  const res = await apiClient.post<LearnSessionData>('/api/learn/auth/register', req);
+export async function registerStudent(req: RegisterRequest): Promise<RegisterResponse> {
+  const payload = {
+    fullName: req.fullName || req.name || '',
+    username: req.username,
+    password: req.password,
+    mobileNumber: req.mobileNumber,
+    grade: req.grade || 'grade-10',
+    preferredLanguage: req.preferredLanguage || req.language || 'en',
+    email: req.email,
+  };
+  const res = await apiClient.post<RegisterResponse>('/api/learn/auth/register', payload);
   return res.data;
 }
 
 /**
  * Signs in an existing student with username + password via the BFF direct-grant flow.
+ * Passes X-Atlas-Device-Id and X-Atlas-Device-Name headers to enforce the 2-device limit.
  * On success the backend sets HttpOnly session cookies.
  * Returns the active LearnSessionData for immediate in-app sign-in.
  */
 export async function loginWithPassword(req: LoginRequest): Promise<LearnSessionData> {
-  const res = await apiClient.post<LearnSessionData>('/api/learn/auth/login', req);
+  const deviceId = getOrCreateDeviceId();
+  const deviceName = getDeviceFriendlyName();
+  const res = await apiClient.post<LearnSessionData>('/api/learn/auth/login', req, {
+    headers: {
+      'X-Atlas-Device-Id': deviceId,
+      'X-Atlas-Device-Name': deviceName,
+    },
+  });
   return res.data;
 }
 
