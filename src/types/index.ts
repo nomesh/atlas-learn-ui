@@ -26,6 +26,10 @@ export interface LearningContext {
   activeLessonId?: string;
   conversationId: string;
   imageUrl?: string;
+  /** Pedagogical action type (e.g. "TEACH_ME", "CLARIFY", "SIMPLIFY"). Maps to backend TutorActionType. */
+  action?: string;
+  /** Chapter context forwarded to backend TutorChatRequest. */
+  chapterId?: string;
 }
 
 // Exact wire citation structure from ATLAS backend

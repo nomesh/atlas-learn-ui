@@ -24,6 +24,9 @@ export class AtlasLiveTutorAdapter implements TutorAdapter {
       subject: context.subjectId,
       language: context.language,
       topicId: context.topicId,
+      lessonId: context.topicId,       // alias; backend auto-syncs if one is null
+      chapterId: context.chapterId,
+      action: context.action,
       imageUrl: context.imageUrl,
     });
 

@@ -39,7 +39,7 @@ interface StudentContextValue {
   signInStudent: (data: StudentSignInData) => void;
   isDeviceModalOpen: boolean;
   setIsDeviceModalOpen: (open: boolean) => void;
-  conversationId: string;
+  getOrCreateConversationId: (subjectId: string, topicId: string) => string;
   learningContext: LearningContext;
   setCurriculumSubject: (subjectId: string, topicId?: string, lessonId?: string) => void;
   tutorState: TutorState;
@@ -164,13 +164,37 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return !localStorage.getItem('atlas_onboarding_completed');
   });
 
-  const [conversationId] = useState<string>(() => {
-    const existing = sessionStorage.getItem('atlas_tutor_conversation_id');
-    if (existing) return existing;
-    const newId = `learn-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-    sessionStorage.setItem('atlas_tutor_conversation_id', newId);
-    return newId;
-  });
+  /**
+   * Per-lesson conversation ID map: key = "subjectId:topicId" → UUID.
+   * Stored in sessionStorage as JSON so each browser tab keeps its own isolated memory.
+   */
+  const conversationMapRef = React.useRef<Map<string, string> | null>(null);
+  if (conversationMapRef.current === null) {
+    try {
+      const saved = sessionStorage.getItem('atlas_tutor_conversation_map');
+      conversationMapRef.current = saved
+        ? new Map<string, string>(JSON.parse(saved))
+        : new Map<string, string>();
+    } catch {
+      conversationMapRef.current = new Map<string, string>();
+    }
+  }
+
+  const getOrCreateConversationId = useCallback((sid: string, tid: string): string => {
+    const map = conversationMapRef.current!;
+    const key = `${sid}:${tid}`;
+    if (!map.has(key)) {
+      const newId = `learn-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      map.set(key, newId);
+      try {
+        sessionStorage.setItem(
+          'atlas_tutor_conversation_map',
+          JSON.stringify([...map.entries()]),
+        );
+      } catch { /* quota exceeded — silently skip persistence */ }
+    }
+    return map.get(key)!;
+  }, []);
 
   const [subjectId, setSubjectId] = useState<string | undefined>('science');
   const [topicId, setTopicId] = useState<string | undefined>('photosynthesis');
@@ -343,7 +367,10 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     topicId,
     activeLessonId,
     language,
-    conversationId,
+    // Derive the per-lesson conversationId so the context is always up-to-date.
+    conversationId: subjectId && topicId
+      ? getOrCreateConversationId(subjectId, topicId)
+      : getOrCreateConversationId('default', 'default'),
   };
 
   const currentUser = session && session.authenticated && session.userId ? {
@@ -392,7 +419,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         signInStudent,
         isDeviceModalOpen,
         setIsDeviceModalOpen,
-        conversationId,
+        getOrCreateConversationId,
         learningContext,
         setCurriculumSubject,
         tutorState,

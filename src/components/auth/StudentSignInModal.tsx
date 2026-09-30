@@ -16,9 +16,11 @@ import {
   UserPlus,
   UserCheck,
   Globe,
+  Loader2,
 } from 'lucide-react';
 import { useStudent } from '../../state/studentContext';
-import { redirectToLogin } from '../../api/authApi';
+import { redirectToLogin, registerStudent, loginWithPassword } from '../../api/authApi';
+import type { LearnSessionData } from '../../api/authApi';
 import { ATLAS_MARK, NEURAL_WORKS_LOGO } from '../../brand/assets';
 import type { Grade, Language } from '../../types';
 
@@ -92,6 +94,9 @@ export const StudentSignInModal: React.FC = () => {
   const [schoolName, setSchoolName] = useState('');
   const [pinCode, setPinCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [signInError, setSignInError] = useState<string | null>(null);
+  /** Within the 'manual' tab: 'register' = create new account, 'signin' = existing user */
+  const [manualMode, setManualMode] = useState<'register' | 'signin'>('register');
 
   useEffect(() => {
     if (isSignInModalOpen && signInModalTab) {
@@ -127,25 +132,53 @@ export const StudentSignInModal: React.FC = () => {
     }
   };
 
-  const handleManualSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const finalName = studentNameInput.trim() || 'Amila Perera';
-    const finalId = studentId.trim() || `STU-${Date.now().toString().slice(-6)}`;
-    const finalSchool = schoolName.trim() || 'Sri Lanka National School';
+  /** Maps a successful LearnSessionData response into the local signInStudent format. */
+  const signInFromSession = (data: LearnSessionData) => {
+    const learner = data.activeLearner;
+    signInStudent({
+      id: learner?.id || data.userId || `stu-${Date.now()}`,
+      displayName: learner?.displayName || data.displayName || studentNameInput.trim() || 'Student',
+      grade: (learner?.grade as Grade) || selectedGrade,
+      language: (learner?.preferredLanguage as Language) || selectedLang,
+      curriculumCode: learner?.curriculumCode || 'SL-MOE',
+      enrolledSubjects: learner?.enrolledSubjects || ['History', 'Science', 'Mathematics', 'ICT'],
+    });
+    localStorage.setItem('atlas_onboarding_completed', 'true');
+    setIsSignInModalOpen(false);
+  };
 
+  const handleManualSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSignInError(null);
     setIsSubmitting(true);
     try {
-      signInStudent({
-        id: finalId,
-        displayName: finalName,
-        grade: selectedGrade,
-        language: selectedLang,
-        school: finalSchool,
-        curriculumCode: 'SL-MOE',
-        enrolledSubjects: ['History', 'Science', 'Mathematics', 'ICT'],
-      });
-      localStorage.setItem('atlas_onboarding_completed', 'true');
-      setIsSignInModalOpen(false);
+      if (manualMode === 'register') {
+        const username = studentId.trim() || `stu-${Date.now().toString().slice(-6)}`;
+        const data = await registerStudent({
+          username,
+          password: pinCode || username,          // default password = username when blank
+          name: studentNameInput.trim() || undefined,
+          grade: selectedGrade,
+          language: selectedLang,
+        });
+        signInFromSession(data);
+      } else {
+        // Sign-in mode: use studentId as username
+        const data = await loginWithPassword({
+          username: studentId.trim(),
+          password: pinCode,
+        });
+        signInFromSession(data);
+      }
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 409) {
+        setSignInError('That username is already registered. Please sign in instead, or choose a different username.');
+      } else if (status === 401) {
+        setSignInError('Incorrect username or password. Please try again.');
+      } else {
+        setSignInError('Could not connect to the server. Please check your connection and try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -327,52 +360,92 @@ export const StudentSignInModal: React.FC = () => {
             </div>
           ) : (
             <form onSubmit={handleManualSubmit} className="space-y-4">
-              <div className="p-3 bg-sky-50 border border-sky-100 rounded-2xl text-xs text-sky-900 flex items-center gap-2">
-                <UserPlus className="w-4 h-4 text-sky-600 flex-shrink-0" />
-                <span>
-                  Register as a new student to unlock full interactive AI Tutoring, exam prep, and study progress.
-                </span>
+              {/* Register / Sign-In mode toggle */}
+              <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => { setManualMode('register'); setSignInError(null); }}
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    manualMode === 'register'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>New Account</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setManualMode('signin'); setSignInError(null); }}
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    manualMode === 'signin'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Sign In</span>
+                </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                    <User className="w-3.5 h-3.5 text-atlas-cyan" />
-                    <span>Your Full Name *</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={studentNameInput}
-                    onChange={(e) => setStudentNameInput(e.target.value)}
-                    placeholder="e.g. Amila Perera"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
-                  />
+              {manualMode === 'register' && (
+                <div className="p-3 bg-sky-50 border border-sky-100 rounded-2xl text-xs text-sky-900 flex items-center gap-2">
+                  <UserPlus className="w-4 h-4 text-sky-600 flex-shrink-0" />
+                  <span>Register as a new student to unlock full interactive AI Tutoring, exam prep, and study progress.</span>
                 </div>
+              )}
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                    <GraduationCap className="w-3.5 h-3.5 text-atlas-cyan" />
-                    <span>Grade Level *</span>
-                  </label>
-                  <select
-                    value={selectedGrade}
-                    onChange={(e) => setSelectedGrade(e.target.value as Grade)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
-                  >
-                    <option value="grade-6">Grade 6 (Junior)</option>
-                    <option value="grade-7">Grade 7 (Junior)</option>
-                    <option value="grade-8">Grade 8 (Junior Secondary)</option>
-                    <option value="grade-9">Grade 9 (Secondary)</option>
-                    <option value="grade-10">Grade 10 (G.C.E. O/L Candidate)</option>
-                    <option value="grade-11">Grade 11 (G.C.E. O/L Candidate)</option>
-                    <option value="grade-12">Grade 12 (G.C.E. A/L)</option>
-                    <option value="grade-13">Grade 13 (G.C.E. A/L)</option>
-                  </select>
+              {/* Error banner */}
+              {signInError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-2xl text-xs text-red-800 flex items-start gap-2">
+                  <span className="text-red-500 flex-shrink-0 mt-0.5">⚠</span>
+                  <span>{signInError}</span>
                 </div>
-              </div>
+              )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Full-name + Grade (register only) */}
+              {manualMode === 'register' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                      <User className="w-3.5 h-3.5 text-atlas-cyan" />
+                      <span>Your Full Name *</span>
+                    </label>
+                    <input
+                      type="text"
+                      required={manualMode === 'register'}
+                      value={studentNameInput}
+                      onChange={(e) => setStudentNameInput(e.target.value)}
+                      placeholder="e.g. Amila Perera"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                      <GraduationCap className="w-3.5 h-3.5 text-atlas-cyan" />
+                      <span>Grade Level *</span>
+                    </label>
+                    <select
+                      value={selectedGrade}
+                      onChange={(e) => setSelectedGrade(e.target.value as Grade)}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
+                    >
+                      <option value="grade-6">Grade 6 (Junior)</option>
+                      <option value="grade-7">Grade 7 (Junior)</option>
+                      <option value="grade-8">Grade 8 (Junior Secondary)</option>
+                      <option value="grade-9">Grade 9 (Secondary)</option>
+                      <option value="grade-10">Grade 10 (G.C.E. O/L Candidate)</option>
+                      <option value="grade-11">Grade 11 (G.C.E. O/L Candidate)</option>
+                      <option value="grade-12">Grade 12 (G.C.E. A/L)</option>
+                      <option value="grade-13">Grade 13 (G.C.E. A/L)</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* Language (register only) */}
+              {manualMode === 'register' && (
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                     <Globe className="w-3.5 h-3.5 text-atlas-cyan" />
@@ -388,33 +461,21 @@ export const StudentSignInModal: React.FC = () => {
                     <option value="ta">Tamil (தமிழ்)</option>
                   </select>
                 </div>
+              )}
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                    <School className="w-3.5 h-3.5 text-atlas-cyan" />
-                    <span>School / Institution (Optional)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={schoolName}
-                    onChange={(e) => setSchoolName(e.target.value)}
-                    placeholder="e.g. Ananda College, Colombo"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
-                  />
-                </div>
-              </div>
-
+              {/* Username + Password */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                     <Key className="w-3.5 h-3.5 text-atlas-cyan" />
-                    <span>Student / Index No (Optional)</span>
+                    <span>{manualMode === 'register' ? 'Username / Index No' : 'Username *'}</span>
                   </label>
                   <input
                     type="text"
+                    required={manualMode === 'signin'}
                     value={studentId}
                     onChange={(e) => setStudentId(e.target.value)}
-                    placeholder="Auto-assigned if blank"
+                    placeholder={manualMode === 'register' ? 'Auto-assigned if blank' : 'Your username'}
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
                   />
                 </div>
@@ -422,13 +483,14 @@ export const StudentSignInModal: React.FC = () => {
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                     <Lock className="w-3.5 h-3.5 text-atlas-cyan" />
-                    <span>PIN Code / Password (Optional)</span>
+                    <span>{manualMode === 'register' ? 'Password (Optional)' : 'Password *'}</span>
                   </label>
                   <input
                     type="password"
+                    required={manualMode === 'signin'}
                     value={pinCode}
                     onChange={(e) => setPinCode(e.target.value)}
-                    placeholder="e.g. 2026 or leave blank"
+                    placeholder={manualMode === 'register' ? 'Leave blank to use username' : 'Your password'}
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
                   />
                 </div>
@@ -437,10 +499,24 @@ export const StudentSignInModal: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3.5 px-5 bg-gradient-to-r from-cyan-600 via-sky-600 to-indigo-700 hover:from-cyan-500 hover:to-indigo-600 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="w-full py-3.5 px-5 bg-gradient-to-r from-cyan-600 via-sky-600 to-indigo-700 hover:from-cyan-500 hover:to-indigo-600 disabled:opacity-60 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
-                <UserPlus className="w-4 h-4 text-cyan-200" />
-                <span>Create Student Account &amp; Start Learning</span>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 text-cyan-200 animate-spin" />
+                    <span>{manualMode === 'register' ? 'Creating Account…' : 'Signing In…'}</span>
+                  </>
+                ) : manualMode === 'register' ? (
+                  <>
+                    <UserPlus className="w-4 h-4 text-cyan-200" />
+                    <span>Create Account &amp; Start Learning</span>
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="w-4 h-4 text-cyan-200" />
+                    <span>Sign In</span>
+                  </>
+                )}
               </button>
             </form>
           )}

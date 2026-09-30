@@ -85,6 +85,42 @@ export function redirectToLogin(returnPath: string = '/'): void {
   window.location.href = `/api/learn/auth/login?redirect=${encodeURIComponent(returnPath)}`;
 }
 
+// ─── Direct-grant Registration & Login ────────────────────────────────────────
+
+export interface RegisterRequest {
+  username: string;
+  password: string;
+  name?: string;
+  grade?: string;
+  language?: string;
+  email?: string;
+}
+
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+/**
+ * Registers a new student account via the BFF.
+ * On success the backend provisions Keycloak + DB and sets HttpOnly session cookies.
+ * Returns the active LearnSessionData for immediate in-app sign-in.
+ */
+export async function registerStudent(req: RegisterRequest): Promise<LearnSessionData> {
+  const res = await apiClient.post<LearnSessionData>('/api/learn/auth/register', req);
+  return res.data;
+}
+
+/**
+ * Signs in an existing student with username + password via the BFF direct-grant flow.
+ * On success the backend sets HttpOnly session cookies.
+ * Returns the active LearnSessionData for immediate in-app sign-in.
+ */
+export async function loginWithPassword(req: LoginRequest): Promise<LearnSessionData> {
+  const res = await apiClient.post<LearnSessionData>('/api/learn/auth/login', req);
+  return res.data;
+}
+
 /**
  * Logs out the current student session, clears cookies, and returns the Keycloak logout redirect.
  */
