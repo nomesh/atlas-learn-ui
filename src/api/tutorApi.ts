@@ -1107,6 +1107,7 @@ export class MockTutorAdapter implements TutorAdapter {
       // Science topic context
       if (context.topicId === 'science-gr10-ch1-chemical-basis') return this.handleChemicalBasisOfLife(lang);
       if (context.topicId === 'science-gr10-ch2-motion') return this.handleMotionInAStraightLine(lang);
+      if (context.topicId === 'science-gr10-ch3-structure-of-matter') return this.handleStructureOfMatter(lang);
       if (context.topicId === 'science-gr10-ch4-newtons-laws') return this.handleNewtonsLaws(lang);
       if (context.topicId === 'science-gr10-ch6-cells') return this.handlePlantAnimalCells(lang);
       if (context.topicId === 'science-gr10-ch15-hydrostatic-pressure') return this.handleHydrostaticPressure(lang);
@@ -1125,7 +1126,8 @@ export class MockTutorAdapter implements TutorAdapter {
       if (context.subjectId === 'maths') return this.handleMathsGr10(question, lang, context);
       if (context.subjectId === 'history') return this.handleHistory(lang);
       if (context.subjectId === 'science') return this.handleScienceGr10(question, lang);
-      if (context.subjectId === 'ict') return this.handleNumberSystems(lang);
+      if (context.topicId === 'number-systems') return this.handleNumberSystems(lang);
+      if (context.subjectId === 'ict') return this.handleDefault(question, lang, context);
     }
 
     // =========================================================================
@@ -2214,6 +2216,120 @@ Motion is analyzed using scalar and vector quantities:
         'Why does the gradient of a velocity-time graph equal acceleration?',
         'Difference between distance and displacement with Sri Lankan expressway examples',
         'Quiz me on Equations of Motion'
+      ]
+    };
+  }
+
+  private handleStructureOfMatter(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    const sources: SourceCitation[] = [
+      {
+        documentId: 'moe-lk-science-gr10-part1',
+        source: 'Grade 10 Science Textbook Part I — Chapter 3: Structure of Matter (Pages 52–83)',
+        fileType: 'PDF',
+        pageNumber: 52,
+        chunkNumber: 110,
+        distance: 0.08,
+        excerpt: null,
+      }
+    ];
+
+    const enAnswer = `**Structure of Matter — Grade 10 Science (Chapter 3, Pages 52–83)**
+
+Matter is composed of basic building blocks called **atoms**. An atom is the smallest unit of an element that retains its chemical properties.
+
+### 1. The Three Subatomic Particles:
+| Particle | Symbol | Location | Relative Charge | Relative Mass |
+|---|---|---|---|---|
+| **Proton** | $p$ / $p^+$ | Inside Nucleus | $+1$ | $1$ |
+| **Neutron** | $n$ / $n^0$ | Inside Nucleus | $0$ (Neutral) | $1$ |
+| **Electron** | $e^-$ | Energy levels (Shells) around Nucleus | $-1$ | $\\frac{1}{1840}$ |
+
+### 2. Atomic Number ($Z$) & Mass Number ($A$):
+- **Atomic Number ($Z$):** Total number of **protons** in the nucleus of an atom. Defines the identity of the element.
+- **Mass Number ($A$):** Total number of **protons + neutrons** in the nucleus ($A = Z + n$).
+- **Standard Nuclide Notation:**
+  $$^{A}_{Z}\\text{X}$$
+  *(e.g., $^{12}_{6}\\text{C}$ has 6 protons, 6 electrons, and $12 - 6 = 6$ neutrons; $^{23}_{11}\\text{Na}$ has 11 protons, 11 electrons, and $23 - 11 = 12$ neutrons)*.
+
+### 3. Isotopes:
+Atoms of the **same element** with the **same atomic number ($Z$)** but **different mass numbers ($A$)** due to differing numbers of neutrons.
+- Examples: $^{12}_{6}\\text{C}$, $^{13}_{6}\\text{C}$, $^{14}_{6}\\text{C}$ (used in archaeological radiocarbon dating in Sigiriya).
+- Chlorine isotopes: $^{35}_{17}\\text{Cl}$ (75%) and $^{37}_{17}\\text{Cl}$ (25%), giving average relative atomic mass $A_r = 35.5$.
+
+### 4. Electronic Configuration (First 20 Elements):
+Electrons occupy energy shells ($K, L, M, N$):
+- Shell capacities ($2n^2$): $K = 2$, $L = 8$, $M = 8$ (stable octet for first 20 elements), $N = 2$.
+- Examples: Carbon ($Z=6$): $2, 4$; Sodium ($Z=11$): $2, 8, 1$; Calcium ($Z=20$): $2, 8, 8, 2$.`;
+
+    const siAnswer = `**පදාර්ථයේ ව්‍යුහය — 10 ශ්‍රේණිය විද්‍යාව (3 වන පරිච්ඡේදය, පිටු 52–83)**
+
+සියලු පදාර්ථ නිර්මාණය වී ඇත්තේ **පරමාණු** වලිනි. පරමාණුවක් යනු මූලද්‍රව්‍යයක රසායනික ගුණ රඳවා ගන්නා කුඩාම ඒකකයයි.
+
+### 1. ප්‍රධාන උප-පරමාණුක අංශු 3:
+- **ප්‍රෝටෝන ($p$):** න්‍යෂ්ටිය තුළ පිහිටයි, ආරෝපණය $+1$, සාපේක්ෂ ස්කන්ධය $1$.
+- **නියුට්‍රෝන ($n$):** න්‍යෂ්ටිය තුළ පිහිටයි, ආරෝපණය $0$ (උදාසීන), සාපේක්ෂ ස්කන්ධය $1$.
+- **ඉලෙක්ට්‍රෝන ($e^-$):** න්‍යෂ්ටිය වටා ශක්ති මට්ටම්වල භ්‍රමණය වේ, ආරෝපණය $-1$, සාපේක්ෂ ස්කන්ධය $\\frac{1}{1840}$.
+
+### 2. පරමාණුක ක්‍රමාංකය ($Z$) හා ස්කන්ධ ක්‍රමාංකය ($A$):
+- **පරමාණුක ක්‍රමාංකය ($Z$):** පරමාණුවක න්‍යෂ්ටියේ ඇති **ප්‍රෝටෝන සංඛ්‍යාව** වේ.
+- **ස්කන්ධ ක්‍රමාංකය ($A$):** න්‍යෂ්ටියේ ඇති **ප්‍රෝටෝන සහ නියුට්‍රෝන වල එකතුව** වේ ($A = Z + n$).
+- **සම්මත සංකේතනය:**
+  $$^{A}_{Z}\\text{X}$$
+  *(උදා: $^{12}_{6}\\text{C}$ හි ප්‍රෝටෝන 6, ඉලෙක්ට්‍රෝන 6, නියුට්‍රෝන $12 - 6 = 6$; $^{23}_{11}\\text{Na}$ හි ප්‍රෝටෝන 11, ඉලෙක්ට්‍රෝන 11, නියුට්‍රෝන 12)*.
+
+### 3. සමස්ථානික (Isotopes):
+එකම මූලද්‍රව්‍යයේ, **එකම පරමාණුක ක්‍රමාංකයක් ($Z$)** සහිත නමුත් නියුට්‍රෝන සංඛ්‍යාව වෙනස් වීම නිසා **වෙනස් ස්කන්ධ ක්‍රමාංක ($A$)** ඇති පරමාණු වේ.
+- උදාහරණ: කාබන් සමස්ථානික $^{12}_{6}\\text{C}, ^{13}_{6}\\text{C}, ^{14}_{6}\\text{C}$ (පුරාවිද්‍යාත්මක කාල නිර්ණයට යොදාගනී).
+
+### 4. ඉලෙක්ට්‍රෝන වින්‍යාසය (පළමු මූලද්‍රව්‍ය 20):
+- ශක්ති මට්ටම් පිරෙන පිළිවෙළ: උපරිමය 1 වන මට්ටම = 2, 2 වන මට්ටම = 8, 3 වන මට්ටම = 8.
+- උදා: කාබන් ($Z=6$): $2, 4$; සෝඩියම් ($Z=11$): $2, 8, 1$; ක්ලෝරීන් ($Z=17$): $2, 8, 7$.`;
+
+    const taAnswer = `**சடப்பொருளின் கட்டமைப்பு — தரம் 10 அறிவியல் (அத்தியாயம் 3, பக். 52–83)**
+
+அனைத்து சடப்பொருட்களும் **அணுக்களால்** ஆக்கப்பட்டவை. அணு என்பது ஒரு மூலகத்தின் இரசாயனப் பண்புகளைத் தக்கவைக்கும் மிகச்சிறிய அலகாகும்.
+
+### 1. மூன்று உப-அணுத் துணிக்கைகள்:
+- **புரோத்தன் ($p$):** கருவினுள் உள்ளது, ஏற்றம் $+1$, திணிவு $1$.
+- **நியூத்திரன் ($n$):** கருவினுள் உள்ளது, நடுநிலையானது ($0$), திணிவு $1$.
+- **இலத்திரன் ($e^-$):** கருவைச் சுற்றியுள்ள சக்தி மட்டங்களில் சுற்றுகிறது, ஏற்றம் $-1$, திணிவு $\\frac{1}{1840}$.
+
+### 2. அணுவெண் ($Z$) மற்றும் திணிவெண் ($A$):
+- **அணுவெண் ($Z$):** கருவிலுள்ள புரோத்தன்களின் எண்ணிக்கை.
+- **திணிவெண் ($A$):** கருவிலுள்ள புரோத்தன்கள் + நியூத்திரன்களின் மொத்த எண்ணிக்கை ($A = Z + n$).
+- **நியூக்லைட்டு குறியீடு:**
+  $$^{A}_{Z}\\text{X}$$
+  *(உதா: $^{12}_{6}\\text{C}$ இல் புரோத்தன் 6, நியூத்திரன் 6; $^{23}_{11}\\text{Na}$ இல் புரோத்தன் 11, நியூத்திரன் 12)*.
+
+### 3. சமதானிகள் (Isotopes):
+ஒரே அணுவெண்ணையும் ($Z$) வேறுபட்ட திணிவெண்களையும் ($A$) கொண்ட ஒரே மூலகத்தின் அணுக்கள்.
+- உதாரணம்: $^{12}_{6}\\text{C}, ^{13}_{6}\\text{C}, ^{14}_{6}\\text{C}$.`;
+
+    return {
+      answer: lang === 'si' ? siAnswer : lang === 'ta' ? taAnswer : enAnswer,
+      sources,
+      languageVersions: {
+        en: enAnswer,
+        si: siAnswer,
+        ta: taAnswer,
+      },
+      keyPoints: [
+        'Subatomic particles: Proton (+1, nucleus), Neutron (0, nucleus), Electron (-1, shells)',
+        'Atomic number Z = number of protons; Mass number A = protons + neutrons',
+        'Isotopes have same Z but different A (differing neutrons)',
+        'First 20 elements electron configuration: 2, 8, 8, 2 capacity rule'
+      ],
+      memoryTrick: {
+        concept: 'Structure of Matter (Textbook Part 1, p. 52–83)',
+        trick: 'PEN: Protons (+), Electrons (-), Neutrons (0 Neutral)! Nucleus has P + N!',
+        rhyme: 'Protons in the center positive and bold,\nNeutrons keep them steady with no charge to hold!\nElectrons whiz around in energy rings,\nTwo, eight, eight is the harmony nature sings!',
+        audioText: 'Here is your memory trick for atomic structure! Remember P E N: Protons are Positive, Electrons are negative Energy rings, and Neutrons are Neutral in the nucleus! Mass number A equals protons plus neutrons!'
+      },
+      suggestedFollowUps: [
+        'Clarify more: How to write the electron configuration of the first 20 elements',
+        'Explain simpler: The atom as a miniature solar system',
+        'Sri Lankan Example: Carbon-14 dating of ancient Sigiriya artifacts',
+        'Quiz me on atomic number and mass number'
       ]
     };
   }
@@ -3683,36 +3799,60 @@ Always verify by substituting the result back into the original problem to ensur
     if (context?.subjectId === 'history') {
       return this.handleHistoryRepeat(lang, context);
     }
-    return {
-      answer: lang === 'si' 
-        ? `සතුටින් නැවත සලකා බලමු! සරලවම කිව්වොත්: ශාක වලට ජීවත් වෙන්නත් කෑම අවශ්‍යයි. සතුන් වගේ ඇවිදලා කෑම හොයන්න බැරි නිසා, ශාක තමන්ගේ පත්‍ර වල තියෙන **හරිතප්‍රද** සහ **හිරු එළිය** පාවිච්චි කරලා, බිමෙන් **වතුරයි** හුස්ම ගන්න වාතයෙන් **කාබන් ඩයොක්සයිඩුයි** අරගෙන රසවත් ග්ලූකෝස් ආහාර හදනවා. මෙයට අපි **ප්‍රභාසංස්ලේෂණය** කියනවා.`
-        : `Let's break it down in a fresh, simple way! Think of a green leaf as a tiny solar-powered kitchen:
+    if (context?.topicId === 'science-gr10-ch2-motion') {
+      return this.handleMotionClarify(lang);
+    }
+    if (context?.topicId === 'science-gr10-ch3-structure-of-matter') {
+      return this.handleStructureOfMatterClarify(lang);
+    }
+    if (context?.topicId === 'science-gr10-ch17-rate-of-reactions') {
+      return this.handleRateOfReactionsClarify(lang);
+    }
+    if (context?.topicId === 'word-processing') {
+      return this.handleWordProcessingClarify(lang);
+    }
+    if (context?.topicId === 'number-systems') {
+      return this.handleNumberSystems(lang);
+    }
+    if (context?.topicId === 'photosynthesis' || (!context?.topicId && context?.subjectId === 'science' && context?.grade === 'grade-8')) {
+      return {
+        answer: lang === 'si' 
+          ? `සතුටින් නැවත සලකා බලමු! සරලවම කිව්වොත්: ශාක වලට ජීවත් වෙන්නත් කෑම අවශ්‍යයි. සතුන් වගේ ඇවිදලා කෑම හොයන්න බැරි නිසා, ශාක තමන්ගේ පත්‍ර වල තියෙන **හරිතප්‍රද** සහ **හිරු එළිය** පාවිච්චි කරලා, බිමෙන් **වතුරයි** හුස්ම ගන්න වාතයෙන් **කාබන් ඩයොක්සයිඩුයි** අරගෙන රසවත් ග්ලූකෝස් ආහාර හදනවා. මෙයට අපි **ප්‍රභාසංස්ලේෂණය** කියනවා.`
+          : `Let's break it down in a fresh, simple way! Think of a green leaf as a tiny solar-powered kitchen:
 - **Chef:** The Chlorophyll inside chloroplasts
 - **Stove / Power:** Sunlight streaming from above
 - **Groceries:** Water from the roots + Carbon Dioxide from the air
 - **Finished Meal:** Sweet Glucose food + Fresh Oxygen released into the air.`,
-      sources: [
-        {
-          documentId: 'sl-nie-sci-gr8-ch4',
-          source: 'Grade 8 Science Textbook (National Institute of Education)',
-          pageNumber: 43,
-          distance: 0.16,
-        }
-      ],
-    };
+        sources: [
+          {
+            documentId: 'sl-nie-sci-gr8-ch4',
+            source: 'Grade 8 Science Textbook (National Institute of Education)',
+            pageNumber: 43,
+            distance: 0.16,
+          }
+        ],
+      };
+    }
+    return this.handleUnmockedTopicResponse('Repeat', lang, context);
   }
 
   private handleClarifyExplanation(lang: 'en' | 'si' | 'ta', context: LearningContext): RAGResponse {
     if (context.topicId === 'science-gr10-ch17-rate-of-reactions') {
       return this.handleRateOfReactionsClarify(lang);
     }
+    if (context.topicId === 'science-gr10-ch2-motion') {
+      return this.handleMotionClarify(lang);
+    }
+    if (context.topicId === 'science-gr10-ch3-structure-of-matter') {
+      return this.handleStructureOfMatterClarify(lang);
+    }
     if (context.topicId === 'word-processing') {
       return this.handleWordProcessingClarify(lang);
     }
-    const isIct = context.subjectId === 'ict';
+    const isNumberSystems = context.topicId === 'number-systems';
     const isHistory = context.subjectId === 'history';
 
-    if (isIct) {
+    if (isNumberSystems) {
       const en = `### Detailed Step-by-Step Breakdown: Number Systems & Binary Logic
 
 Let's examine how electrical circuits calculate numbers step by step:
@@ -3759,39 +3899,49 @@ Would you like to try converting another decimal number or test it in the intera
       return this.handleHistoryClarify(lang, context);
     }
 
-    return {
-      answer: `### Step-by-Step Clarification: Photosynthesis Chemistry
+    if (context.topicId === 'photosynthesis' || (!context.topicId && context.subjectId === 'science' && context.grade === 'grade-8')) {
+      return {
+        answer: `### Step-by-Step Clarification: Photosynthesis Chemistry
 
 1. **Light Reaction (Granum):** Sunlight hits chlorophyll in the leaf. Water ($H_2O$) is split into Hydrogen and Oxygen ($O_2$). Oxygen diffuses out into the air.
 2. **Dark Reaction / Calvin Cycle (Stroma):** Carbon Dioxide ($CO_2$) combines with Hydrogen to build Glucose ($C_6H_{12}O_6$).
 3. **Storage:** The plant links glucose molecules into insoluble starch, stored in roots, tubers, and fruits!`,
-      sources: [
-        {
-          source: 'Grade 8 Science — Photosynthesis In-Depth Mechanism',
-          pageNumber: 44,
-          distance: 0.11,
-        }
-      ],
-      suggestedFollowUps: [
-        'Explain simpler: What goes in and what comes out?',
-        'Sri Lankan Example: Why do king coconuts have sweet water?',
-        'Memory trick: Photosynthesis equation rhyme',
-        'Quiz me on photosynthesis'
-      ]
-    };
+        sources: [
+          {
+            source: 'Grade 8 Science — Photosynthesis In-Depth Mechanism',
+            pageNumber: 44,
+            distance: 0.11,
+          }
+        ],
+        suggestedFollowUps: [
+          'Explain simpler: What goes in and what comes out?',
+          'Sri Lankan Example: Why do king coconuts have sweet water?',
+          'Memory trick: Photosynthesis equation rhyme',
+          'Quiz me on photosynthesis'
+        ]
+      };
+    }
+
+    return this.handleUnmockedTopicResponse('Clarify', lang, context);
   }
 
   private handleSimplerExplanation(lang: 'en' | 'si' | 'ta', context?: LearningContext): RAGResponse {
     if (context?.topicId === 'science-gr10-ch17-rate-of-reactions') {
       return this.handleRateOfReactionsSimpler(lang);
     }
+    if (context?.topicId === 'science-gr10-ch2-motion') {
+      return this.handleMotionSimpler(lang);
+    }
+    if (context?.topicId === 'science-gr10-ch3-structure-of-matter') {
+      return this.handleStructureOfMatterSimpler(lang);
+    }
     if (context?.topicId === 'word-processing') {
       return this.handleWordProcessingSimpler(lang);
     }
-    const isIct = context?.subjectId === 'ict';
+    const isNumberSystems = context?.topicId === 'number-systems';
     const isHistory = context?.subjectId === 'history';
 
-    if (isIct) {
+    if (isNumberSystems) {
       const en = `### Super Simple Version: Binary & Bits
 
 Think of your bedroom ceiling light switch:
@@ -3819,33 +3969,43 @@ When you type 'A', the keyboard simply sets 8 switches to: '01000001'! That's al
       return this.handleHistorySimpler(lang, context);
     }
 
-    return {
-      answer: `Super simple version:
+    if (context?.topicId === 'photosynthesis' || (!context?.topicId && context?.subjectId === 'science' && context?.grade === 'grade-8')) {
+      return {
+        answer: `Super simple version:
 - **What goes in:** Sunlight ☀️ + Water 💧 + Air ($CO_2$) 💨
 - **What comes out:** Plant Food (Glucose) 🍯 + Clean Oxygen ($O_2$) 🍃
 
 Without this simple plant magic, living creatures wouldn't have oxygen to breathe!`,
-      sources: [{ source: 'Grade 8 Science — Foundation Concepts', pageNumber: 42 }],
-      suggestedFollowUps: [
-        'Clarify more: Step-by-step chemical reaction',
-        'Sri Lankan Example: King Coconut tree',
-        'Memory trick for photosynthesis',
-        'Quiz me on science'
-      ]
-    };
+        sources: [{ source: 'Grade 8 Science — Foundation Concepts', pageNumber: 42 }],
+        suggestedFollowUps: [
+          'Clarify more: Step-by-step chemical reaction',
+          'Sri Lankan Example: King Coconut tree',
+          'Memory trick for photosynthesis',
+          'Quiz me on science'
+        ]
+      };
+    }
+
+    return this.handleUnmockedTopicResponse('Simpler', lang, context);
   }
 
   private handleExample(lang: 'en' | 'si' | 'ta', context?: LearningContext): RAGResponse {
     if (context?.topicId === 'science-gr10-ch17-rate-of-reactions') {
       return this.handleRateOfReactionsExample(lang);
     }
+    if (context?.topicId === 'science-gr10-ch2-motion') {
+      return this.handleMotionExample(lang);
+    }
+    if (context?.topicId === 'science-gr10-ch3-structure-of-matter') {
+      return this.handleStructureOfMatterExample(lang);
+    }
     if (context?.topicId === 'word-processing') {
       return this.handleWordProcessingExample(lang);
     }
-    const isIct = context?.subjectId === 'ict';
+    const isNumberSystems = context?.topicId === 'number-systems';
     const isHistory = context?.subjectId === 'history';
 
-    if (isIct) {
+    if (isNumberSystems) {
       return {
         answer: `**A Real-World Sri Lankan Example of ICT & Binary:**
 
@@ -3874,27 +4034,38 @@ Every single memory device sold across Sri Lanka follows the exact binary place 
       return this.handleHistoryExample(lang, context);
     }
 
-    return {
-      answer: `**A Real-World Sri Lankan Example:**
+    if (context?.topicId === 'photosynthesis' || (!context?.topicId && context?.subjectId === 'science' && context?.grade === 'grade-8')) {
+      return {
+        answer: `**A Real-World Sri Lankan Example:**
 Think of a King Coconut (Thambili) tree in your garden. The tall fronds spread wide to catch equatorial sunshine. 
 Through photosynthesis, the palm creates glucose and electrolytes, which it pumps into the young king coconuts. The sweet, refreshing water you drink on a hot afternoon was synthesized by the leaves using sunlight!`,
-      sources: [{ source: 'Grade 8 Science Textbook — Plant Physiology in Tropical Ecosystems', pageNumber: 45 }],
-      suggestedFollowUps: [
-        'Clarify more: How do roots pump water upward?',
-        'Explain simpler: Photosynthesis basics',
-        'Memory trick for plant nutrition',
-        'Quiz me on photosynthesis'
-      ]
-    };
+        sources: [{ source: 'Grade 8 Science Textbook — Plant Physiology in Tropical Ecosystems', pageNumber: 45 }],
+        suggestedFollowUps: [
+          'Clarify more: How do roots pump water upward?',
+          'Explain simpler: Photosynthesis basics',
+          'Memory trick for plant nutrition',
+          'Quiz me on photosynthesis'
+        ]
+      };
+    }
+
+    return this.handleUnmockedTopicResponse('Example', lang, context);
   }
 
   private handleQuizPrompt(lang: 'en' | 'si' | 'ta', context?: LearningContext): RAGResponse {
     if (context?.subjectId === 'history') {
       return this.handleHistoryQuiz(lang, context);
     }
-    return {
-      answer: lang === 'si'
-        ? `**ඔබේ අවබෝධය පරීක්ෂා කරමු! මෙන්න ප්‍රශ්නයක්:**
+    if (context?.topicId === 'science-gr10-ch2-motion') {
+      return this.handleMotionQuiz(lang);
+    }
+    if (context?.topicId === 'science-gr10-ch3-structure-of-matter') {
+      return this.handleStructureOfMatterQuiz(lang);
+    }
+    if (context?.topicId === 'photosynthesis' || (!context?.topicId && context?.subjectId === 'science' && context?.grade === 'grade-8')) {
+      return {
+        answer: lang === 'si'
+          ? `**ඔබේ අවබෝධය පරීක්ෂා කරමු! මෙන්න ප්‍රශ්නයක්:**
 ශාක පත්‍රවල හරිත වර්ණය ලබාදෙන සහ සූර්යාලෝකය උරාගන්නා වර්ණකය කුමක්ද?
 
 1. හිමොග්ලොබින්
@@ -3902,7 +4073,7 @@ Through photosynthesis, the palm creates glucose and electrolytes, which it pump
 3. මෙලනින්
 
 ඔබේ පිළිතුර කියන්න, මම පැහැදිලි කරන්නම්!`
-        : `**Let's test your understanding with a quick question:**
+          : `**Let's test your understanding with a quick question:**
 What is the name of the green pigment inside plant leaves that captures sunlight?
 
 1. Hemoglobin
@@ -3910,14 +4081,392 @@ What is the name of the green pigment inside plant leaves that captures sunlight
 3. Melanin
 
 Type or tap your answer, and let's check it together!`,
+        sources: [
+          {
+            documentId: 'sl-nie-sci-gr8-ch4',
+            source: 'Grade 8 Science Revision Review',
+            pageNumber: 46,
+            distance: 0.12,
+          }
+        ],
+      };
+    }
+
+    return this.handleUnmockedTopicResponse('Quiz', lang, context);
+  }
+
+  // =========================================================================
+  // GRADE 10 SCIENCE: MOTION (CHAPTER 2) MOCK HANDLERS
+  // =========================================================================
+
+  private handleMotionClarify(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    if (lang === 'si') {
+      return {
+        answer: `### පියවරෙන් පියවර පැහැදිලි කිරීම: චලිතය සහ චලිත සමීකරණ (Grade 10 Science — Chapter 2: Motion)
+
+1. **විස්ථාපනය ($s$) හා දුර:**
+   - **දුර:** වස්තුවක් ගමන් කළ මුළු මාර්ගයේ දිග (අදිශ රාශියකි).
+   - **විස්ථාපනය ($s$):** ආරම්භක ලක්ෂ්‍යයේ සිට අවසාන ලක්ෂ්‍යයට ඇති සරල රේඛීය දුර හා දිශාව (දෛශික රාශියකි, ඒකකය: $m$).
+
+2. **ප්‍රවේගය ($v$) හා ත්වරණය ($a$):**
+   - **ප්‍රවේගය ($v$):** විස්ථාපනය වෙනස්වීමේ සීඝ්‍රතාවයි ($v = \\frac{s}{t}$, ඒකකය: $m\\,s^{-1}$).
+   - **ත්වරණය ($a$):** ප්‍රවේගය වෙනස්වීමේ සීඝ්‍රතාවයි ($a = \\frac{v - u}{t}$, ඒකකය: $m\\,s^{-2}$).
+
+3. **ඒකාකාර ත්වරණයෙන් චලනය වන වස්තු සඳහා චලිත සමීකරණ 4:**
+   - $v = u + at$
+   - $s = ut + \\frac{1}{2}at^2$
+   - $v^2 = u^2 + 2as$
+   - $s = \\left(\\frac{u + v}{2}\\right)t$
+
+මෙහි $u$ = ආරම්භක ප්‍රවේගය, $v$ = අවසාන ප්‍රවේගය, $a$ = ඒකාකාර ත්වරණය, $t$ = කාලය, $s$ = විස්ථාපනය වේ.`,
+        sources: [
+          {
+            source: 'Grade 10 Science Textbook (Part 1) — Chapter 2: Motion',
+            pageNumber: 28,
+            distance: 0.10,
+          }
+        ],
+        suggestedFollowUps: [
+          'Explain simpler: Distance vs Displacement',
+          'Sri Lankan Example: Ruhunu Kumari train accelerating from Colombo Fort',
+          'Quiz me on motion formulas'
+        ]
+      };
+    }
+
+    if (lang === 'ta') {
+      return {
+        answer: `### படிப்படியான விளக்கம்: இயக்கம் மற்றும் இயக்கச் சமன்பாடுகள் (Grade 10 Science — Chapter 2: Motion)
+
+1. **இடப்பெயர்ச்சி ($s$) மற்றும் தூரம்:**
+   - **தூரம்:** ஒரு பொருள் பயணித்த பாதையின் மொத்த நீளம் (எண்ணளவு கணியம்).
+   - **இடப்பெயர்ச்சி ($s$):** தொடக்கப் புள்ளியிலிருந்து இறுதிப் புள்ளிக்குமான நேர்கோட்டுத் தூரமும் திசையும் (காவி கணியம், அலகு: $m$).
+
+2. **வேகம் ($v$) மற்றும் ஆர்முடுகல் ($a$):**
+   - **வேகம் ($v$):** இடப்பெயர்ச்சி மாற்ற வீதம் ($v = \\frac{s}{t}$, அலகு: $m\\,s^{-1}$).
+   - **ஆர்முடுகல் ($a$):** வேக மாற்ற வீதம் ($a = \\frac{v - u}{t}$, அலகு: $m\\,s^{-2}$).
+
+3. **சீரான ஆர்முடுகலின் கீழான இயக்கச் சமன்பாடுகள்:**
+   - $v = u + at$
+   - $s = ut + \\frac{1}{2}at^2$
+   - $v^2 = u^2 + 2as$
+   - $s = \\left(\\frac{u + v}{2}\\right)t$`,
+        sources: [
+          {
+            source: 'Grade 10 Science Textbook (Part 1) — Chapter 2: Motion',
+            pageNumber: 28,
+            distance: 0.10,
+          }
+        ],
+        suggestedFollowUps: [
+          'Explain simpler: Velocity vs Acceleration',
+          'Sri Lankan Example: Southern Expressway bus journey',
+          'Quiz me on motion formulas'
+        ]
+      };
+    }
+
+    return {
+      answer: `### Step-by-Step Clarification: Grade 10 Science Chapter 2 — Motion
+
+1. **Distance vs. Displacement ($s$):**
+   - **Distance:** The actual total path length traveled (scalar quantity, measured in meters).
+   - **Displacement ($s$):** The straight-line distance and specific direction from start to end point (vector quantity, measured in meters, $\\text{m}$).
+
+2. **Speed, Velocity ($v$), and Acceleration ($a$):**
+   - **Velocity ($v$):** Rate of change of displacement: $v = \\frac{s}{t}$ (units: $\\text{m}\\cdot\\text{s}^{-1}$).
+   - **Acceleration ($a$):** Rate of change of velocity: $a = \\frac{v - u}{t}$ (units: $\\text{m}\\cdot\\text{s}^{-2}$).
+
+3. **Four Standard Equations of Linear Motion (Uniform Acceleration):**
+   - $v = u + at$
+   - $s = ut + \\frac{1}{2}at^2$
+   - $v^2 = u^2 + 2as$
+   - $s = \\left(\\frac{u + v}{2}\\right)t$
+
+*(where $u$ = initial velocity, $v$ = final velocity, $a$ = uniform acceleration, $t$ = time, and $s$ = displacement)*.`,
       sources: [
         {
-          documentId: 'sl-nie-sci-gr8-ch4',
-          source: 'Grade 8 Science Revision Review',
-          pageNumber: 46,
-          distance: 0.12,
+          source: 'Grade 10 Science Textbook (Part 1) — Chapter 2: Motion, p. 24–36',
+          pageNumber: 28,
+          distance: 0.10,
         }
       ],
+      suggestedFollowUps: [
+        'Explain simpler: What is acceleration in simple words?',
+        'Sri Lankan Example: Ruhunu Kumari train accelerating from Colombo Fort',
+        'Quiz me on Grade 10 motion calculations'
+      ]
+    };
+  }
+
+  private handleMotionSimpler(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    const en = `### Super Simple Version: Motion & Speed
+
+Imagine riding your bicycle down a hill in Kandy or along Galle Face:
+- **Distance:** How far your bicycle wheels rolled along the winding road.
+- **Displacement:** Drawing a direct arrow straight from your home to your school through the air.
+- **Speed:** What your bicycle speedometer shows (e.g., $15\\text{ km/h}$).
+- **Velocity:** Speed with a compass direction (e.g., $15\\text{ km/h}$ heading South towards Galle).
+- **Acceleration:** Stepping hard on the pedals to go from $0\\text{ km/h}$ to $20\\text{ km/h}$ quickly!`;
+    return {
+      answer: en,
+      sources: [{ source: 'Grade 10 Science — Chapter 2: Motion Fundamentals', pageNumber: 25 }],
+      suggestedFollowUps: [
+        'Clarify more: The 4 motion equations step by step',
+        'Sri Lankan Example: Expressway bus speeding up',
+        'Quiz me on motion'
+      ]
+    };
+  }
+
+  private handleMotionExample(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    return {
+      answer: `**A Real-World Sri Lankan Example of Motion & Acceleration:**
+
+Think of the **Ruhunu Kumari Express Train** departing from Colombo Fort Railway Station towards Galle:
+1. When stopped on Platform 4, initial velocity is $u = 0\\text{ m/s}$.
+2. As the locomotive pulls away along the coastal track, the diesel engine accelerates uniformly at $a = 0.5\\text{ m/s}^2$ for $t = 20\\text{ seconds}$.
+3. Using the first equation of motion:
+   $$v = u + at = 0 + (0.5 \\times 20) = 10\\text{ m/s} \\; (36\\text{ km/h})$$
+4. By Galle Face Green, the train has traveled a displacement of:
+   $$s = ut + \\frac{1}{2}at^2 = 0 + \\frac{1}{2}(0.5)(20^2) = 100\\text{ meters}!$$
+
+Every time trains, buses on the Southern Expressway, or vehicles accelerate across Sri Lanka, they obey these exact Grade 10 physics equations!`,
+      sources: [{ source: 'Grade 10 Science Textbook — Real-world Kinematics', pageNumber: 30 }],
+      suggestedFollowUps: [
+        'Clarify more: How to solve motion word problems',
+        'Explain simpler: Velocity vs Acceleration',
+        'Quiz me on train motion calculations'
+      ]
+    };
+  }
+
+  private handleMotionQuiz(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    return {
+      answer: lang === 'si'
+        ? `**ඔබේ චලිතය පිළිබඳ අවබෝධය පරීක්ෂා කරමු! මෙන්න ප්‍රශ්නයක්:**
+ඒකාකාර ත්වරණයෙන් චලනය වන වස්තුවක ජාත්‍යන්තර සම්මත (SI) ඒකකය කුමක්ද?
+
+1. $m\\,s^{-1}$
+2. $m\\,s^{-2}$
+3. $kg\\,m\\,s^{-1}$
+
+ඔබේ පිළිතුර තෝරන්න!`
+        : `**Let's test your understanding of Chapter 2 Motion:**
+What is the standard SI unit of linear acceleration?
+
+1. $m/s$ ($m\\,s^{-1}$)
+2. $m/s^2$ ($m\\,s^{-2}$)
+3. $km/h$
+
+Type or tap your answer, and let's check it together!`,
+      sources: [{ source: 'Grade 10 Science Chapter 2 Review', pageNumber: 35 }]
+    };
+  }
+
+  // =========================================================================
+  // GRADE 10 SCIENCE: STRUCTURE OF MATTER (CHAPTER 3) MOCK HANDLERS
+  // =========================================================================
+
+  private handleStructureOfMatterClarify(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    if (lang === 'si') {
+      return {
+        answer: `### පියවරෙන් පියවර පැහැදිලි කිරීම: පදාර්ථයේ ව්‍යුහය (Grade 10 Science — Chapter 3: Structure of Matter)
+
+1. **න්‍යෂ්ටිය සහ උප-පරමාණුක අංශු:**
+   - පරමාණුවක මධ්‍යයේ කුඩා ඝන **න්‍යෂ්ටිය** පිහිටා ඇති අතර, එහි **ප්‍රෝටෝන ($p^+$)** සහ **නියුට්‍රෝන ($n^0$)** අඩංගු වේ.
+   - න්‍යෂ්ටිය වටා ඇති කක්ෂ (ශක්ති මට්ටම්) වල **ඉලෙක්ට්‍රෝන ($e^-$)** අධික වේගයෙන් භ්‍රමණය වේ.
+
+2. **පරමාණුක ක්‍රමාංකය ($Z$) සහ ස්කන්ධ ක්‍රමාංකය ($A$):**
+   - **$Z$ (පරමාණුක ක්‍රමාංකය):** න්‍යෂ්ටියේ ඇති ප්‍රෝටෝන සංඛ්‍යාව (උදාසීන පරමාණුවක ඉලෙක්ට්‍රෝන සංඛ්‍යාවට සමාන වේ).
+   - **$A$ (ස්කන්ධ ක්‍රමාංකය):** ප්‍රෝටෝන + නියුට්‍රෝන එකතුව ($A = Z + n$).
+   - නියුට්‍රෝන සංඛ්‍යාව සෙවීම: $n = A - Z$.
+
+3. **ඉලෙක්ට්‍රෝන වින්‍යාසය (පළමු මූලද්‍රව්‍ය 20):**
+   - ප්‍රධාන ශක්ති මට්ටම්වල උපරිම ඉලෙක්ට්‍රෝන ධාරිතාව: $K = 2$, $L = 8$, $M = 8$, $N = 2$.
+   - උදාහරණ: සෝඩියම් ($^{23}_{11}\\text{Na}$): $Z = 11 \\to 2, 8, 1$. (බාහිරම මට්ටමේ ඉලෙක්ට්‍රෝන 1 ක් ඇති බැවින් I කාණ්ඩයේ මූලද්‍රව්‍යයකි).
+
+4. **සමස්ථානික (Isotopes):**
+   - එකම මූලද්‍රව්‍යයේ එකම $Z$ අගයක් ඇති නමුත් නියුට්‍රෝන සංඛ්‍යාව වෙනස් වීමෙන් වෙනස් $A$ අගයන් ඇති පරමාණු (උදා: $^{12}_6\\text{C}, ^{14}_6\\text{C}$).`,
+        sources: [
+          {
+            source: 'Grade 10 Science Textbook (Part 1) — Chapter 3: Structure of Matter',
+            pageNumber: 56,
+            distance: 0.09,
+          }
+        ],
+        suggestedFollowUps: [
+          'Explain simpler: The atom as a miniature solar system',
+          'Sri Lankan Example: Carbon-14 dating of ancient Sigiriya artifacts',
+          'Quiz me on atomic number and mass number'
+        ]
+      };
+    }
+
+    if (lang === 'ta') {
+      return {
+        answer: `### படிப்படியான விளக்கம்: சடப்பொருளின் கட்டமைப்பு (Grade 10 Science — Chapter 3: Structure of Matter)
+
+1. **உப-அணுத் துணிக்கைகள்:**
+   - **புரோத்தன் ($p$):** கருவினுள் உள்ளது ($+1$ ஏற்றம்).
+   - **நியூத்திரன் ($n$):** கருவினுள் உள்ளது (நடுநிலையானது, $0$).
+   - **இலத்திரன் ($e^-$):** கருவைச் சுற்றியுள்ள சக்தி மட்டங்களில் சுற்றுகிறது ($-1$ ஏற்றம்).
+
+2. **அணுவெண் ($Z$) மற்றும் திணிவெண் ($A$):**
+   - $Z$ = புரோத்தன்களின் எண்ணிக்கை.
+   - $A$ = புரோத்தன்கள் + நியூத்திரன்கள் ($A = Z + n$).
+   - நியூத்திரன் எண்ணிக்கை = $A - Z$.
+
+3. **இலத்திரன் நிலைமைப்பு (முதல் 20 மூலகங்கள்):**
+   - சக்தி மட்டங்கள்: $K = 2, L = 8, M = 8, N = 2$.
+   - உதா: சோடியம் ($^{23}_{11}\\text{Na}$): $2, 8, 1$.
+
+4. **சமதானிகள் (Isotopes):**
+   - ஒரே அணுவெண்ணையும் வெவ்வேறு திணிவெண்களையும் கொண்ட அணுக்கள் (உதா: $^{12}_6\\text{C}, ^{14}_6\\text{C}$).`,
+        sources: [
+          {
+            source: 'Grade 10 Science Textbook (Part 1) — Chapter 3: Structure of Matter',
+            pageNumber: 56,
+            distance: 0.09,
+          }
+        ],
+        suggestedFollowUps: [
+          'Explain simpler: The atom as a miniature solar system',
+          'Sri Lankan Example: Carbon-14 dating of ancient Sigiriya artifacts',
+          'Quiz me on atomic number and mass number'
+        ]
+      };
+    }
+
+    return {
+      answer: `### Step-by-Step Clarification: Grade 10 Science Chapter 3 — Structure of Matter
+
+1. **The Three Subatomic Particles:**
+   - **Protons ($p^+$):** Located inside the dense central nucleus; charge: $+1$, relative mass: $1$.
+   - **Neutrons ($n^0$):** Located inside the nucleus; charge: $0$ (neutral), relative mass: $1$.
+   - **Electrons ($e^-$):** Orbit in discrete energy shells around the nucleus; charge: $-1$, relative mass: $\\frac{1}{1840}$ (negligible).
+
+2. **Atomic Number ($Z$) vs. Mass Number ($A$):**
+   - **Atomic Number ($Z$):** Number of protons in the nucleus. In a neutral atom, number of electrons = $Z$.
+   - **Mass Number ($A$):** Total number of protons + neutrons ($A = Z + n$).
+   - **Nuclide Formula:**
+     $$n = A - Z$$
+     *(Example: Sodium $^{23}_{11}\\text{Na} \\implies Z = 11\\text{ protons}, 11\\text{ electrons}, n = 23 - 11 = 12\\text{ neutrons})*.
+
+3. **Writing Electron Configurations (First 20 Elements):**
+   - Energy shells fill from lowest to highest:
+     - 1st shell ($K$ shell): maximum $2$ electrons
+     - 2nd shell ($L$ shell): maximum $8$ electrons
+     - 3rd shell ($M$ shell): maximum $8$ electrons (octet stability)
+     - 4th shell ($N$ shell): up to $2$ electrons (for Calcium, $Z=20$)
+   - **Key Examples:**
+     - Carbon ($Z=6$): $2, 4$ (Valence electrons = 4 $\\to$ Group IV)
+     - Magnesium ($Z=12$): $2, 8, 2$ (Valence electrons = 2 $\\to$ Group II)
+     - Chlorine ($Z=17$): $2, 8, 7$ (Valence electrons = 7 $\\to$ Group VII)
+     - Argon ($Z=18$): $2, 8, 8$ (Stable octet noble gas $\\to$ Group VIII / 0)
+
+4. **Isotopes & Their Significance:**
+   - Atoms of the **same element** (same $Z$) that possess different numbers of neutrons (different $A$).
+   - Example: Carbon-12 ($^{12}_{6}\\text{C}$) and Carbon-14 ($^{14}_{6}\\text{C}$) used in archaeological radiocarbon dating.`,
+      sources: [
+        {
+          source: 'Grade 10 Science Textbook (Part 1) — Chapter 3: Structure of Matter, p. 52–68',
+          pageNumber: 56,
+          distance: 0.08,
+        }
+      ],
+      suggestedFollowUps: [
+        'Explain simpler: The atom as a miniature solar system',
+        'Sri Lankan Example: Carbon-14 dating of ancient Sigiriya artifacts',
+        'Quiz me on atomic number and mass number'
+      ]
+    };
+  }
+
+  private handleStructureOfMatterSimpler(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    const en = `### Super Simple Version: The Atom as a Solar System 🪐
+
+Imagine a miniature solar system:
+- **The Sun (Nucleus):** A heavy, dense ball in the exact center packed with:
+  - **Protons (Positive $p^+$):** Full of positive energy!
+  - **Neutrons (Neutral $n^0$):** Heavy pacifiers that keep protons from repelling each other.
+- **The Planets (Electrons $e^-$):** Tiny, super-fast negative particles zooming around the Sun in fixed orbits (energy rings).
+
+**The Golden Rules for the First 20 Elements:**
+- Ring 1 can only hold **2** electrons.
+- Ring 2 can only hold **8** electrons.
+- Ring 3 can only hold **8** electrons.
+- Any leftover electrons go to Ring 4!`;
+    return {
+      answer: en,
+      sources: [{ source: 'Grade 10 Science — Chapter 3 Fundamentals', pageNumber: 54 }],
+      suggestedFollowUps: [
+        'Clarify more: Step-by-step electron filling',
+        'Sri Lankan Example: Kahatagaha graphite carbon atoms',
+        'Quiz me on atomic structures'
+      ]
+    };
+  }
+
+  private handleStructureOfMatterExample(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    return {
+      answer: `**Real-World Sri Lankan Examples of Atomic Structure & Isotopes:**
+
+1. **Radiocarbon Dating at Sigiriya & Anuradhapura ($^{14}\\text{C}$ Isotopes):**
+   Living trees and plants across Sri Lanka absorb atmospheric carbon dioxide, which naturally contains a trace amount of the radioactive isotope **Carbon-14 ($^{14}_{6}\\text{C}$)** alongside standard **Carbon-12 ($^{12}_{6}\\text{C}$)**. When ancient timber beams or charcoal in the Sigiriya fortress ceased living, $^{14}\\text{C}$ began decaying into nitrogen at a known half-life ($5,730\\text{ years}$). By measuring the remaining ratio of $^{14}\\text{C}$ to $^{12}\\text{C}$, Sri Lankan archaeologists pinpointed King Kashyapa's 5th-century reign!
+
+2. **Ultra-Pure Vein Graphite in Bogala & Kahatagaha Mines:**
+   Sri Lanka is world-famous for the purest crystalline vein graphite on Earth ($>99\\%\\text{ purity}$). Every single graphite flake extracted hundreds of meters underground in Bogala consists of millions of hexagonally bonded Carbon atoms ($Z=6$, configuration $2, 4$), where each carbon atom shares 3 valence electrons and delocalizes the 4th electron, allowing graphite to conduct electricity!`,
+      sources: [{ source: 'Grade 10 Science Textbook — Sri Lankan Minerals & Applications', pageNumber: 74 }],
+      suggestedFollowUps: [
+        'Clarify more: How valence electrons determine conductivity',
+        'Explain simpler: The atom as a solar system',
+        'Quiz me on isotopes and electron shells'
+      ]
+    };
+  }
+
+  private handleStructureOfMatterQuiz(lang: 'en' | 'si' | 'ta'): RAGResponse {
+    return {
+      answer: lang === 'si'
+        ? `**ඔබේ පදාර්ථයේ ව්‍යුහය පිළිබඳ අවබෝධය පරීක්ෂා කරමු! මෙන්න ප්‍රශ්නයක්:**
+සෝඩියම් පරමාණුවක් $^{23}_{11}\\text{Na}$ ලෙස දක්වා ඇත. මෙම පරමාණුවේ න්‍යෂ්ටියේ ඇති **නියුට්‍රෝන සංඛ්‍යාව** කීයද?
+
+1. $11$
+2. $12$
+3. $23$
+
+ඔබේ පිළිතුර තෝරන්න!`
+        : `**Let's test your understanding of Chapter 3 Structure of Matter:**
+A neutral Sodium atom is represented as:
+$$^{23}_{11}\\text{Na}$$
+How many **neutrons** are present in the nucleus of this atom?
+
+1. $11$
+2. $12$
+3. $23$
+
+Type or tap your answer, and let's check your reasoning!`,
+      sources: [{ source: 'Grade 10 Science Chapter 3 Review', pageNumber: 80 }]
+    };
+  }
+
+  private handleUnmockedTopicResponse(actionName: string, lang: 'en' | 'si' | 'ta', context?: LearningContext): RAGResponse {
+    const topicId = context?.topicId || 'general';
+    const subjectId = context?.subjectId || 'curriculum';
+    return {
+      answer: lang === 'si'
+        ? `⚠️ **නොබැඳි ආදර්ශක සීමාව:** මෙම මාතෘකාව (${topicId}) සඳහා පෙර-සකසන ලද ආදර්ශක (Mock) ප්‍රතිචාරයක් නොමැත. සජීවී AI ගුරුතුමා වෙතින් සම්පූර්ණ පිළිතුරු ලබා ගැනීමට සජීවී බැක්එන්ඩ් (Live Backend) ක්‍රමවේදය ක්‍රියාත්මක කරන්න.`
+        : lang === 'ta'
+        ? `⚠️ **ஆஃப்லைன் மாதிரி அறிவிப்பு:** இந்த தலைப்புக்கு (${topicId}) மாதிரி விடை எழுதப்படவில்லை. நேரடி AI ஆசிரியரிடமிருந்து முழுமையான விளக்கத்தைப் பெற Live Backend பயன்முறைக்கு மாறவும்.`
+        : `⚠️ **Offline Mock Mode Notice:** Offline mock content is not authored for topic \`${topicId}\` (${subjectId}). To receive full pedagogical answers grounded in the textbook curriculum, please connect to the Live Backend (\`VITE_USE_MOCK_API=false\`).`,
+      sources: [],
+      suggestedFollowUps: [
+        'Explore Motion (Science)',
+        'Explore Rate of Reactions (Science)',
+        'Explore Number Systems (ICT)',
+        'Explore Inscriptions & Epigraphy (History)'
+      ]
     };
   }
 
@@ -7172,18 +7721,28 @@ class TutorService {
   private mockMode: boolean;
 
   constructor() {
-    const storedMode = typeof localStorage !== 'undefined' ? localStorage.getItem('atlas_force_mock') : null;
-    const useMock = storedMode !== null ? storedMode === 'true' : (typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_MOCK_API !== 'false');
+    const isProd = typeof import.meta !== 'undefined' && import.meta.env?.PROD;
+    const storedMode = !isProd && typeof localStorage !== 'undefined' ? localStorage.getItem('atlas_force_mock') : null;
+    const useMock = !isProd && (storedMode !== null ? storedMode === 'true' : (typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_MOCK_API !== 'false'));
     this.mockMode = useMock;
     this.adapter = useMock ? new MockTutorAdapter() : new AtlasLiveTutorAdapter();
     console.info(`[TutorService] Initialized with ${useMock ? 'MockTutorAdapter' : 'AtlasLiveTutorAdapter'}`);
   }
 
   public isMockMode(): boolean {
+    if (typeof import.meta !== 'undefined' && import.meta.env?.PROD) {
+      return false;
+    }
     return this.mockMode;
   }
 
   public setMockMode(useMock: boolean): void {
+    if (typeof import.meta !== 'undefined' && import.meta.env?.PROD) {
+      console.warn('[TutorService] Mock mode cannot be enabled in production environments.');
+      this.mockMode = false;
+      this.adapter = new AtlasLiveTutorAdapter();
+      return;
+    }
     this.mockMode = useMock;
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('atlas_force_mock', String(useMock));
