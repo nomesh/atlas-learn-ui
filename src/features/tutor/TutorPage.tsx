@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -36,11 +36,13 @@ import { setTutorLeaseToken } from '../../api/client';
 import { AuthGate, GuestBanner } from '../../components/auth/AuthGate';
 import {
   acquireTutorLease,
+  ensureTutorLease,
   sendTutorHeartbeat,
   releaseTutorLease,
   getOrCreateDeviceId,
   getDeviceFriendlyName,
   type TutorLeaseResponse,
+  type EnsureTutorLeaseResult,
 } from '../../api/authApi';
 import type { ChatMessage, SourceCitation, TutorAction, Language, Topic } from '../../types';
 
@@ -897,38 +899,45 @@ export const TutorPage: React.FC = () => {
     return lastStudentMsg.content;
   }, [messages]);
 
-  const tryAcquireLease = async (forceTakeover: boolean = false) => {
-    if (!isAuthenticated) return;
-    try {
-      const devId = getOrCreateDeviceId();
-      const devName = getDeviceFriendlyName();
-      const res = await acquireTutorLease({
-        deviceId: devId,
-        deviceName: devName,
-        forceTakeover,
-      });
-
-      if (res.status === 'GRANTED' && res.leaseToken) {
-        setLeaseToken(res.leaseToken);
-        setTutorLeaseToken(res.leaseToken);
-        setConflictData(null);
-        setIsSuperseded(false);
-      } else if (res.status === 'CONFLICT') {
-        setConflictData(res);
-        setTutorLeaseToken(null);
-      }
-    } catch (err: unknown) {
-      const axErr = err as { response?: { data?: TutorLeaseResponse; status?: number } };
-      if (axErr.response?.data?.status === 'CONFLICT') {
-        setConflictData(axErr.response.data);
-        setTutorLeaseToken(null);
-      }
+  const syncLeaseState = useCallback(async (forceTakeover: boolean = false) => {
+    if (!isAuthenticated) return null;
+    const res = await ensureTutorLease(forceTakeover);
+    if (res.status === 'GRANTED') {
+      setLeaseToken(res.leaseToken);
+      setConflictData(null);
+      setIsSuperseded(false);
+      return res.leaseToken;
+    } else if (res.status === 'CONFLICT') {
+      setConflictData(res.conflictData);
+      setLeaseToken(null);
+      setIsSuperseded(true);
+      return null;
+    } else if (res.status === 'UNAUTHENTICATED') {
+      setLeaseToken(null);
+      return null;
     }
-  };
+    return null;
+  }, [isAuthenticated]);
+
+  const tryAcquireLease = syncLeaseState;
+
+  const handleSwitchToLive = useCallback(async () => {
+    tutorService.setMockMode(false);
+    setIsMockMode(false);
+    // Clear any previous mock notices or error banners from chat
+    setMessages((prev) => prev.filter((m) => !m.content.includes('Offline Mock Mode Notice') && !m.id.includes('-err')));
+    if (isAuthenticated) {
+      await syncLeaseState(false);
+    } else {
+      login();
+    }
+  }, [isAuthenticated, login, syncLeaseState]);
 
   // Lease acquisition and periodic heartbeat
   useEffect(() => {
-    tryAcquireLease(false);
+    if (!isMockMode && isAuthenticated) {
+      syncLeaseState(false);
+    }
 
     const interval = setInterval(async () => {
       const currentToken = leaseTokenRef.current;
@@ -950,10 +959,10 @@ export const TutorPage: React.FC = () => {
         setTutorLeaseToken(null);
       }
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isMockMode, syncLeaseState]);
 
 
-  const handleSendMessage = async (textToSend?: string) => {
+  const handleSendMessage = async (textToSend?: string, isRetry: boolean = false) => {
     // Intercept sign-in action
     if (textToSend === '__SIGN_IN__') {
       login();
@@ -987,6 +996,19 @@ export const TutorPage: React.FC = () => {
 
     const text = (textToSend !== undefined ? textToSend : inputMessage).trim();
     if ((!text && !currentImg) || isSendingRef.current) return;
+
+    // Defensive Lease Gate: Before dispatching live Tutor inference, ensure an active lease exists
+    if (!tutorService.isMockMode()) {
+      if (!isAuthenticated) {
+        login();
+        return;
+      }
+      const token = await syncLeaseState(false);
+      if (!token) {
+        console.warn('[TutorPage] Aborting live message send: No active lease token.');
+        return;
+      }
+    }
 
     isSendingRef.current = true;
 
@@ -1089,15 +1111,65 @@ export const TutorPage: React.FC = () => {
         ? 'மன்னிக்கவும், இணைப்புப் பிழை ஏற்பட்டது. சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.'
         : 'I encountered a brief connection issue. Let us try that again in a moment.';
 
-      const axiosErr = err as { response?: { status?: number; data?: { error?: string; message?: string } } };
+      const axiosErr = err as {
+        response?: {
+          status?: number;
+          data?: {
+            error?: string;
+            message?: string;
+            status?: string;
+            activeDeviceName?: string;
+          };
+        };
+      };
       const status = axiosErr?.response?.status;
+      const errorCode = axiosErr?.response?.data?.error || axiosErr?.response?.data?.status;
       let errorActions: TutorAction[] | undefined = undefined;
 
-      if (status === 409) {
+      if (status === 428 || errorCode === 'LEASE_REQUIRED') {
+        // HTTP 428 Precondition Required: Tutor lease required
+        // Invariant: MUST NOT set isSuperseded(true) and MUST NOT show false device takeover dialog/toast
+        if (!isRetry) {
+          console.info('[TutorPage] Lease required (428). Attempting automatic lease acquisition and retry...');
+          const reacquiredToken = await syncLeaseState(false);
+          if (reacquiredToken) {
+            isSendingRef.current = false;
+            return handleSendMessage(studentMessageText, true);
+          }
+        }
+        errorText = language === 'si'
+          ? 'සැසිය සක්‍රිය කිරීම අවශ්‍යයි (428 Precondition Required). කරුණාකර නැවත උත්සාහ කරන්න.'
+          : language === 'ta'
+          ? 'அமர்வைச் செயல்படுத்த வேண்டும் (428 Precondition Required). மீண்டும் முயற்சிக்கவும்.'
+          : 'A tutor session lease is required. Please reconnect or try again.';
+        errorActions = [
+          {
+            id: `retry-lease-${Date.now()}`,
+            label: language === 'si' ? 'නැවත උත්සාහ කරන්න' : language === 'ta' ? 'மீண்டும் முயற்சிக்கவும்' : 'Retry Question',
+            prompt: studentMessageText,
+          },
+        ];
+      } else if (
+        status === 409 &&
+        (errorCode === 'CONFLICT' ||
+         errorCode === 'DEVICE_CONFLICT' ||
+         errorCode === 'LEASE_SUPERSEDED' ||
+         errorCode === 'LEASE_EXPIRED' ||
+         !errorCode)
+      ) {
         const errorData = axiosErr?.response?.data;
         setIsSuperseded(true);
         setLeaseToken(null);
         setTutorLeaseToken(null);
+        if (errorData) {
+          setConflictData({
+            status: 'CONFLICT',
+            leaseToken: null,
+            expiresAt: null,
+            activeDeviceName: errorData.activeDeviceName || null,
+            message: errorData.message || 'Another device is currently using this tutor session.',
+          });
+        }
         tryAcquireLease(false);
 
         errorText = language === 'si'
@@ -1284,10 +1356,14 @@ export const TutorPage: React.FC = () => {
           {!import.meta.env.PROD && (
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
                 const next = !isMockMode;
-                tutorService.setMockMode(next);
-                setIsMockMode(next);
+                if (!next) {
+                  await handleSwitchToLive();
+                } else {
+                  tutorService.setMockMode(true);
+                  setIsMockMode(true);
+                }
               }}
               className={`px-2.5 py-1 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5 ${
                 isMockMode
@@ -1358,10 +1434,7 @@ export const TutorPage: React.FC = () => {
           </div>
           <button
             type="button"
-            onClick={() => {
-              tutorService.setMockMode(false);
-              setIsMockMode(false);
-            }}
+            onClick={handleSwitchToLive}
             className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white text-[11px] rounded-lg transition-colors flex-shrink-0 font-bold"
           >
             Switch to Live Backend

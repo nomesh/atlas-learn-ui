@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient, getTutorLeaseToken, setTutorLeaseToken } from './client';
 
 export interface LearnerProfile {
   id: string;
@@ -211,6 +211,82 @@ export async function acquireTutorLease(req: TutorLeaseRequest): Promise<TutorLe
   return res.data;
 }
 
+export type EnsureTutorLeaseResult =
+  | { status: 'GRANTED'; leaseToken: string }
+  | { status: 'CONFLICT'; conflictData: TutorLeaseResponse }
+  | { status: 'UNAUTHENTICATED' }
+  | { status: 'ERROR'; error: unknown };
+
+let inFlightLeasePromise: Promise<EnsureTutorLeaseResult> | null = null;
+
+/**
+ * Idempotent lease gate:
+ * - If a valid active lease token exists and not forcing takeover, reuses it immediately.
+ * - If an acquisition is already in progress, awaits the exact same in-flight promise.
+ * - Otherwise acquires a lease from the backend, caches it in client storage, and returns the result.
+ * - Disallows duplicate concurrent network calls.
+ */
+export async function ensureTutorLease(forceTakeover: boolean = false): Promise<EnsureTutorLeaseResult> {
+  if (!forceTakeover) {
+    const existing = getTutorLeaseToken();
+    if (existing) {
+      return { status: 'GRANTED', leaseToken: existing };
+    }
+  }
+
+  if (inFlightLeasePromise) {
+    return inFlightLeasePromise;
+  }
+
+  inFlightLeasePromise = (async () => {
+    try {
+      const devId = getOrCreateDeviceId();
+      const devName = getDeviceFriendlyName();
+      const res = await acquireTutorLease({
+        deviceId: devId,
+        deviceName: devName,
+        forceTakeover: !!forceTakeover,
+      });
+
+      if (res.status === 'GRANTED' && res.leaseToken) {
+        setTutorLeaseToken(res.leaseToken);
+        return { status: 'GRANTED' as const, leaseToken: res.leaseToken };
+      } else if (res.status === 'CONFLICT') {
+        setTutorLeaseToken(null);
+        return { status: 'CONFLICT' as const, conflictData: res };
+      } else {
+        return { status: 'ERROR' as const, error: new Error(res.message || 'Lease not granted') };
+      }
+    } catch (err: unknown) {
+      const axErr = err as { response?: { status?: number; data?: TutorLeaseResponse } };
+      if (axErr.response?.status === 401) {
+        return { status: 'UNAUTHENTICATED' as const };
+      }
+      if (axErr.response?.status === 409 || axErr.response?.data?.status === 'CONFLICT') {
+        const conflict = axErr.response.data || {
+          status: 'CONFLICT',
+          leaseToken: null,
+          expiresAt: null,
+          activeDeviceName: null,
+          message: 'Another device is currently using this tutor session.',
+        };
+        setTutorLeaseToken(null);
+        return { status: 'CONFLICT' as const, conflictData: conflict };
+      }
+      return { status: 'ERROR' as const, error: err };
+    } finally {
+      inFlightLeasePromise = null;
+    }
+  })();
+
+  return inFlightLeasePromise;
+}
+
+export function resetTutorLeaseGate(): void {
+  inFlightLeasePromise = null;
+  setTutorLeaseToken(null);
+}
+
 /**
  * Extends the active lease heartbeat every 30 seconds.
  */
@@ -231,6 +307,8 @@ export async function releaseTutorLease(leaseToken: string): Promise<void> {
     await apiClient.post('/api/learn/tutor/lease/release', { leaseToken });
   } catch (err) {
     console.warn('[authApi] Failed to release tutor lease:', err);
+  } finally {
+    resetTutorLeaseGate();
   }
 }
 
