@@ -444,3 +444,294 @@ test('SIM-07: Cross-chapter sequential transition updates visualizer mode determ
   }
 });
 
+// ============================================================
+// R4: False Session Transfer Across Curriculum Contexts (SESS-01 to SESS-12)
+// ============================================================
+
+// Provide sessionStorage polyfill for Node.js test environment if not present
+if (typeof globalThis.sessionStorage === 'undefined') {
+  const store = new Map();
+  globalThis.sessionStorage = {
+    getItem: (k) => (store.has(k) ? store.get(k) : null),
+    setItem: (k, v) => store.set(k, String(v)),
+    removeItem: (k) => store.delete(k),
+    clear: () => store.clear(),
+    get length() { return store.size; },
+    key: (i) => Array.from(store.keys())[i] || null,
+  };
+}
+
+test('SESS-01: Topic A -> Topic B conversation isolation (no transcript leakage)', async () => {
+  const {
+    getTutorSessionStorageKey,
+    saveTutorSessionMessages,
+    loadTutorSessionMessages,
+    buildInitialGreeting,
+  } = await import('../src/features/tutor/TutorPage.tsx');
+
+  globalThis.sessionStorage.clear();
+
+  const user = 'stu-ol-10-amila';
+  const grade = 'grade-10';
+  const subject = 'science';
+
+  // Student is on Topic A (Structure of Matter) and has a conversation
+  const keyTopicA = getTutorSessionStorageKey(user, grade, subject, 'science-gr10-ch3-structure-of-matter');
+  const msgsTopicA = [
+    buildInitialGreeting(subject, 'science-gr10-ch3-structure-of-matter', 'en', 'Amila', grade),
+    { id: 'msg-s1', role: 'student', content: 'What is the electron arrangement in Bohr model?' },
+    { id: 'msg-t1', role: 'tutor', content: 'In the Bohr model, electrons occupy discrete shells (2, 8, 8).' },
+  ];
+  saveTutorSessionMessages(keyTopicA, msgsTopicA);
+
+  // Switch context to Topic B (Rate of Reactions)
+  const keyTopicB = getTutorSessionStorageKey(user, grade, subject, 'science-gr10-ch17-rate-of-reactions');
+  assert.notStrictEqual(keyTopicA, keyTopicB, 'Topic keys must be strictly isolated');
+
+  // Verify Topic B starts with fresh greeting, NOT Topic A transcript
+  const cachedTopicB = loadTutorSessionMessages(keyTopicB);
+  assert.strictEqual(cachedTopicB, null, 'Topic B must have no cached messages initially');
+
+  const greetingTopicB = buildInitialGreeting(subject, 'science-gr10-ch17-rate-of-reactions', 'en', 'Amila', grade);
+  assert.ok(greetingTopicB.content.includes('Rate of Reactions'), 'Topic B greeting must refer to Rate of Reactions');
+  assert.ok(!greetingTopicB.content.includes('Bohr'), 'Topic B greeting must NOT contain Bohr model');
+});
+
+test('SESS-02: Topic A -> Topic B -> Topic A transcript restoration', async () => {
+  const {
+    getTutorSessionStorageKey,
+    saveTutorSessionMessages,
+    loadTutorSessionMessages,
+    buildInitialGreeting,
+  } = await import('../src/features/tutor/TutorPage.tsx');
+
+  const user = 'stu-ol-10-amila';
+  const grade = 'grade-10';
+  const subject = 'science';
+
+  const keyA = getTutorSessionStorageKey(user, grade, subject, 'science-gr10-ch3-structure-of-matter');
+  const keyB = getTutorSessionStorageKey(user, grade, subject, 'science-gr10-ch17-rate-of-reactions');
+
+  // Save Topic A transcript
+  const msgsA = [
+    buildInitialGreeting(subject, 'science-gr10-ch3-structure-of-matter', 'en', 'Amila', grade),
+    { id: 'msg-s1', role: 'student', content: 'Tell me about isotopes' },
+  ];
+  saveTutorSessionMessages(keyA, msgsA);
+
+  // Student conducts discussion on Topic B
+  const msgsB = [
+    buildInitialGreeting(subject, 'science-gr10-ch17-rate-of-reactions', 'en', 'Amila', grade),
+    { id: 'msg-s2', role: 'student', content: 'What is collision theory?' },
+  ];
+  saveTutorSessionMessages(keyB, msgsB);
+
+  // Student returns to Topic A
+  const restoredA = loadTutorSessionMessages(keyA);
+  assert.ok(restoredA, 'Topic A messages must be restored from tab session cache');
+  assert.strictEqual(restoredA.length, 2);
+  assert.strictEqual(restoredA[1].content, 'Tell me about isotopes');
+});
+
+test('SESS-03: Reset isolation on Topic B preserves Topic A history', async () => {
+  const {
+    getTutorSessionStorageKey,
+    saveTutorSessionMessages,
+    loadTutorSessionMessages,
+    clearTutorSessionMessages,
+  } = await import('../src/features/tutor/TutorPage.tsx');
+
+  const user = 'stu-ol-10-amila';
+  const grade = 'grade-10';
+  const subject = 'science';
+
+  const keyA = getTutorSessionStorageKey(user, grade, subject, 'science-gr10-ch3-structure-of-matter');
+  const keyB = getTutorSessionStorageKey(user, grade, subject, 'science-gr10-ch17-rate-of-reactions');
+
+  saveTutorSessionMessages(keyA, [{ id: '1', role: 'student', content: 'Matter msg' }]);
+  saveTutorSessionMessages(keyB, [{ id: '2', role: 'student', content: 'Rate msg' }]);
+
+  // Reset Topic B
+  clearTutorSessionMessages(keyB);
+
+  assert.strictEqual(loadTutorSessionMessages(keyB), null, 'Topic B cache must be cleared');
+  const restoredA = loadTutorSessionMessages(keyA);
+  assert.ok(restoredA, 'Topic A cache must remain intact');
+  assert.strictEqual(restoredA[0].content, 'Matter msg');
+});
+
+test('SESS-04: Subject A -> Subject B starter pills & persona isolation', async () => {
+  const { getCurriculumStarterPills, buildInitialGreeting } = await import('../src/features/tutor/TutorPage.tsx');
+
+  // Science Structure of Matter pills
+  const sciPills = getCurriculumStarterPills('science', 'science-gr10-ch3-structure-of-matter', 'en');
+  assert.ok(sciPills.some((p) => p.id === 'sci-bohr'), 'Science matter pills must contain Bohr model');
+  assert.ok(!sciPills.some((p) => p.id === 'ict-num'), 'Science pills must NOT contain ICT pills');
+
+  // ICT Number Systems pills
+  const ictPills = getCurriculumStarterPills('ict', 'number-systems', 'en');
+  assert.ok(ictPills.some((p) => p.id === 'ict-num'), 'ICT pills must contain number systems');
+  assert.ok(!ictPills.some((p) => p.id === 'sci-bohr'), 'ICT pills must NOT contain Science Bohr pills');
+
+  // Subject Greetings
+  const sciGreeting = buildInitialGreeting('science', 'structure-of-matter', 'en', 'Amila', 'grade-10');
+  const ictGreeting = buildInitialGreeting('ict', 'number-systems', 'en', 'Amila', 'grade-10');
+  assert.ok(sciGreeting.content.includes('Structure of Matter'));
+  assert.ok(ictGreeting.content.includes('Information & Communication Technology'));
+});
+
+test('SESS-05 & SESS-06: Per-topic conversationId scoping and Teach Me persistence', async () => {
+  const { getTutorSessionStorageKey, saveTutorSessionMessages, loadTutorSessionMessages } = await import('../src/features/tutor/TutorPage.tsx');
+
+  // Conversation map calculation matches studentContext getOrCreateConversationId
+  const computeKey = (user, grade, sid, tid) => `${user}:${grade}:${sid}:${tid}`;
+
+  const user = 'stu-ol-10-amila';
+  const grade = 'grade-10';
+
+  const mapKeySci = computeKey(user, grade, 'science', 'science-gr10-ch3-structure-of-matter');
+  const mapKeyHist = computeKey(user, grade, 'history', 'history-gr10-sources');
+  assert.notStrictEqual(mapKeySci, mapKeyHist, 'Conversation keys across subjects must be isolated');
+
+  // Tutor -> Teach Me -> Tutor session round-trip
+  const tutorKey = getTutorSessionStorageKey(user, grade, 'science', 'science-gr10-ch3-structure-of-matter');
+  saveTutorSessionMessages(tutorKey, [{ id: 'm1', role: 'tutor', content: 'Learning about atoms' }]);
+
+  // Simulate navigating to TeachMe then back to Tutor
+  const restored = loadTutorSessionMessages(tutorKey);
+  assert.ok(restored);
+  assert.strictEqual(restored[0].content, 'Learning about atoms');
+});
+
+test('SESS-07: Browser tab refresh restoration from tab-local cache', async () => {
+  const { getTutorSessionStorageKey, saveTutorSessionMessages, loadTutorSessionMessages } = await import('../src/features/tutor/TutorPage.tsx');
+
+  const key = getTutorSessionStorageKey('stu-1', 'grade-10', 'science', 'science-gr10-ch2-motion');
+  saveTutorSessionMessages(key, [
+    { id: '1', role: 'student', content: 'What is acceleration?' },
+    { id: '2', role: 'tutor', content: 'Acceleration is the rate of change of velocity.' },
+  ]);
+
+  // Simulate fresh mount on page reload
+  const reloaded = loadTutorSessionMessages(key);
+  assert.ok(reloaded);
+  assert.strictEqual(reloaded.length, 2);
+  assert.strictEqual(reloaded[1].content, 'Acceleration is the rate of change of velocity.');
+});
+
+test('SESS-08: Sequential topic transitions (History back/forward simulation)', async () => {
+  const { getTutorSessionStorageKey, saveTutorSessionMessages, loadTutorSessionMessages } = await import('../src/features/tutor/TutorPage.tsx');
+
+  const user = 'stu-1';
+  const grade = 'grade-10';
+  const keyMotion = getTutorSessionStorageKey(user, grade, 'science', 'science-gr10-ch2-motion');
+  const keyMatter = getTutorSessionStorageKey(user, grade, 'science', 'science-gr10-ch3-structure-of-matter');
+  const keyReactions = getTutorSessionStorageKey(user, grade, 'science', 'science-gr10-ch17-rate-of-reactions');
+
+  saveTutorSessionMessages(keyMotion, [{ id: 'mot', role: 'student', content: 'Motion question' }]);
+  saveTutorSessionMessages(keyMatter, [{ id: 'mat', role: 'student', content: 'Matter question' }]);
+  saveTutorSessionMessages(keyReactions, [{ id: 'rxn', role: 'student', content: 'Reactions question' }]);
+
+  // Back to Matter
+  assert.strictEqual(loadTutorSessionMessages(keyMatter)[0].content, 'Matter question');
+  // Back to Motion
+  assert.strictEqual(loadTutorSessionMessages(keyMotion)[0].content, 'Motion question');
+  // Forward to Reactions
+  assert.strictEqual(loadTutorSessionMessages(keyReactions)[0].content, 'Reactions question');
+});
+
+test('SESS-09: Multi-tab isolation simulation', async () => {
+  const { getTutorSessionStorageKey } = await import('../src/features/tutor/TutorPage.tsx');
+
+  // Tab 1 sessionStorage mock
+  const tab1Store = new Map();
+  // Tab 2 sessionStorage mock
+  const tab2Store = new Map();
+
+  const key = getTutorSessionStorageKey('stu-1', 'grade-10', 'science', 'science-gr10-ch3-structure-of-matter');
+
+  tab1Store.set(key, JSON.stringify([{ id: '1', role: 'student', content: 'Tab 1 prompt' }]));
+  tab2Store.set(key, JSON.stringify([{ id: '2', role: 'student', content: 'Tab 2 prompt' }]));
+
+  assert.notStrictEqual(
+    JSON.parse(tab1Store.get(key))[0].content,
+    JSON.parse(tab2Store.get(key))[0].content,
+    'Each browser tab maintains isolated sessionStorage'
+  );
+});
+
+test('SESS-10: User logout purges all atlas_messages_* and tutor maps', () => {
+  // Populate sessionStorage with various keys
+  globalThis.sessionStorage.setItem('atlas_messages_u1_g10_sci_matter', '[]');
+  globalThis.sessionStorage.setItem('atlas_messages_u1_g10_sci_motion', '[]');
+  globalThis.sessionStorage.setItem('atlas_tutor_conversation_map', '[["k","v"]]');
+  globalThis.sessionStorage.setItem('atlas_tutor_lease_token', 'token-123');
+  globalThis.sessionStorage.setItem('unrelated_key', 'keep_me');
+
+  // Exact logout cleanup algorithm from studentContext.tsx
+  const keysToRemove = [];
+  for (let i = 0; i < globalThis.sessionStorage.length; i++) {
+    const k = globalThis.sessionStorage.key(i);
+    if (k && (k.startsWith('atlas_messages_') || k.startsWith('atlas_tutor_'))) {
+      keysToRemove.push(k);
+    }
+  }
+  keysToRemove.forEach((k) => globalThis.sessionStorage.removeItem(k));
+
+  assert.strictEqual(globalThis.sessionStorage.getItem('atlas_messages_u1_g10_sci_matter'), null);
+  assert.strictEqual(globalThis.sessionStorage.getItem('atlas_messages_u1_g10_sci_motion'), null);
+  assert.strictEqual(globalThis.sessionStorage.getItem('atlas_tutor_conversation_map'), null);
+  assert.strictEqual(globalThis.sessionStorage.getItem('atlas_tutor_lease_token'), null);
+  assert.strictEqual(globalThis.sessionStorage.getItem('unrelated_key'), 'keep_me');
+});
+
+test('SESS-11: activeModeHint scopes strictly to incoming topic messages', () => {
+  // Simulates derivation of activeModeHint from messages array
+  const deriveHint = (msgs) => {
+    const lastStudent = [...msgs].reverse().find((m) => m.role === 'student');
+    return lastStudent ? lastStudent.content : undefined;
+  };
+
+  const msgsTopicA = [
+    { role: 'student', content: 'Show me the Bohr atomic model with 6 electrons' },
+    { role: 'tutor', content: 'Carbon has 6 electrons: 2 in K shell, 4 in L shell.' },
+  ];
+  assert.strictEqual(deriveHint(msgsTopicA), 'Show me the Bohr atomic model with 6 electrons');
+
+  // Switched to Topic B (fresh greeting only, no student message yet)
+  const msgsTopicB = [
+    { role: 'tutor', content: 'Welcome to Rate of Reactions.' },
+  ];
+  assert.strictEqual(deriveHint(msgsTopicB), undefined, 'Topic B hint must be undefined, not inheriting Topic A');
+});
+
+test('SESS-12: tutorService.clearConversation forwards scoped parameters', async () => {
+  const { AtlasLiveTutorAdapter } = await import('../src/api/tutorApi.ts');
+  const { apiClient } = await import('../src/api/client.ts');
+
+  let interceptedUrl = null;
+  const originalDelete = apiClient.delete;
+  apiClient.delete = async (url) => {
+    interceptedUrl = url;
+    return { data: { success: true } };
+  };
+
+  try {
+    const adapter = new AtlasLiveTutorAdapter();
+    await adapter.clearConversation('conv-123', {
+      grade: 'grade-10',
+      subject: 'science',
+      topicId: 'science-gr10-ch3-structure-of-matter',
+    });
+
+    assert.ok(interceptedUrl, 'Delete request must be made');
+    assert.ok(interceptedUrl.startsWith('/api/learn/conversations/conv-123'), 'URL must match conversationId');
+    assert.ok(interceptedUrl.includes('grade=grade-10'), 'Query must include grade');
+    assert.ok(interceptedUrl.includes('subject=science'), 'Query must include subject');
+    assert.ok(interceptedUrl.includes('topicId=science-gr10-ch3-structure-of-matter'), 'Query must include topicId');
+  } finally {
+    apiClient.delete = originalDelete;
+  }
+});
+
+

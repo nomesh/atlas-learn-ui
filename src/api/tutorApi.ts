@@ -1,13 +1,19 @@
 import { apiClient } from './client';
 import type { LearningContext, RAGResponse, SourceCitation } from '../types';
 
+export interface TutorClearOptions {
+  grade?: string;
+  subject?: string;
+  topicId?: string;
+}
+
 /**
  * Interface contract for Tutor backend adapters.
  * UI components interact strictly through this boundary.
  */
 export interface TutorAdapter {
   ask(question: string, context: LearningContext): Promise<RAGResponse>;
-  clearConversation(conversationId: string): Promise<void>;
+  clearConversation(conversationId: string, options?: TutorClearOptions): Promise<void>;
 }
 
 /**
@@ -37,9 +43,14 @@ export class AtlasLiveTutorAdapter implements TutorAdapter {
     };
   }
 
-  async clearConversation(conversationId: string): Promise<void> {
+  async clearConversation(conversationId: string, options?: TutorClearOptions): Promise<void> {
     try {
-      await apiClient.delete(`/api/learn/conversations/${conversationId}`);
+      const params = new URLSearchParams();
+      if (options?.grade) params.set('grade', options.grade);
+      if (options?.subject) params.set('subject', options.subject);
+      if (options?.topicId) params.set('topicId', options.topicId);
+      const query = params.toString() ? `?${params.toString()}` : '';
+      await apiClient.delete(`/api/learn/conversations/${conversationId}${query}`);
     } catch (err) {
       console.warn('[AtlasLiveTutorAdapter] Failed to clear remote conversation:', err);
     }
@@ -7707,7 +7718,7 @@ Thank you for your question! Here is a structured educational explanation based 
     };
   }
 
-  async clearConversation(_conversationId: string): Promise<void> {
+  async clearConversation(_conversationId: string, _options?: TutorClearOptions): Promise<void> {
     // No-op for mock adapter
   }
 }
@@ -7755,8 +7766,8 @@ class TutorService {
     return this.adapter.ask(question, context);
   }
 
-  public async clearConversation(conversationId: string): Promise<void> {
-    await this.adapter.clearConversation(conversationId);
+  public async clearConversation(conversationId: string, options?: TutorClearOptions): Promise<void> {
+    await this.adapter.clearConversation(conversationId, options);
   }
 }
 

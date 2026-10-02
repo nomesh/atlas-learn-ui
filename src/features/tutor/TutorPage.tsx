@@ -350,6 +350,302 @@ export const detectCurriculumContextFromMessage = (
   return null;
 };
 
+/**
+ * Tab-local cache key for tutor messages scoped strictly by:
+ * user + grade + subject + topic
+ */
+export const getTutorSessionStorageKey = (
+  userId: string,
+  grade: string,
+  subjectId: string,
+  topicId: string
+): string => {
+  return `atlas_messages_${userId || 'guest'}_${grade || 'grade-10'}_${subjectId || 'default'}_${topicId || 'default'}`;
+};
+
+export const loadTutorSessionMessages = (key: string): ChatMessage[] | null => {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? (parsed as ChatMessage[]) : null;
+  } catch {
+    return null;
+  }
+};
+
+export const saveTutorSessionMessages = (key: string, msgs: ChatMessage[]): void => {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(msgs));
+  } catch {
+    // quota exceeded — gracefully continue in-memory
+  }
+};
+
+export const clearTutorSessionMessages = (key: string): void => {
+  try {
+    sessionStorage.removeItem(key);
+  } catch {
+    // ignore
+  }
+};
+
+export function getCurriculumStarterPills(
+  subjectId?: string,
+  topicId?: string,
+  language: Language = 'en'
+): TutorAction[] {
+  const sub = (subjectId || '').toLowerCase();
+  const top = (topicId || '').toLowerCase();
+
+  if (sub === 'science') {
+    if (top.includes('matter') || top.includes('bohr') || top.includes('atom') || top.includes('sci-10-matter') || top === 'structure-of-matter') {
+      if (language === 'si') {
+        return [
+          { id: 'sci-bohr', label: 'බෝර් පරමාණුක ආකෘතිය', prompt: 'බෝර් පරමාණුක ආකෘතිය සහ ඉලෙක්ට්‍රෝන වින්‍යාසය (2, 8, 8) පැහැදිලි කරන්න' },
+          { id: 'sci-isotopes', label: 'සමස්ථානික සහ පරමාණුක ක්‍රමාංකය', prompt: 'සමස්ථානික යනු මොනවාද? පරමාණුක ක්‍රමාංකය සහ ස්කන්ධ ක්‍රමාංකය අතර වෙනස කුමක්ද?' },
+          { id: 'sci-matter', label: 'පදාර්ථයේ ව්‍යුහය', prompt: 'පදාර්ථයේ ව්‍යුහය සහ උපපරමාණුක අංශු (ප්‍රෝටෝන, නියුට්‍රෝන, ඉලෙක්ට්‍රෝන) ගැන පහදා දෙන්න' },
+        ];
+      }
+      if (language === 'ta') {
+        return [
+          { id: 'sci-bohr', label: 'போர் அணு மாதிரி', prompt: 'போர் அணு மாதிரி மற்றும் இலத்திரன் கட்டமைப்பு (2, 8, 8) பற்றி விளக்குக' },
+          { id: 'sci-isotopes', label: 'சமதானிகள் & அணு எண்', prompt: 'சமதானிகள் என்றால் என்ன? அணு எண் மற்றும் திணிவு எண் தொடர்பு என்ன?' },
+          { id: 'sci-matter', label: 'சடப்பொருளின் கட்டமைப்பு', prompt: 'சடப்பொருளின் அடிப்படை கட்டமைப்பு மற்றும் உப-அணு துணிக்கைகள் பற்றி விளக்குக' },
+        ];
+      }
+      return [
+        { id: 'sci-bohr', label: 'Bohr Atomic Model', prompt: 'Explain the Bohr atomic model and electron configuration (2, 8, 8)' },
+        { id: 'sci-isotopes', label: 'Isotopes & Atomic Number', prompt: 'What are isotopes and how do atomic and mass numbers relate?' },
+        { id: 'sci-matter', label: 'Structure of Matter', prompt: 'Explain the structure of matter and subatomic particles (protons, neutrons, electrons)' },
+      ];
+    }
+
+    if (top.includes('reaction') || top.includes('rate') || top.includes('sci-10-reactions') || top === 'rate-of-reactions') {
+      if (language === 'si') {
+        return [
+          { id: 'sci-rate-factors', label: 'ප්‍රතික්‍රියා සීඝ්‍රතාව කෙරෙහි බලපාන සාධක', prompt: 'රසායනික ප්‍රතික්‍රියාවක සීඝ්‍රතාව කෙරෙහි බලපාන සාධක මොනවාද?' },
+          { id: 'sci-collision', label: 'ගැටුම් වාදය සහ උත්ප්‍රේරක', prompt: 'ගැටුම් වාදය සහ උත්ප්‍රේරක මගින් ප්‍රතික්‍රියා සීඝ්‍රතාව වැඩි කරන්නේ කෙසේදැයි පැහැදිලි කරන්න' },
+        ];
+      }
+      if (language === 'ta') {
+        return [
+          { id: 'sci-rate-factors', label: 'தாக்க வீதத்தை பாதிக்கும் காரணிகள்', prompt: 'இரசாயனத் தாக்க வீதத்தை பாதிக்கும் முக்கிய காரணிகள் எவை?' },
+          { id: 'sci-collision', label: 'மோதுகைக் கோட்பாடு & ஊக்கிகள்', prompt: 'மோதுகைக் கோட்பாடு மற்றும் ஊக்கிகள் தாக்க வீதத்தை எவ்வாறு அதிகரிக்கின்றன?' },
+        ];
+      }
+      return [
+        { id: 'sci-rate-factors', label: 'Factors Affecting Reaction Rate', prompt: 'What factors affect the rate of a chemical reaction?' },
+        { id: 'sci-collision', label: 'Collision Theory & Catalysts', prompt: 'Explain collision theory and how catalysts speed up reaction rates' },
+      ];
+    }
+
+    if (top.includes('motion') || top.includes('linear') || top.includes('sci-10-motion') || top === 'motion-in-a-straight-line') {
+      if (language === 'si') {
+        return [
+          { id: 'sci-motion-eq', label: 'චලිත සමීකරණ (v = u + at)', prompt: 'සරල රේඛීය චලිත සමීකරණ (v = u + at, s = ut + 1/2at²) පැහැදිලි කරන්න' },
+          { id: 'sci-vel-time', label: 'ප්‍රවේග-කාල ප්‍රස්තාර', prompt: 'ප්‍රවේග-කාල ප්‍රස්තාරයකින් ත්වරණය සහ විස්ථාපනය සොයන්නේ කෙසේද?' },
+        ];
+      }
+      if (language === 'ta') {
+        return [
+          { id: 'sci-motion-eq', label: 'இயக்கச் சமன்பாடுகள் (v = u + at)', prompt: 'நேர்கோட்டு இயக்க சமன்பாடுகளை (v = u + at, s = ut + 1/2at²) விளக்குக' },
+          { id: 'sci-vel-time', label: 'வேக-நேர வரைபடங்கள்', prompt: 'வேக-நேர வரைபடத்திலிருந்து ஆர்முடுகல் மற்றும் இடப்பெயர்ச்சியை எவ்வாறு கணிப்பது?' },
+        ];
+      }
+      return [
+        { id: 'sci-motion-eq', label: 'Equations of Motion', prompt: 'Can you explain the equations of linear motion (v = u + at, s = ut + 1/2at²)?' },
+        { id: 'sci-vel-time', label: 'Velocity-Time Graphs', prompt: 'How do you determine acceleration and displacement from a velocity-time graph?' },
+      ];
+    }
+
+    // Default science / Grade 8 Photosynthesis
+    if (language === 'si') {
+      return [
+        { id: 'sci-photo', label: 'ප්‍රභාසංශ්ලේෂණය', prompt: 'ශාකවල ප්‍රභාසංශ්ලේෂණ ක්‍රියාවලිය පැහැදිලි කරන්න' },
+        { id: 'sci-stomata', label: 'පත්‍ර රන්ද්‍ර සහ වායු හුවමාරුව', prompt: 'පත්‍ර රන්ද්‍ර මගින් වායු හුවමාරුව සිදුවන ආකාරය පැහැදිලි කරන්න' },
+        { id: 'sci-starch', label: 'පිෂ්ටය හඳුනාගැනීමේ පරීක්ෂාව', prompt: 'පත්‍ර වල පිෂ්ටය හඳුනාගැනීම සඳහා අයඩින් පරීක්ෂාව පැහැදිලි කරන්න' },
+      ];
+    }
+    if (language === 'ta') {
+      return [
+        { id: 'sci-photo', label: 'ஒளித்தொகுப்பு செயல்முறை', prompt: 'தாவரங்களில் ஒளித்தொகுப்பு நடைபெறும் செயல்முறையை விளக்குக' },
+        { id: 'sci-stomata', label: 'இலைவாய்களும் வாயுப் பரிமாற்றமும்', prompt: 'இலைவாய்கள் வாயுப் பரிமாற்றத்தை எவ்வாறு கட்டுப்படுத்துகின்றன?' },
+        { id: 'sci-starch', label: 'மாப்பொருள் பரிசோதனை', prompt: 'இலைகளில் மாப்பொருளை கண்டறியும் அயடீன் பரிசோதனையை விளக்குக' },
+      ];
+    }
+    return [
+      { id: 'sci-photo', label: 'Science: Photosynthesis', prompt: 'Explain the process of photosynthesis in plants' },
+      { id: 'sci-stomata', label: 'Science: Stomata & Gas Exchange', prompt: 'How do leaf stomata regulate gas exchange?' },
+      { id: 'sci-starch', label: 'Science: Plant Starch Testing', prompt: 'Explain the iodine test experiment for starch in leaves' },
+    ];
+  }
+
+  if (sub === 'ict') {
+    if (language === 'si') {
+      return [
+        { id: 'ict-num', label: '1 වන පාඩම: සංඛ්‍යා පද්ධති (ද්විමය)', prompt: 'සංඛ්‍යා පද්ධති සහ ද්විමය පරිවර්තනය පැහැදිලි කරන්න' },
+        { id: 'ict-cfg', label: '2 වන පාඩම: පරිගණක වින්‍යාසය සහ යතුරුපුවරු', prompt: 'Can you explain more about Desktop Customization & Display Settings?' },
+        { id: 'ict-wp', label: '3 වන පාඩම: වදන් සැකසුම (Word Processing)', prompt: '3 වන පරිච්ඡේදය: වදන් සැකසුම සහ ලේඛන හැඩසවි ගැන්වීම පැහැදිලි කරන්න' },
+        { id: 'ict-prg', label: '4 වන පාඩම: Scratch ක්‍රමලේඛනය (Loops)', prompt: 'Scratch හි විචල්‍යයන් සහ පුනරාවර්තන loops ක්‍රියාකරන්නේ කෙසේද?' },
+        { id: 'ict-phy', label: '5 වන පාඩම: භෞතික පරිගණනය (micro:bit)', prompt: 'භෞතික පරිගණනයේ සංවේදක සහ ක්‍රියාකරවන අතර වෙනස කුමක්ද?' },
+      ];
+    }
+    if (language === 'ta') {
+      return [
+        { id: 'ict-num', label: 'பாடம் 1: எண் முறைகள் (இருமம்/தசமம்)', prompt: 'எண் முறைகள் மற்றும் இரும மாற்றங்களை விளக்குங்கள்' },
+        { id: 'ict-cfg', label: 'பாடம் 2: கணினி உள்ளமைவு & விசைப்பலகை', prompt: 'Can you explain more about Desktop Customization & Display Settings?' },
+        { id: 'ict-wp', label: 'பாடம் 3: சொல் செயலாக்கம் (Word Processing)', prompt: 'பாடம் 3: சொல் செயலாக்கம் மற்றும் ஆவண வடிவமைப்பு பற்றி விளக்குங்கள்' },
+        { id: 'ict-prg', label: 'பாடம் 4: Scratch நிரலாக்கம் (Loops)', prompt: 'Scratch இல் மாறிகள் மற்றும் சுழற்சிகள் எவ்வாறு செயல்படுகின்றன?' },
+        { id: 'ict-phy', label: 'பாடம் 5: பௌதீகக் கணினியியல் (micro:bit)', prompt: 'உணரிகள் மற்றும் இயங்கிகள் இடையிலான வேறுபாடு என்ன?' },
+      ];
+    }
+    return [
+      { id: 'ict-num', label: 'Ch 1: Number Systems (Binary & Decimal)', prompt: 'Can you explain the main concepts of Number Systems and binary conversions?' },
+      { id: 'ict-cfg', label: 'Ch 2: Desktop Configuration & Keyboards', prompt: 'Can you explain more about Desktop Customization & Display Settings?' },
+      { id: 'ict-wp', label: 'Ch 3: Word Processing & Formatting', prompt: 'Can you teach me Chapter 3: Word Processing and document formatting?' },
+      { id: 'ict-prg', label: 'Ch 4: Scratch Programming & Loops', prompt: 'How do variables and repeat loops work in Scratch programming?' },
+      { id: 'ict-phy', label: 'Ch 5: Physical Computing & Sensors', prompt: 'What is the difference between sensors and actuators on a micro:bit?' },
+    ];
+  }
+
+  if (sub === 'history') {
+    if (language === 'si') {
+      return [
+        { id: 'hist-sellipi', label: '1 වන පාඩම: සෙල්ලිපි වර්ග 5 (Sellipi)', prompt: 'ඉතිහාසය හැදෑරීමේ මූලාශ්‍ර වල සෙල්ලිපි (Sellipi) වර්ග සහ බ්‍රාහ්මී ලේඛන ගැන විස්තර කරන්න' },
+        { id: 'hist-media', label: 'ශිලා ලේඛන මාධ්‍ය (ගල්පොත, පනාකඩුව)', prompt: 'ලංකාවේ ශිලා ලේඛන සහ වෙනත් ලේඛන මාධ්‍ය (ගල්පොත, සීගිරි කුරුටු ගී, පනාකඩුව තඹ සන්නස) මොනවාද?' },
+        { id: 'hist-curriculum', label: '10 ශ්‍රේණිය ඉතිහාසය පරිච්ඡේද 10', prompt: '10 ශ්‍රේණිය ඉතිහාසය විෂය නිර්දේශයේ පරිච්ඡේද 10 මොනවාද?' },
+      ];
+    }
+    if (language === 'ta') {
+      return [
+        { id: 'hist-sellipi', label: 'பாடம் 1: கல்வெட்டுகள் (Sellipi) & பிராமி', prompt: 'இலங்கையின் வரலாற்று ஆதாரங்களான கல்வெட்டுகள் மற்றும் பிராமி எழுத்துக்கள் பற்றி விளக்குக' },
+        { id: 'hist-media', label: 'சாசன ஊடகங்கள் (கற்பொத்த, பனாகடுவ)', prompt: 'இலங்கையின் சாசன ஊடகங்கள் (கற்பொத்த, பனாகடுவ செப்புப்பட்டயம்) எவை?' },
+        { id: 'hist-curriculum', label: 'தரம் 10 வரலாறு 10 அத்தியாயங்கள்', prompt: 'தரம் 10 வரலாற்றுப் பாடநூலின் 10 அத்தியாயங்கள் எவை?' },
+      ];
+    }
+    return [
+      { id: 'hist-sellipi', label: 'Ch 1: 5 Types of Inscriptions (Sellipi)', prompt: 'Explain the 5 types of Inscriptions (Sellipi) and Brahmi cave records from Chapter 1' },
+      { id: 'hist-media', label: 'Epigraphical Media (Panakaduwa, Galpotha)', prompt: 'What are the key epigraphical media like Galpotha, Sigiriya Kurutu Gee, and Panakaduwa copper plate?' },
+      { id: 'hist-curriculum', label: 'Grade 10 History: All 10 Chapters', prompt: 'What are the 10 chapters in the Grade 10 History curriculum?' },
+    ];
+  }
+
+  // Maths or other
+  if (language === 'si') {
+    return [
+      { id: 'math-pyth', label: 'පයිතගරස් ප්‍රමේයය', prompt: 'පයිතගරස් ප්‍රමේයයේ ප්‍රධාන කරුණු පැහැදිලි කරන්න' },
+      { id: 'math-triangles', label: 'ඍජුකෝණී ත්‍රිකෝණ', prompt: 'a² + b² = c² භාවිතයෙන් කර්ණය ගණනය කරන්නේ කෙසේද?' },
+    ];
+  }
+  if (language === 'ta') {
+    return [
+      { id: 'math-pyth', label: 'பைத்தகரசின் தேற்றம்', prompt: 'பைத்தகரசின் தேற்றத்தின் முக்கிய கருத்துக்களை விளக்குக' },
+      { id: 'math-triangles', label: 'செங்கோண முக்கோணங்கள்', prompt: 'a² + b² = c² ஐப் பயன்படுத்தி செம்பக்கத்தை எவ்வாறு கணிப்பது?' },
+    ];
+  }
+  return [
+    { id: 'math-pyth', label: 'Maths: Pythagoras Theorem', prompt: 'Can you explain the main ideas of Pythagoras Theorem?' },
+    { id: 'math-triangles', label: 'Maths: Right-Angled Triangles', prompt: 'How to calculate the hypotenuse using a² + b² = c²?' },
+  ];
+}
+
+export function buildInitialGreeting(
+  subjectId: string,
+  topicId: string,
+  language: Language,
+  studentName: string,
+  grade: string
+): ChatMessage {
+  const sub = (subjectId || '').toLowerCase();
+  const top = (topicId || '').toLowerCase();
+  const studentGradeLabel = grade ? grade.replace('grade-', 'Grade ') : 'Grade 10';
+
+  let enGreeting = `Ayubowan ${studentName}! I am your **ATLAS Tutor for ${studentGradeLabel}**. What topic would you like to explore together today?`;
+  let siGreeting = `ආයුබෝවන් ${studentName}! මම ඔබගේ **${studentGradeLabel}** ගුරුතුමා. අද අපි කුමන පාඩමෙන් පටන් ගනිමුද?`;
+  let taGreeting = `வணக்கம் ${studentName}! நான் உங்கள் **${studentGradeLabel}** ஆசிரியர். நாம் இன்று எந்த பாடத்திலிருந்து தொடங்கலாம்?`;
+
+  let keyPoints: string[] | undefined = undefined;
+
+  if (sub === 'science') {
+    if (top.includes('matter') || top.includes('bohr') || top.includes('atom') || top.includes('sci-10-matter') || top === 'structure-of-matter') {
+      enGreeting = `Ayubowan ${studentName}! I am your **ATLAS Tutor for Grade 10 Science — Structure of Matter**.\n\nI can help you explore atomic structure, electron configurations (2, 8, 8), Bohr atomic models, isotopes, and the periodic table.\n\nWhat would you like to explore first?`;
+      siGreeting = `ආයුබෝවන් ${studentName}! මම ඔබගේ **10 ශ්‍රේණිය විද්‍යාව — පදාර්ථයේ ව්‍යුහය** ගුරුතුමා.\n\nපරමාණුක ව්‍යුහය, ඉලෙක්ට්‍රෝන වින්‍යාසය (2, 8, 8), බෝර් පරමාණු ආකෘති, සමස්ථානික සහ ආවර්තිතා වගුව පිළිබඳ ඕනෑම කරුණක් මා සමඟ සාකච්ඡා කළ හැක.\n\nඅපි කුමන කරුණෙන් පටන් ගනිමුද?`;
+      taGreeting = `வணக்கம் ${studentName}! நான் உங்கள் **தரம் 10 விஞ்ஞானம் — சடப்பொருளின் கட்டமைப்பு** ஆசிரியர்.\n\nஅணு கட்டமைப்பு, இலத்திரன் கட்டமைப்பு (2, 8, 8), போர் அணு மாதிரிகள், மற்றும் சமதானிகள் பற்றி நாம் கற்கலாம்.\n\nநாம் எதிலிருந்து தொடங்கலாம்?`;
+      keyPoints = [
+        'Atomic Structure (Protons, Neutrons, Electrons)',
+        'Bohr Electron Configuration (2, 8, 8)',
+        'Atomic Number (Z) & Mass Number (A)',
+        'Isotopes & Chemical Properties'
+      ];
+    } else if (top.includes('reaction') || top.includes('rate') || top.includes('sci-10-reactions') || top === 'rate-of-reactions') {
+      enGreeting = `Ayubowan ${studentName}! I am your **ATLAS Tutor for Grade 10 Science — Rate of Reactions**.\n\nI can help you understand how concentration, temperature, surface area, and catalysts affect the speed of chemical reactions using collision theory.\n\nWhat would you like to explore?`;
+      siGreeting = `ආයුබෝවන් ${studentName}! මම ඔබගේ **10 ශ්‍රේණිය විද්‍යාව — රසායනික ප්‍රතික්‍රියා සීඝ්‍රතාව** ගුරුතුමා.\n\nසාන්ද්‍රණය, උෂ්ණත්වය, පෘෂ්ඨික වර්ගඵලය සහ උත්ප්‍රේරක මගින් ප්‍රතික්‍රියා සීඝ්‍රතාව වෙනස් වන ආකාරය ගැටුම් වාදය ඇසුරින් ඉගෙන ගනිමු.\n\nඅපි ආරම්භ කරමුද?`;
+      taGreeting = `வணக்கம் ${studentName}! நான் உங்கள் **தரம் 10 விஞ்ஞானம் — இரசாயனத் தாக்க வீதம்** ஆசிரியர்.\n\nசெறிவு, வெப்பநிலை, மேற்பரப்பளவு மற்றும் ஊக்கிகள் தாக்க வீதத்தை எவ்வாறு பாதிக்கின்றன என்பதை நாம் கற்கலாம்.\n\nநாம் தொடங்கலாமா?`;
+      keyPoints = [
+        'Collision Theory',
+        'Effect of Temperature & Concentration',
+        'Surface Area & Catalysts',
+        'Measuring Reaction Rates'
+      ];
+    } else if (top.includes('motion') || top.includes('linear') || top.includes('sci-10-motion') || top === 'motion-in-a-straight-line') {
+      enGreeting = `Ayubowan ${studentName}! I am your **ATLAS Tutor for Grade 10 Science — Linear Motion**.\n\nI can guide you through displacement, velocity, acceleration, the equations of motion, and velocity-time graphs.\n\nWhat would you like to practice?`;
+      siGreeting = `ආයුබෝවන් ${studentName}! මම ඔබගේ **10 ශ්‍රේණිය විද්‍යාව — සරල රේඛීය චලිතය** ගුරුතුමා.\n\nවිස්ථාපනය, ප්‍රවේගය, ත්වරණය, චලිත සමීකරණ සහ ප්‍රවේග-කාල ප්‍රස්තාර පිළිබඳ ගැටළු විසඳීමට මම ඔබට උදව් කරන්නෙමි.\n\nඅපි කුමන කොටසින් පටන් ගනිමුද?`;
+      taGreeting = `வணக்கம் ${studentName}! நான் உங்கள் **தரம் 10 விஞ்ஞானம் — நேர்கோட்டு இயக்கம்** ஆசிரியர்.\n\nஇடப்பெயர்ச்சி, வேகம், ஆர்முடுகல், இயக்கச் சமன்பாடுகள் மற்றும் வரைபடங்கள் பற்றி நாம் கற்கலாம்.\n\nநாம் எதிலிருந்து தொடங்கலாம்?`;
+      keyPoints = [
+        'Displacement & Velocity',
+        'Acceleration & Deceleration',
+        'Equations of Motion (v=u+at, s=ut+1/2at²)',
+        'Velocity-Time Graph Interpretation'
+      ];
+    } else {
+      enGreeting = `Ayubowan ${studentName}! I am your **ATLAS Tutor for Science**.\n\nWhat science topic would you like to explore together today?`;
+      siGreeting = `ආයුබෝවන් ${studentName}! මම ඔබගේ **විද්‍යාව** ගුරුතුමා.\n\nඅද අපි කුමන විද්‍යා පාඩමෙන් පටන් ගනිමුද?`;
+      taGreeting = `வணக்கம் ${studentName}! நான் உங்கள் **விஞ்ஞானம்** ஆசிரியர்.\n\nநாம் இன்று எந்த விஞ்ஞானப் பாடத்திலிருந்து தொடங்கலாம்?`;
+    }
+  } else if (sub === 'history') {
+    enGreeting = `Ayubowan ${studentName}! I am your **ATLAS Tutor for Grade 10 History**.\n\nI'm here to guide you through your official 10 chapters: Sources of Studying History (Inscriptions & Epigraphy), Ancient Settlements, Political Power, Ancient Society, Science & Technology, Historical Knowledge, Decline of Dry Zone & South-West Kingdoms, Kandyan Kingdom, Renaissance, and Sri Lanka & the Western World.\n\nWould you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore another topic?`;
+    siGreeting = `ආයුබෝවන් ${studentName}! මම ඔබගේ **10 ශ්‍රේණිය ඉතිහාසය** ගුරුතුමා. ඔබගේ 10 ශ්‍රේණියේ නිල ඉතිහාසය පෙළපොතෙහි පරිච්ඡේද 10 පිළිබඳ ඕනෑම කරුණක් මා සමඟ සාකච්ඡා කළ හැක.\n\nඅද අපි 1 වන පරිච්ඡේදයේ **සෙල්ලිපි (Inscriptions)** හෝ වෙනත් පාඩමකින් පටන් ගනිමුද?`;
+    taGreeting = `வணக்கம் ${studentName}! நான் உங்கள் **தரம் 10 வரலாறு** ஆசிரியர். உங்கள் தரம் 10 வரலாற்றுப் பாடநூலின் 10 அத்தியாயங்கள் தொடர்பான எந்தவொரு கேள்வியையும் கேட்கலாம்.\n\nநாம் இன்று அத்தியாயம் 1 இன் **கல்வெட்டுகள் (Sellipi)** பற்றித் தொடங்கலாமா?`;
+    keyPoints = [
+      'Ch 1: Sources of Studying History (Inscriptions & Epigraphy)',
+      'Ch 2: Early Settlements (Mesolithic to Proto-historic)',
+      'Ch 3: Evolution of Political Power (Monarchy & Anuradhapura)',
+      'Ch 4: Ancient Sri Lankan Society & Culture',
+      'Ch 5: Science & Technology (Irrigation & Architecture)'
+    ];
+  } else if (sub === 'ict') {
+    enGreeting = `Ayubowan ${studentName}! I am your **ATLAS Tutor for ${studentGradeLabel} ICT**.\n\nI'm here to help you learn and master your official Information & Communication Technology curriculum: Number Systems, Configuring Computers, Word Processing, Scratch Programming, Physical Computing, and the Internet.\n\nWhat ICT topic would you like to explore together today?`;
+    siGreeting = `ආයුබෝවන් ${studentName}! මම ඔබගේ **තොරතුරු හා සන්නිවේදන තාක්ෂණය (ICT)** ගුරුතුමා. ඔබගේ නිල පෙළපොතෙහි පරිච්ඡේද 6 පිළිබඳ ඕනෑම කරුණක් මා සමඟ සාකච්ඡා කළ හැක.\n\nඅද අපි කුමන ICT පාඩමෙන් පටන් ගනිමුද?`;
+    taGreeting = `வணக்கம் ${studentName}! நான் உங்கள் **தகவல் தொழில்நுட்ப (ICT)** ஆசிரியர். உங்கள் பாடநூலின் அத்தியாயங்கள் தொடர்பான உங்கள் சந்தேகங்களைக் கேளுங்கள்.\n\nநாம் இன்று எந்த ICT பாடத்திலிருந்து தொடங்கலாம்?`;
+    keyPoints = [
+      'Ch 1: Number Systems (Binary & Switches)',
+      'Ch 2: Configuring Computers (Resolution)',
+      'Ch 3: Word Processing (Justify Margins)',
+      'Ch 4: Programming (Scratch Loops)',
+      'Ch 5: Physical Computing (micro:bit)',
+      'Ch 6: Internet (URL & Email Privacy)'
+    ];
+  }
+
+  const primaryContent = language === 'si' ? siGreeting : language === 'ta' ? taGreeting : enGreeting;
+
+  return {
+    id: `msg-init-${sub}-${top}`,
+    role: 'tutor',
+    content: primaryContent,
+    timestamp: new Date().toISOString(),
+    suggestedActions: getCurriculumStarterPills(subjectId, topicId, language),
+    languageVersions: {
+      en: enGreeting,
+      si: siGreeting,
+      ta: taGreeting,
+    },
+    activeLang: language,
+    keyPoints,
+  };
+}
+
 export const TutorPage: React.FC = () => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -364,6 +660,7 @@ export const TutorPage: React.FC = () => {
     isAuthenticated,
     isGuestPreview,
     login,
+    currentUser,
   } = useStudent();
 
   const [curriculumTopics, setCurriculumTopics] = useState<Topic[]>(() => MOCK_TOPICS);
@@ -397,6 +694,14 @@ export const TutorPage: React.FC = () => {
   };
   const activeTopicId = paramTopic || learningContext.topicId;
   const companionTopicId = activeTopicId || defaultTopicForSubject(activeSubjectId);
+  const effectiveTopicId = activeTopicId || companionTopicId || 'default';
+  const userScope = currentUser?.id || 'guest';
+  const activeSessionKey = getTutorSessionStorageKey(
+    userScope,
+    grade,
+    activeSubjectId,
+    effectiveTopicId
+  );
 
   const [isCompanionOpen, setIsCompanionOpen] = useState(true);
   const [mobileView, setMobileView] = useState<'chat' | 'companion'>('chat');
@@ -502,158 +807,57 @@ export const TutorPage: React.FC = () => {
     return `msg-${Date.now()}-${messageCounterRef.current}-${Math.random().toString(36).substring(2, 7)}-${role}`;
   };
 
-  const getSubjectStarterPills = (subId: string): TutorAction[] => {
-    if (subId === 'ict') {
-      if (language === 'si') {
-        return [
-          { id: 'ict-num', label: '1 වන පාඩම: සංඛ්‍යා පද්ධති (ද්විමය)', prompt: 'සංඛ්‍යා පද්ධති සහ ද්විමය පරිවර්තනය පැහැදිලි කරන්න' },
-          { id: 'ict-cfg', label: '2 වන පාඩම: පරිගණක වින්‍යාසය සහ යතුරුපුවරු', prompt: 'Can you explain more about Desktop Customization & Display Settings?' },
-          { id: 'ict-wp', label: '3 වන පාඩම: වදන් සැකසුම (Word Processing)', prompt: '3 වන පරිච්ඡේදය: වදන් සැකසුම සහ ලේඛන හැඩසවි ගැන්වීම පැහැදිලි කරන්න' },
-          { id: 'ict-prg', label: '4 වන පාඩම: Scratch ක්‍රමලේඛනය (Loops)', prompt: 'Scratch හි විචල්‍යයන් සහ පුනරාවර්තන loops ක්‍රියාකරන්නේ කෙසේද?' },
-          { id: 'ict-phy', label: '5 වන පාඩම: භෞතික පරිගණනය (micro:bit)', prompt: 'භෞතික පරිගණනයේ සංවේදක සහ ක්‍රියාකරවන අතර වෙනස කුමක්ද?' },
-        ];
-      }
-      if (language === 'ta') {
-        return [
-          { id: 'ict-num', label: 'பாடம் 1: எண் முறைகள் (இருமம்/தசமம்)', prompt: 'எண் முறைகள் மற்றும் இரும மாற்றங்களை விளக்குங்கள்' },
-          { id: 'ict-cfg', label: 'பாடம் 2: கணினி உள்ளமைவு & விசைப்பலகை', prompt: 'Can you explain more about Desktop Customization & Display Settings?' },
-          { id: 'ict-wp', label: 'பாடம் 3: சொல் செயலாக்கம் (Word Processing)', prompt: 'பாடம் 3: சொல் செயலாக்கம் மற்றும் ஆவண வடிவமைப்பு பற்றி விளக்குங்கள்' },
-          { id: 'ict-prg', label: 'பாடம் 4: Scratch நிரலாக்கம் (Loops)', prompt: 'Scratch இல் மாறிகள் மற்றும் சுழற்சிகள் எவ்வாறு செயல்படுகின்றன?' },
-          { id: 'ict-phy', label: 'பாடம் 5: பௌதீகக் கணினியியல் (micro:bit)', prompt: 'உணரிகள் மற்றும் இயங்கிகள் இடையிலான வேறுபாடு என்ன?' },
-        ];
-      }
-      return [
-        { id: 'ict-num', label: 'Ch 1: Number Systems (Binary & Decimal)', prompt: 'Can you explain the main concepts of Number Systems and binary conversions?' },
-        { id: 'ict-cfg', label: 'Ch 2: Desktop Configuration & Keyboards', prompt: 'Can you explain more about Desktop Customization & Display Settings?' },
-        { id: 'ict-wp', label: 'Ch 3: Word Processing & Formatting', prompt: 'Can you teach me Chapter 3: Word Processing and document formatting?' },
-        { id: 'ict-prg', label: 'Ch 4: Scratch Programming & Loops', prompt: 'How do variables and repeat loops work in Scratch programming?' },
-        { id: 'ict-phy', label: 'Ch 5: Physical Computing & Sensors', prompt: 'What is the difference between sensors and actuators on a micro:bit?' },
-      ];
-    }
-
-    if (subId === 'science') {
-      return [
-        { id: 'sci-photo', label: 'Science: Photosynthesis', prompt: 'Explain the process of photosynthesis in plants' },
-        { id: 'sci-stomata', label: 'Science: Stomata & Gas Exchange', prompt: 'How do leaf stomata regulate gas exchange?' },
-        { id: 'sci-starch', label: 'Science: Plant Starch Testing', prompt: 'Explain the iodine test experiment for starch in leaves' },
-      ];
-    }
-
-    if (subId === 'history') {
-      if (language === 'si') {
-        return [
-          { id: 'hist-sellipi', label: '1 වන පාඩම: සෙල්ලිපි වර්ග 5 (Sellipi)', prompt: 'ඉතිහාසය හැදෑරීමේ මූලාශ්‍ර වල සෙල්ලිපි (Sellipi) වර්ග සහ බ්‍රාහ්මී ලේඛන ගැන විස්තර කරන්න' },
-          { id: 'hist-media', label: 'ශිලා ලේඛන මාධ්‍ය (ගල්පොත, පනාකඩුව)', prompt: 'ලංකාවේ ශිලා ලේඛන සහ වෙනත් ලේඛන මාධ්‍ය (ගල්පොත, සීගිරි කුරුටු ගී, පනාකඩුව තඹ සන්නස) මොනවාද?' },
-          { id: 'hist-curriculum', label: '10 ශ්‍රේණිය ඉතිහාසය පරිච්ඡේද 10', prompt: '10 ශ්‍රේණිය ඉතිහාසය විෂය නිර්දේශයේ පරිච්ඡේද 10 මොනවාද?' },
-        ];
-      }
-      if (language === 'ta') {
-        return [
-          { id: 'hist-sellipi', label: 'பாடம் 1: கல்வெட்டுகள் (Sellipi) & பிராமி', prompt: 'இலங்கையின் வரலாற்று ஆதாரங்களான கல்வெட்டுகள் மற்றும் பிராமி எழுத்துக்கள் பற்றி விளக்குக' },
-          { id: 'hist-media', label: 'சாசன ஊடகங்கள் (கற்பொத்த, பனாகடுவ)', prompt: 'இலங்கையின் சாசன ஊடகங்கள் (கற்பொத்த, பனாகடுவ செப்புப்பட்டயம்) எவை?' },
-          { id: 'hist-curriculum', label: 'தரம் 10 வரலாறு 10 அத்தியாயங்கள்', prompt: 'தரம் 10 வரலாற்றுப் பாடநூலின் 10 அத்தியாயங்கள் எவை?' },
-        ];
-      }
-      return [
-        { id: 'hist-sellipi', label: 'Ch 1: 5 Types of Inscriptions (Sellipi)', prompt: 'Explain the 5 types of Inscriptions (Sellipi) and Brahmi cave records from Chapter 1' },
-        { id: 'hist-media', label: 'Epigraphical Media (Panakaduwa, Galpotha)', prompt: 'What are the key epigraphical media like Galpotha, Sigiriya Kurutu Gee, and Panakaduwa copper plate?' },
-        { id: 'hist-curriculum', label: 'Grade 10 History: All 10 Chapters', prompt: 'What are the 10 chapters in the Grade 10 History curriculum?' },
-      ];
-    }
-
-    return [
-      { id: 'math-pyth', label: 'Maths: Pythagoras Theorem', prompt: 'Can you explain the main ideas of Pythagoras Theorem?' },
-      { id: 'math-triangles', label: 'Maths: Right-Angled Triangles', prompt: 'How to calculate the hypotenuse using a² + b² = c²?' },
-    ];
-  };
-
-  const starterTopicPills = getSubjectStarterPills(activeSubjectId);
-
-  const getInitialGreeting = (): string => {
-    if (activeSubjectId === 'ict') {
-      const studentGradeLabel = grade ? grade.replace('grade-', 'Grade ') : 'Grade 10';
-      if (language === 'si') {
-        return `ආයුබෝවන් ${studentName}! මම ඔබගේ **තොරතුරු හා සන්නිවේදන තාක්ෂණය (ICT)** ගුරුතුමා. 
-ඔබගේ නිල පෙළපොතෙහි පරිච්ඡේද 6 (සංඛ්‍යා පද්ධති, පරිගණක වින්‍යාසය, වදන් සැකසුම, Scratch ක්‍රමලේඛනය, භෞතික පරිගණනය සහ අන්තර්ජාලය) පිළිබඳ ඕනෑම කරුණක් මා සමඟ සාකච්ඡා කළ හැක.
-
-අද අපි කුමන ICT පාඩමෙන් පටන් ගනිමුද?`;
-      }
-      if (language === 'ta') {
-        return `வணக்கம் ${studentName}! நான் உங்கள் **தகவல் தொழில்நுட்ப (ICT)** ஆசிரியர். 
-உங்கள் பாடநூலின் அத்தியாயங்கள் (எண் முறைகள், கணினி உள்ளமைவு, சொல் செயலாக்கம், Scratch நிரலாக்கம், பௌதீகக் கணினியியல் மற்றும் இணையம்) தொடர்பான உங்கள் சந்தேகங்களைக் கேளுங்கள்.
-
-நாம் இன்று எந்த ICT பாடத்திலிருந்து தொடங்கலாம்?`;
-      }
-      return `Ayubowan ${studentName}! I am your **ATLAS Tutor for ${studentGradeLabel} ICT**. 
-I'm here to help you learn and master your official **Information & Communication Technology** curriculum: Number Systems, Configuring Computers, Word Processing, Scratch Programming, Physical Computing, and the Internet.
-
-What ICT topic would you like to explore together today?`;
-    }
-
-    if (activeSubjectId === 'science') {
-      return `Ayubowan ${studentName}! I am your **ATLAS Tutor for Science**. What science topic would you like to explore together today?`;
-    }
-
-    if (activeSubjectId === 'history') {
-      if (language === 'si') {
-        return `ආයුබෝවන් ${studentName}! මම ඔබගේ **10 ශ්‍රේණිය ඉතිහාසය** ගුරුතුමා. 
-ඔබගේ 10 ශ්‍රේණියේ නිල ඉතිහාසය පෙළපොතෙහි පරිච්ඡේද 10 (ඉතිහාසය හැදෑරීමේ මූලාශ්‍ර - සෙල්ලිපි/සාහිත්‍ය මූලාශ්‍ර, මුල් ජනාවාස, දේශපාලන බලය, සමාජය, විද්‍යාව හා තාක්ෂණය, ඓතිහාසික දැනුම, නිරිතදිග රාජධානි, උඩරට රාජධානිය, පුනරුදය, ලංකාව හා යුරෝපා ලෝකය) පිළිබඳ ඕනෑම කරුණක් මා සමඟ සාකච්ඡා කළ හැක.
-
-අද අපි 1 වන පරිච්ඡේදයේ **සෙල්ලිපි (Inscriptions)** හෝ වෙනත් පාඩමකින් පටන් ගනිමුද?`;
-      }
-      if (language === 'ta') {
-        return `வணக்கம் ${studentName}! நான் உங்கள் **தரம் 10 வரலாறு** ஆசிரியர். 
-உங்கள் தரம் 10 வரலாற்றுப் பாடநூலின் 10 அத்தியாயங்கள் (வரலாற்று ஆதாரங்கள் - கல்வெட்டுகள், ஆரம்பகாலக் குடியேற்றங்கள், அரசியல் அதிகாரம், சமூகம், அறிவியல் & தொழில்நுட்பம், வரலாற்று அறிவு, தென்மேற்கு அரசுகள், கண்டி இராச்சியம், மறுமலர்ச்சி, மற்றும் மேலை உலகம்) தொடர்பான எந்தவொரு கேள்வியையும் கேட்கலாம்.
-
-நாம் இன்று அத்தியாயம் 1 இன் **கல்வெட்டுகள் (Sellipi)** பற்றித் தொடங்கலாமா?`;
-      }
-      return `Ayubowan ${studentName}! I am your **ATLAS Tutor for Grade 10 History**. 
-I'm here to guide you through your official 10 chapters: Sources of Studying History (Inscriptions & Epigraphy), Ancient Settlements, Political Power, Ancient Society, Science & Technology, Historical Knowledge, Decline of Dry Zone & South-West Kingdoms, Kandyan Kingdom, Renaissance, and Sri Lanka & the Western World.
-
-Would you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore another topic?`;
-    }
-
-    return `Ayubowan ${studentName}! I am your **ATLAS Tutor for ${grade.replace('-', ' ').toUpperCase()}**. What topic would you like to explore together today?`;
-  };
-
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    const studentGradeLabel = grade ? grade.replace('grade-', 'Grade ') : 'Grade 10';
+    const cached = loadTutorSessionMessages(activeSessionKey);
+    if (cached && cached.length > 0) {
+      return cached;
+    }
     return [
-      {
-        id: 'msg-init-1',
-        role: 'tutor',
-        content: getInitialGreeting(),
-        timestamp: new Date().toISOString(),
-        suggestedActions: starterTopicPills,
-        languageVersions: {
-          en: activeSubjectId === 'history'
-            ? `Ayubowan ${studentName}! I am your **ATLAS Tutor for Grade 10 History**. I'm here to guide you through your official 10 chapters: Sources of Studying History (Inscriptions & Epigraphy), Ancient Settlements, Political Power, Ancient Society, Science & Technology, Historical Knowledge, Decline of Dry Zone & South-West Kingdoms, Kandyan Kingdom, Renaissance, and Sri Lanka & the Western World.\n\nWould you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore another topic?`
-            : (activeSubjectId === 'ict' ? `Ayubowan ${studentName}! I am your **ATLAS Tutor for ${studentGradeLabel} ICT**.\nI'm here to help you learn and master your official Information & Communication Technology curriculum: Number Systems, Configuring Computers, Word Processing, Scratch Programming, Physical Computing, and the Internet.\n\nWhat ICT topic would you like to explore together today?` : getInitialGreeting()),
-          si: activeSubjectId === 'history'
-            ? `ආයුබෝවන් ${studentName}! මම ඔබගේ **10 ශ්‍රේණිය ඉතිහාසය** ගුරුතුමා. ඔබගේ 10 ශ්‍රේණියේ නිල ඉතිහාසය පෙළපොතෙහි පරිච්ඡේද 10 (ඉතිහාසය හැදෑරීමේ මූලාශ්‍ර - සෙල්ලිපි/සාහිත්‍ය මූලාශ්‍ර, මුල් ජනාවාස, දේශපාලන බලය, සමාජය, විද්‍යාව හා තාක්ෂණය, ඓතිහාසික දැනුම, නිරිතදිග රාජධානි, උඩරට රාජධානිය, පුනරුදය, ලංකාව හා යුරෝපා ලෝකය) පිළිබඳ ඕනෑම කරුණක් මා සමඟ සාකච්ඡා කළ හැක.\n\nඅද අපි 1 වන පරිච්ඡේදයේ **සෙල්ලිපි (Inscriptions)** හෝ වෙනත් පාඩමකින් පටන් ගනිමුද?`
-            : (activeSubjectId === 'ict' ? `ආයුබෝවන් ${studentName}! මම ඔබගේ **තොරතුරු හා සන්නිවේදන තාක්ෂණය (ICT)** ගුරුතුමා. ඔබගේ නිල පෙළපොතෙහි පරිච්ඡේද 6 (සංඛ්‍යා පද්ධති, පරිගණක වින්‍යාසය, වදන් සැකසුම, Scratch ක්‍රමලේඛනය, භෞතික පරිගණනය සහ අන්තර්ජාලය) පිළිබඳ ඕනෑම කරුණක් මා සමඟ සාකච්ඡා කළ හැක.\n\nඅද අපි කුමන ICT පාඩමෙන් පටන් ගනිමුද?` : getInitialGreeting()),
-          ta: activeSubjectId === 'history'
-            ? `வணக்கம் ${studentName}! நான் உங்கள் **தரம் 10 வரலாறு** ஆசிரியர். உங்கள் தரம் 10 வரலாற்றுப் பாடநூலின் 10 அத்தியாயங்கள் (வரலாற்று ஆதாரங்கள் - கல்வெட்டுகள், ஆரம்பகாலக் குடியேற்றங்கள், அரசியல் அதிகாரம், சமூகம், அறிவியல் & தொழில்நுட்பம், வரலாற்று அறிவு, தென்மேற்கு அரசுகள், கண்டி இராச்சியம், மறுமலர்ச்சி, மற்றும் மேலை உலகம்) தொடர்பான எந்தவொரு கேள்வியையும் கேட்கலாம்.\n\nநாம் இன்று அத்தியாயம் 1 இன் **கல்வெட்டுகள் (Sellipi)** பற்றித் தொடங்கலாமா?`
-            : (activeSubjectId === 'ict' ? `வணக்கம் ${studentName}! நான் உங்கள் **தகவல் தொழில்நுட்ப (ICT)** ஆசிரியர். உங்கள் பாடநூலின் அத்தியாயங்கள் (எண் முறைகள், கணினி உள்ளமைவு, சொல் செயலாக்கம், Scratch நிரலாக்கம், பௌதீகக் கணினியியல் மற்றும் இணையம்) தொடர்பான உங்கள் சந்தேகங்களைக் கேளுங்கள்.\n\nநாம் இன்று எந்த ICT பாடத்திலிருந்து தொடங்கலாம்?` : getInitialGreeting()),
-        },
-        activeLang: language,
-        keyPoints: activeSubjectId === 'history' ? [
-          'Ch 1: Sources of Studying History (Inscriptions & Epigraphy)',
-          'Ch 2: Early Settlements (Mesolithic to Proto-historic)',
-          'Ch 3: Evolution of Political Power (Monarchy & Anuradhapura)',
-          'Ch 4: Ancient Sri Lankan Society & Culture',
-          'Ch 5: Science & Technology (Irrigation & Architecture)'
-        ] : (activeSubjectId === 'ict' ? [
-          'Ch 1: Number Systems (Binary & Switches)',
-          'Ch 2: Configuring Computers (Resolution)',
-          'Ch 3: Word Processing (Justify Margins)',
-          'Ch 4: Programming (Scratch Loops)',
-          'Ch 5: Physical Computing (micro:bit)',
-          'Ch 6: Internet (URL & Email Privacy)'
-        ] : undefined),
-      },
+      buildInitialGreeting(
+        activeSubjectId,
+        effectiveTopicId,
+        language,
+        studentName,
+        grade
+      ),
     ];
   });
+
+  const currentSessionKeyRef = useRef<string>(activeSessionKey);
+  const messagesRef = useRef<ChatMessage[]>(messages);
+  messagesRef.current = messages;
+
+  // R4: Scope tutor session state strictly to curriculum context (user + grade + subject + topic)
+  useEffect(() => {
+    const prevKey = currentSessionKeyRef.current;
+    if (prevKey === activeSessionKey) {
+      return;
+    }
+
+    // Persist outgoing messages into tab-local cache
+    if (prevKey && messagesRef.current.length > 0) {
+      saveTutorSessionMessages(prevKey, messagesRef.current);
+    }
+
+    currentSessionKeyRef.current = activeSessionKey;
+
+    // Load incoming messages or initialize fresh greeting
+    const cached = loadTutorSessionMessages(activeSessionKey);
+    if (cached && cached.length > 0) {
+      setMessages(cached);
+    } else {
+      const freshGreeting = buildInitialGreeting(
+        activeSubjectId,
+        effectiveTopicId,
+        language,
+        studentName,
+        grade
+      );
+      setMessages([freshGreeting]);
+      saveTutorSessionMessages(activeSessionKey, [freshGreeting]);
+    }
+    setTutorState('idle');
+  }, [activeSessionKey, activeSubjectId, effectiveTopicId, language, studentName, grade, setTutorState]);
 
   // Handle URL query parameter prefill (e.g. from Home search or Practice redirect)
   useEffect(() => {
@@ -809,7 +1013,11 @@ Would you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore an
       imageUrl: currentImg?.previewUrl,
     };
 
-    setMessages((prev) => [...prev, studentMsg]);
+    setMessages((prev) => {
+      const next = [...prev, studentMsg];
+      saveTutorSessionMessages(activeSessionKey, next);
+      return next;
+    });
     setInputMessage('');
     setTutorState('thinking');
 
@@ -833,7 +1041,7 @@ Would you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore an
       setTutorState(nextState);
 
       // Resolve topic-sensitive suggested action pills
-      let actionPills: TutorAction[] = getSubjectStarterPills(targetSubjectId);
+      let actionPills: TutorAction[] = getCurriculumStarterPills(targetSubjectId, targetTopicId, language);
       if (response.suggestedFollowUps && response.suggestedFollowUps.length > 0) {
         actionPills = response.suggestedFollowUps.map((item, idx) => {
           if (typeof item === 'string') {
@@ -861,7 +1069,11 @@ Would you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore an
         keyPoints: response.keyPoints,
       };
 
-      setMessages((prev) => [...prev, tutorMsg]);
+      setMessages((prev) => {
+        const next = [...prev, tutorMsg];
+        saveTutorSessionMessages(activeSessionKey, next);
+        return next;
+      });
 
       // Return to idle after speech finishes
       setTimeout(() => {
@@ -948,7 +1160,11 @@ Would you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore an
         timestamp: new Date().toISOString(),
         suggestedActions: errorActions,
       };
-      setMessages((prev) => [...prev, errorMsg]);
+      setMessages((prev) => {
+        const next = [...prev, errorMsg];
+        saveTutorSessionMessages(activeSessionKey, next);
+        return next;
+      });
 
       setTimeout(() => setTutorState('idle'), 3000);
     } finally {
@@ -957,22 +1173,27 @@ Would you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore an
   };
 
   const handleClearConversation = async () => {
-    setMessages([
-      {
-        id: generateMsgId('reset'),
-        role: 'tutor',
-        content: language === 'si'
-          ? `සංවාදය නැවත ආරම්භ කරන ලදී. ${studentName}, ඔබට ඊළඟට ඉගෙන ගැනීමට අවශ්‍ය කුමක්ද?`
-          : language === 'ta'
-          ? `உரையாடல் மீண்டும் தொடங்கப்பட்டது. ${studentName}, அடுத்து என்ன படிக்க விரும்புகிறீர்கள்?`
-          : `Conversation restarted. What would you like to learn next, ${studentName}?`,
-        timestamp: new Date().toISOString(),
-        suggestedActions: starterTopicPills,
-      },
-    ]);
+    const resetMsg: ChatMessage = {
+      id: generateMsgId('reset'),
+      role: 'tutor',
+      content: language === 'si'
+        ? `සංවාදය නැවත ආරම්භ කරන ලදී. ${studentName}, ඔබට ඊළඟට ඉගෙන ගැනීමට අවශ්‍ය කුමක්ද?`
+        : language === 'ta'
+        ? `உரையாடல் மீண்டும் தொடங்கப்பட்டது. ${studentName}, அடுத்து என்ன படிக்க விரும்புகிறீர்கள்?`
+        : `Conversation restarted. What would you like to learn next, ${studentName}?`,
+      timestamp: new Date().toISOString(),
+      suggestedActions: getCurriculumStarterPills(activeSubjectId, effectiveTopicId, language),
+    };
+    clearTutorSessionMessages(activeSessionKey);
+    saveTutorSessionMessages(activeSessionKey, [resetMsg]);
+    setMessages([resetMsg]);
     setTutorState('idle');
     try {
-      await tutorService.clearConversation(learningContext.conversationId);
+      await tutorService.clearConversation(learningContext.conversationId, {
+        grade,
+        subject: activeSubjectId,
+        topicId: effectiveTopicId,
+      });
     } catch (err) {
       console.warn('[TutorPage] Error clearing remote conversation:', err);
     }

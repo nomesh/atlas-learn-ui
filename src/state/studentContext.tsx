@@ -42,7 +42,7 @@ interface StudentContextValue {
   signInStudent: (data: StudentSignInData) => void;
   isDeviceModalOpen: boolean;
   setIsDeviceModalOpen: (open: boolean) => void;
-  getOrCreateConversationId: (subjectId: string, topicId: string) => string;
+  getOrCreateConversationId: (subjectId: string, topicId: string, userKey?: string, gradeKey?: string) => string;
   learningContext: LearningContext;
   setCurriculumSubject: (subjectId: string, topicId?: string, lessonId?: string) => void;
   tutorState: TutorState;
@@ -186,9 +186,16 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }
 
-  const getOrCreateConversationId = useCallback((sid: string, tid: string): string => {
+  const getOrCreateConversationId = useCallback((
+    sid: string,
+    tid: string,
+    userKey?: string,
+    gradeKey?: string
+  ): string => {
     const map = conversationMapRef.current!;
-    const key = `${sid}:${tid}`;
+    const resolvedUser = userKey || session?.userId || localStudentSession?.id || 'guest';
+    const resolvedGrade = gradeKey || grade || 'grade-10';
+    const key = `${resolvedUser}:${resolvedGrade}:${sid}:${tid}`;
     if (!map.has(key)) {
       const newId = `learn-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       map.set(key, newId);
@@ -200,7 +207,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       } catch { /* quota exceeded — silently skip persistence */ }
     }
     return map.get(key)!;
-  }, []);
+  }, [session?.userId, localStudentSession?.id, grade]);
 
   const [subjectId, setSubjectId] = useState<string | undefined>('science');
   const [topicId, setTopicId] = useState<string | undefined>('photosynthesis');
@@ -341,12 +348,32 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsSignInModalOpen(true);
   };
 
+  const clearSessionStorageTutorState = () => {
+    try {
+      sessionStorage.removeItem('atlas_tutor_conversation_map');
+      if (conversationMapRef.current) {
+        conversationMapRef.current.clear();
+      }
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const k = sessionStorage.key(i);
+        if (k && (k.startsWith('atlas_messages_') || k.startsWith('atlas_tutor_'))) {
+          keysToRemove.push(k);
+        }
+      }
+      keysToRemove.forEach((k) => sessionStorage.removeItem(k));
+    } catch {
+      // ignore
+    }
+  };
+
   const logout = async () => {
     try {
       localStorage.removeItem('atlas_student_session');
       localStorage.removeItem('atlas_guest_preview');
       sessionStorage.removeItem('atlas_guest_preview');
       sessionStorage.removeItem('atlas_tutor_lease_token');
+      clearSessionStorageTutorState();
       setLocalStudentSession(null);
       setIsAuthenticated(false);
       const logoutUrl = await apiLogout();
@@ -364,6 +391,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       localStorage.removeItem('atlas_guest_preview');
       sessionStorage.removeItem('atlas_guest_preview');
       sessionStorage.removeItem('atlas_tutor_lease_token');
+      clearSessionStorageTutorState();
       window.location.href = '/';
     }
   };
@@ -374,18 +402,6 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [language, i18n]);
 
-  const learningContext: LearningContext = {
-    grade,
-    subjectId,
-    topicId,
-    activeLessonId,
-    language,
-    // Derive the per-lesson conversationId so the context is always up-to-date.
-    conversationId: subjectId && topicId
-      ? getOrCreateConversationId(subjectId, topicId)
-      : getOrCreateConversationId('default', 'default'),
-  };
-
   const currentUser = session && session.authenticated && session.userId ? {
     id: session.userId,
     email: session.email || '',
@@ -395,6 +411,20 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     email: `${localStudentSession.id}@student.atlas.learn`,
     displayName: localStudentSession.displayName,
   } : null;
+
+  const currentUserId = currentUser?.id || 'guest';
+
+  const learningContext: LearningContext = {
+    grade,
+    subjectId,
+    topicId,
+    activeLessonId,
+    language,
+    // Derive the per-lesson conversationId so the context is always up-to-date and isolated per user+grade+subject+topic
+    conversationId: subjectId && topicId
+      ? getOrCreateConversationId(subjectId, topicId, currentUserId, grade)
+      : getOrCreateConversationId('default', 'default', currentUserId, grade),
+  };
 
   const activeLearner: LearnerProfile | null = session?.activeLearner || (localStudentSession ? {
     id: localStudentSession.id,
