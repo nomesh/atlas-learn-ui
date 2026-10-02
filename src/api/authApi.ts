@@ -32,6 +32,7 @@ export interface DeviceRegistration {
   status: 'ACTIVE' | 'REVOKED';
   registeredAt: string;
   lastSeenAt: string;
+  currentDevice?: boolean;
 }
 
 export interface TutorLeaseResponse {
@@ -192,7 +193,12 @@ export async function updateProfile(req: StudentProfileUpdateRequest): Promise<S
  * Lists all registered devices for the student account.
  */
 export async function listDevices(): Promise<DeviceRegistration[]> {
-  const res = await apiClient.get<DeviceRegistration[]>('/api/learn/devices');
+  const deviceId = getOrCreateDeviceId();
+  const res = await apiClient.get<DeviceRegistration[]>('/api/learn/devices', {
+    headers: {
+      'X-Atlas-Device-Id': deviceId,
+    },
+  });
   return res.data;
 }
 
@@ -214,6 +220,8 @@ export async function acquireTutorLease(req: TutorLeaseRequest): Promise<TutorLe
 export type EnsureTutorLeaseResult =
   | { status: 'GRANTED'; leaseToken: string }
   | { status: 'CONFLICT'; conflictData: TutorLeaseResponse }
+  | { status: 'DEVICE_LIMIT_EXCEEDED'; message: string; maxDevices: number }
+  | { status: 'DEVICE_REVOKED'; message: string }
   | { status: 'UNAUTHENTICATED' }
   | { status: 'ERROR'; error: unknown };
 
@@ -254,21 +262,55 @@ export async function ensureTutorLease(forceTakeover: boolean = false): Promise<
       } else if (res.status === 'CONFLICT') {
         setTutorLeaseToken(null);
         return { status: 'CONFLICT' as const, conflictData: res };
+      } else if (res.status === 'REVOKED') {
+        setTutorLeaseToken(null);
+        return { status: 'DEVICE_REVOKED' as const, message: res.message || 'This device has been revoked.' };
       } else {
         return { status: 'ERROR' as const, error: new Error(res.message || 'Lease not granted') };
       }
     } catch (err: unknown) {
-      const axErr = err as { response?: { status?: number; data?: TutorLeaseResponse } };
+      const axErr = err as {
+        response?: {
+          status?: number;
+          data?: {
+            status?: string;
+            error?: string;
+            message?: string;
+            maxDevices?: number;
+            leaseToken?: string | null;
+            expiresAt?: string | null;
+            activeDeviceName?: string | null;
+          };
+        };
+      };
       if (axErr.response?.status === 401) {
         return { status: 'UNAUTHENTICATED' as const };
       }
+      if (axErr.response?.status === 403) {
+        const data = axErr.response.data;
+        if (data?.error === 'DEVICE_LIMIT_EXCEEDED' || data?.status === 'DEVICE_LIMIT_EXCEEDED') {
+          setTutorLeaseToken(null);
+          return {
+            status: 'DEVICE_LIMIT_EXCEEDED' as const,
+            message: data.message || 'Maximum registered devices limit reached.',
+            maxDevices: data.maxDevices || 2,
+          };
+        }
+        if (data?.status === 'REVOKED' || data?.error === 'DEVICE_REVOKED') {
+          setTutorLeaseToken(null);
+          return {
+            status: 'DEVICE_REVOKED' as const,
+            message: data.message || 'This device has been revoked.',
+          };
+        }
+      }
       if (axErr.response?.status === 409 || axErr.response?.data?.status === 'CONFLICT') {
-        const conflict = axErr.response.data || {
+        const conflict: TutorLeaseResponse = {
           status: 'CONFLICT',
-          leaseToken: null,
-          expiresAt: null,
-          activeDeviceName: null,
-          message: 'Another device is currently using this tutor session.',
+          leaseToken: axErr.response?.data?.leaseToken || null,
+          expiresAt: axErr.response?.data?.expiresAt || null,
+          activeDeviceName: axErr.response?.data?.activeDeviceName || null,
+          message: axErr.response?.data?.message || 'Another device is currently using this tutor session.',
         };
         setTutorLeaseToken(null);
         return { status: 'CONFLICT' as const, conflictData: conflict };
@@ -279,7 +321,7 @@ export async function ensureTutorLease(forceTakeover: boolean = false): Promise<
     }
   })();
 
-  return inFlightLeasePromise;
+  return inFlightLeasePromise!;
 }
 
 export function resetTutorLeaseGate(): void {

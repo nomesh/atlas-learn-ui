@@ -10,6 +10,7 @@ import {
   acquireTutorLease,
   sendTutorHeartbeat,
   releaseTutorLease,
+  listDevices,
 } from '../api/authApi';
 
 // In-memory mock storage for Node environment
@@ -48,6 +49,8 @@ describe('ATLAS Learn — P0 R4.1 Tutor Lease Lifecycle & Error Classification',
   let simulatedConflict: boolean = false;
   let simulatedConflictData: { activeDeviceName: string; message: string } | null = null;
   let simulatedLeaseRequired: boolean = false;
+  let simulatedDeviceLimitExceeded: boolean = false;
+  let simulatedDeviceRevoked: boolean = false;
 
   beforeEach(() => {
     requestLog = [];
@@ -55,6 +58,8 @@ describe('ATLAS Learn — P0 R4.1 Tutor Lease Lifecycle & Error Classification',
     simulatedConflict = false;
     simulatedConflictData = null;
     simulatedLeaseRequired = false;
+    simulatedDeviceLimitExceeded = false;
+    simulatedDeviceRevoked = false;
     mockLocalStorage.clear();
     mockSessionStorage.clear();
     resetTutorLeaseGate();
@@ -87,6 +92,34 @@ describe('ATLAS Learn — P0 R4.1 Tutor Lease Lifecycle & Error Classification',
       const url = config.url || '';
 
       if (url.includes('/api/learn/tutor/lease/acquire')) {
+        if (simulatedDeviceLimitExceeded) {
+          return Promise.reject({
+            response: {
+              status: 403,
+              statusText: 'Forbidden',
+              data: {
+                error: 'DEVICE_LIMIT_EXCEEDED',
+                message: 'Maximum registered devices (2) reached for this account.',
+                maxDevices: 2,
+              },
+            },
+          });
+        }
+
+        if (simulatedDeviceRevoked) {
+          return Promise.reject({
+            response: {
+              status: 403,
+              statusText: 'Forbidden',
+              data: {
+                status: 'REVOKED',
+                error: 'DEVICE_REVOKED',
+                message: 'This device registration has been revoked.',
+              },
+            },
+          });
+        }
+
         if (simulatedConflict) {
           return {
             data: {
@@ -133,6 +166,36 @@ describe('ATLAS Learn — P0 R4.1 Tutor Lease Lifecycle & Error Classification',
       if (url.includes('/api/learn/tutor/lease/release')) {
         return {
           data: { status: 'OK' },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config,
+        };
+      }
+
+      if (url.includes('/api/learn/devices')) {
+        const callerDeviceId = headersRecord['X-Atlas-Device-Id'];
+        return {
+          data: [
+            {
+              id: 'dev-reg-1',
+              deviceName: 'Google Chrome on Windows 10/11',
+              userAgentSummary: 'Mozilla/5.0 Chrome/131',
+              status: 'ACTIVE',
+              registeredAt: '2026-10-01T10:00:00Z',
+              lastSeenAt: '2026-10-02T12:00:00Z',
+              currentDevice: callerDeviceId === 'dev-current-123',
+            },
+            {
+              id: 'dev-reg-2',
+              deviceName: 'Apple Safari on macOS',
+              userAgentSummary: 'Mozilla/5.0 Safari/605',
+              status: 'ACTIVE',
+              registeredAt: '2026-09-30T10:00:00Z',
+              lastSeenAt: '2026-10-01T08:00:00Z',
+              currentDevice: false,
+            },
+          ],
           status: 200,
           statusText: 'OK',
           headers: {},
@@ -469,5 +532,90 @@ describe('ATLAS Learn — P0 R4.1 Tutor Lease Lifecycle & Error Classification',
     const tutorPosts = requestLog.filter((r) => r.url === '/api/learn/tutor');
     assert.strictEqual(tutorPosts.length, 1);
     assert.ok(tutorPosts[0].headers['X-Atlas-Lease-Token'], 'Dispatched POST must carry X-Atlas-Lease-Token header');
+  });
+
+  // DEVICE-01: Backend HTTP 403 DEVICE_LIMIT_EXCEEDED returns structured domain result
+  test('DEVICE-01: Backend HTTP 403 DEVICE_LIMIT_EXCEEDED maps to structured DEVICE_LIMIT_EXCEEDED result', async () => {
+    simulatedDeviceLimitExceeded = true;
+
+    const res = await ensureTutorLease(false);
+    assert.strictEqual(res.status, 'DEVICE_LIMIT_EXCEEDED');
+    if (res.status === 'DEVICE_LIMIT_EXCEEDED') {
+      assert.strictEqual(res.maxDevices, 2);
+      assert.ok(res.message.includes('Maximum registered devices'));
+    }
+  });
+
+  // DEVICE-02: Device limit exceeded does NOT set leaseToken in storage
+  test('DEVICE-02: Device limit error does not store lease token in client storage', async () => {
+    simulatedDeviceLimitExceeded = true;
+    setTutorLeaseToken(null);
+
+    await ensureTutorLease(false);
+    assert.strictEqual(getTutorLeaseToken(), null, 'Lease token must not be stored on quota failure');
+  });
+
+  // DEVICE-03: Concurrent ensureTutorLease() calls under quota limit share single network request
+  test('DEVICE-03: Concurrent ensureTutorLease() calls under quota limit are deduplicated to 1 call', async () => {
+    simulatedDeviceLimitExceeded = true;
+
+    const [r1, r2, r3] = await Promise.all([
+      ensureTutorLease(false),
+      ensureTutorLease(false),
+      ensureTutorLease(false),
+    ]);
+
+    assert.strictEqual(r1.status, 'DEVICE_LIMIT_EXCEEDED');
+    assert.strictEqual(r2.status, 'DEVICE_LIMIT_EXCEEDED');
+    assert.strictEqual(r3.status, 'DEVICE_LIMIT_EXCEEDED');
+
+    const acquireCalls = requestLog.filter((r) => r.url.includes('/api/learn/tutor/lease/acquire'));
+    assert.strictEqual(acquireCalls.length, 1, 'Concurrent lease attempts must be deduplicated to 1 network call');
+  });
+
+  // DEVICE-04: listDevices() sends X-Atlas-Device-Id header
+  test('DEVICE-04: listDevices() sends X-Atlas-Device-Id header with client device ID', async () => {
+    mockLocalStorage.setItem('atlas_learn_device_id', 'dev-current-123');
+
+    const devices = await listDevices();
+    assert.ok(devices.length > 0);
+
+    const devCall = requestLog.find((r) => r.url === '/api/learn/devices');
+    assert.ok(devCall, 'Must call /api/learn/devices');
+    assert.strictEqual(devCall.headers['X-Atlas-Device-Id'], 'dev-current-123');
+  });
+
+  // DEVICE-05: listDevices() identifies current device via currentDevice boolean
+  test('DEVICE-05: listDevices() receives currentDevice boolean distinguishing current device', async () => {
+    mockLocalStorage.setItem('atlas_learn_device_id', 'dev-current-123');
+
+    const devices = await listDevices();
+    assert.strictEqual(devices.length, 2);
+
+    const currentDev = devices.find((d) => d.id === 'dev-reg-1');
+    const otherDev = devices.find((d) => d.id === 'dev-reg-2');
+
+    assert.strictEqual(currentDev?.currentDevice, true, 'Matching device must have currentDevice = true');
+    assert.strictEqual(otherDev?.currentDevice, false, 'Non-matching device must have currentDevice = false');
+  });
+
+  // DEVICE-06: Backend HTTP 403 DEVICE_REVOKED maps to structured DEVICE_REVOKED result
+  test('DEVICE-06: Backend HTTP 403 DEVICE_REVOKED maps to structured DEVICE_REVOKED result', async () => {
+    simulatedDeviceRevoked = true;
+
+    const res = await ensureTutorLease(false);
+    assert.strictEqual(res.status, 'DEVICE_REVOKED');
+    if (res.status === 'DEVICE_REVOKED') {
+      assert.ok(res.message.includes('revoked'));
+    }
+  });
+
+  // DEVICE-07: Invariant check: DEVICE_LIMIT_EXCEEDED is distinct from CONFLICT
+  test('DEVICE-07: DEVICE_LIMIT_EXCEEDED does not produce CONFLICT or populate conflictData', async () => {
+    simulatedDeviceLimitExceeded = true;
+
+    const res = await ensureTutorLease(false);
+    assert.notStrictEqual(res.status, 'CONFLICT');
+    assert.strictEqual(res.status, 'DEVICE_LIMIT_EXCEEDED');
   });
 });

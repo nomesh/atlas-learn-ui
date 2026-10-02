@@ -44,6 +44,7 @@ import {
   type TutorLeaseResponse,
   type EnsureTutorLeaseResult,
 } from '../../api/authApi';
+import { DeviceManagementModal } from '../account/DeviceManagementModal';
 import type { ChatMessage, SourceCitation, TutorAction, Language, Topic } from '../../types';
 
 export const detectCurriculumContextFromMessage = (
@@ -782,6 +783,9 @@ export const TutorPage: React.FC = () => {
   const [leaseToken, setLeaseToken] = useState<string | null>(null);
   const [conflictData, setConflictData] = useState<TutorLeaseResponse | null>(null);
   const [isSuperseded, setIsSuperseded] = useState(false);
+  const [deviceLimitNotice, setDeviceLimitNotice] = useState<{ message: string; maxDevices: number } | null>(null);
+  const [deviceRevokedNotice, setDeviceRevokedNotice] = useState<string | null>(null);
+  const [isDeviceModalOpen, setIsDeviceModalOpen] = useState(false);
   const leaseTokenRef = useRef<string | null>(null);
   leaseTokenRef.current = leaseToken;
 
@@ -906,11 +910,27 @@ export const TutorPage: React.FC = () => {
       setLeaseToken(res.leaseToken);
       setConflictData(null);
       setIsSuperseded(false);
+      setDeviceLimitNotice(null);
+      setDeviceRevokedNotice(null);
       return res.leaseToken;
     } else if (res.status === 'CONFLICT') {
       setConflictData(res.conflictData);
       setLeaseToken(null);
       setIsSuperseded(true);
+      return null;
+    } else if (res.status === 'DEVICE_LIMIT_EXCEEDED') {
+      // Invariant: MUST NOT set isSuperseded(true) and MUST NOT show false device takeover dialog
+      setConflictData(null);
+      setLeaseToken(null);
+      setIsSuperseded(false);
+      setDeviceLimitNotice({ message: res.message, maxDevices: res.maxDevices });
+      return null;
+    } else if (res.status === 'DEVICE_REVOKED') {
+      // Invariant: MUST NOT set isSuperseded(true)
+      setConflictData(null);
+      setLeaseToken(null);
+      setIsSuperseded(false);
+      setDeviceRevokedNotice(res.message);
       return null;
     } else if (res.status === 'UNAUTHENTICATED') {
       setLeaseToken(null);
@@ -969,6 +989,12 @@ export const TutorPage: React.FC = () => {
       return;
     }
 
+    // Intercept manage devices action
+    if (textToSend === '__MANAGE_DEVICES__') {
+      setIsDeviceModalOpen(true);
+      return;
+    }
+
     // Intercept switch-to-mock action (forbidden in production)
     if (textToSend === '__SWITCH_TO_MOCK__') {
       if (import.meta.env.PROD) {
@@ -1006,6 +1032,28 @@ export const TutorPage: React.FC = () => {
       const token = await syncLeaseState(false);
       if (!token) {
         console.warn('[TutorPage] Aborting live message send: No active lease token.');
+        if (deviceLimitNotice) {
+          const limitMsg: ChatMessage = {
+            id: `msg-limit-${Date.now()}`,
+            role: 'tutor',
+            content: language === 'si'
+              ? `උපාංග සීමාව ඉක්මවා ඇත (උපරිම උපාංග ${deviceLimitNotice.maxDevices}). කරුණාකර උපාංග කළමනාකරණයෙන් පැරණි උපාංගයක් ඉවත් කරන්න.`
+              : language === 'ta'
+              ? `சாதன வரம்பு மீறப்பட்டது (அதிகபட்சம் ${deviceLimitNotice.maxDevices} சாதனங்கள்). தயவுசெய்து சாதனங்களை நிர்வகிக்கவும்.`
+              : `Device limit exceeded (maximum ${deviceLimitNotice.maxDevices} active devices). Please manage your devices to remove an unused device.`,
+            timestamp: new Date().toISOString(),
+            suggestedActions: [
+              {
+                id: `manage-devices-${Date.now()}`,
+                label: '📱 Manage Devices',
+                prompt: '__MANAGE_DEVICES__',
+              },
+            ],
+            tutorState: 'encouraging',
+            activeLang: language,
+          };
+          setMessages((prev) => [...prev, limitMsg]);
+        }
         return;
       }
     }
@@ -1177,6 +1225,40 @@ export const TutorPage: React.FC = () => {
           : language === 'ta'
           ? 'வேறொரு சாதனத்தில் இந்த அமர்வு செயலில் உள்ளது (409 Conflict). இந்த சாதனத்திற்கு மாற்ற உறுதிப்படுத்தவும்.'
           : (errorData?.message || 'Another device is currently using this tutor session (409 Conflict). Please take over the session to continue.');
+      } else if (status === 403 && (errorCode === 'DEVICE_LIMIT_EXCEEDED' || errorCode === 'DEVICE_LIMIT')) {
+        setIsSuperseded(false);
+        const maxDev = (axiosErr?.response?.data as { maxDevices?: number })?.maxDevices || 2;
+        setDeviceLimitNotice({
+          message: axiosErr?.response?.data?.message || 'Maximum registered devices limit reached.',
+          maxDevices: maxDev,
+        });
+        errorText = language === 'si'
+          ? `උපාංග සීමාව ඉක්මවා ඇත (උපරිම උපාංග ${maxDev}). කරුණාකර උපාංග කළමනාකරණයෙන් පැරණි උපාංගයක් ඉවත් කරන්න.`
+          : language === 'ta'
+          ? `சாதன வரம்பு மீறப்பட்டது (அதிகபட்சம் ${maxDev} சாதனங்கள்). சாதனங்களை நிர்வகித்து பழைய சாதனத்தை நீக்கவும்.`
+          : `Device limit exceeded (maximum ${maxDev} active devices). Please manage your devices to remove an unused device.`;
+        errorActions = [
+          {
+            id: `manage-devices-${Date.now()}`,
+            label: '📱 Manage Devices',
+            prompt: '__MANAGE_DEVICES__',
+          },
+        ];
+      } else if (status === 403 && (errorCode === 'REVOKED' || errorCode === 'DEVICE_REVOKED')) {
+        setIsSuperseded(false);
+        setDeviceRevokedNotice(axiosErr?.response?.data?.message || 'This device has been revoked.');
+        errorText = language === 'si'
+          ? 'මෙම උපකරණය ඉවත් කර ඇත. කරුණාකර නැවත පිවිසෙන්න.'
+          : language === 'ta'
+          ? 'இந்த சாதனம் நீக்கப்பட்டுள்ளது. தயவுசெய்து மீண்டும் உள்நுழையவும்.'
+          : 'This device registration has been revoked. Please sign in again or manage devices.';
+        errorActions = [
+          {
+            id: `manage-devices-${Date.now()}`,
+            label: '📱 Manage Devices',
+            prompt: '__MANAGE_DEVICES__',
+          },
+        ];
       } else if (status === 401) {
         errorText = language === 'si'
           ? 'සත්‍යාපනය අවශ්‍යයි (401 Unauthorized). සේවාදායකයට වලංගු Bearer Token එකක් හෝ සක්‍රිය Session එකක් අවශ්‍යයි.'
@@ -1910,6 +1992,65 @@ export const TutorPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Device Quota Exceeded Banner */}
+      {deviceLimitNotice && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-lg w-full px-4">
+          <div className="bg-slate-900 text-white p-4 rounded-2xl shadow-2xl border border-amber-500/40 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-slate-100">
+                  Device Limit Reached (Max {deviceLimitNotice.maxDevices})
+                </p>
+                <p className="text-[11px] text-slate-300 truncate">
+                  {deviceLimitNotice.message || 'Maximum 2 active devices allowed. Please revoke an unused device.'}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsDeviceModalOpen(true)}
+              className="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-slate-950 text-xs font-bold rounded-xl transition-colors flex-shrink-0"
+            >
+              Manage Devices
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Device Revoked Banner */}
+      {deviceRevokedNotice && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-lg w-full px-4">
+          <div className="bg-slate-900 text-white p-4 rounded-2xl shadow-2xl border border-rose-500/40 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <AlertTriangle className="w-5 h-5 text-rose-400 flex-shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-slate-100">Device Access Revoked</p>
+                <p className="text-[11px] text-slate-300 truncate">
+                  {deviceRevokedNotice}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsDeviceModalOpen(true)}
+              className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-xl transition-colors flex-shrink-0"
+            >
+              Manage Devices
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Device Management Modal */}
+      <DeviceManagementModal
+        isOpen={isDeviceModalOpen}
+        onClose={() => {
+          setIsDeviceModalOpen(false);
+          syncLeaseState(false);
+        }}
+      />
 
       {/* Reasonably Large Atlas Tutor Character Talking Stage */}
       <AtlasTutorTalkingStage

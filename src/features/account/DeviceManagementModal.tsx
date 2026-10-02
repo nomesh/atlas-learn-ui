@@ -129,7 +129,7 @@ export const DeviceManagementModal: React.FC<DeviceManagementModalProps> = ({ is
               </div>
             ) : (
               devices.map((device) => {
-                const isCurrent = device.deviceName?.toLowerCase().includes('current') || false;
+                const isCurrent = Boolean(device.currentDevice);
                 const isRevoked = device.status === 'REVOKED';
 
                 return (
@@ -181,9 +181,13 @@ export const DeviceManagementModal: React.FC<DeviceManagementModalProps> = ({ is
                       <button
                         type="button"
                         onClick={() => handleRevoke(device.id)}
-                        disabled={loading}
-                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors ml-2"
-                        title="Revoke Device Access"
+                        disabled={loading || isCurrent}
+                        className={`p-2 rounded-xl transition-colors ml-2 ${
+                          isCurrent
+                            ? 'text-slate-300 cursor-not-allowed opacity-50'
+                            : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
+                        }`}
+                        title={isCurrent ? 'Current active device cannot be self-revoked' : 'Revoke Device Access'}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
