@@ -142,6 +142,15 @@ export const MOCK_SUBJECTS: Subject[] = [
   }
 ];
 
+/**
+ * FIXTURE-ONLY FALLBACK: MOCK_TOPICS
+ * 
+ * ARCHITECTURAL NOTICE:
+ * PostgreSQL (`atlas.curriculum_topic`, `atlas.curriculum_chapter`) via backend
+ * `/api/learn/curriculum` is the authoritative runtime source of truth.
+ * This array is retained strictly for offline demo preview and unit/integration test fixtures.
+ * Do not manually replicate production curriculum catalogs here.
+ */
 export const MOCK_TOPICS: Topic[] = [
   {
     id: 'photosynthesis',
@@ -1273,6 +1282,26 @@ export const MOCK_TOPICS: Topic[] = [
       en: 'Gregor Mendel’s experiments, monohybrid crosses, dominant and recessive alleles, chromosomes, DNA, and inherited traits (Textbook Part 2, p. 169–185).',
       si: 'ග්‍රෙගර් මෙන්ඩල්ගේ පරීක්ෂණ, ඒකමුහුම් අභිජනනය, ප්‍රමුඛ සහ නිලීන ඇලීල, වර්ණදේහ, DNA සහ පාරම්පරික ලක්ෂණ (පෙළපොත 2 කොටස, පිටු 169–185).',
       ta: 'மெண்டலின் சோதனைகள், ஒருபண்புக் கலப்பு, ஆட்சியுடைய மற்றும் பின்னடைவான பரம்பரையலகுகள், நிறமூர்த்தங்கள், DNA மற்றும் பரம்பரை இயல்புகள் (பாடநூல் பகுதி 2, பக். 169–185).',
+    },
+    lessonsCount: 4,
+    completedPercentage: 0,
+  },
+  {
+    // Test/Demo fixture: Colonial Encounters & The Kandyan Kingdom
+    // Authoritative runtime catalog is served from PostgreSQL (atlas.curriculum_topic)
+    id: 'history-gr10-colonial-transitions',
+    subjectId: 'history',
+    chapterNumber: 3,
+    grade: 'grade-10',
+    title: {
+      en: 'Colonial Encounters & The Kandyan Kingdom',
+      si: 'යුරෝපීය ආක්‍රමණ සහ උඩරට රාජධානිය',
+      ta: 'ஐரோப்பியர் ஆக்கிரமிப்பும் கண்டி இராச்சியமும்',
+    },
+    description: {
+      en: 'Portuguese, Dutch, and British administrative impact and the resistance of the Kingdom of Kandy.',
+      si: 'පෘතුගීසි, ලන්දේසි සහ බ්‍රිතාන්‍ය පාලන බලපෑම සහ උඩරට රාජධානියේ ප්‍රතිරෝධය.',
+      ta: 'போர்த்துக்கேயர், டச்சுக்காரர் மற்றும் பிரித்தானியர் ஆட்சிகளின் தாக்கம் மற்றும் கண்டி இராச்சியத்தின் எதிர்ப்பு.',
     },
     lessonsCount: 4,
     completedPercentage: 0,

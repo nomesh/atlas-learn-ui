@@ -17,6 +17,8 @@ import {
 import { useStudent } from '../../state/studentContext';
 import { TutorAvatar } from '../avatar/TutorAvatar';
 import { getLessonStepsForTopic, MOCK_TOPICS } from '../../mocks/curriculumData';
+import { fetchCurriculumTopics } from '../../api/curriculumApi';
+import type { Topic } from '../../types';
 import { ElectricSwitchVisualizer } from '../../components/interactive/ElectricSwitchVisualizer';
 import { ResolutionVisualizer } from '../../components/interactive/ResolutionVisualizer';
 import { ScratchBlockVisualizer } from '../../components/interactive/ScratchBlockVisualizer';
@@ -32,7 +34,7 @@ export const TeachMePage: React.FC = () => {
   const { topicId } = useParams<{ topicId: string }>();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { language, setTutorState, tutorState, setCurriculumSubject, isAuthenticated, isGuestPreview } = useStudent();
+  const { language, setTutorState, tutorState, setCurriculumSubject, isAuthenticated, isGuestPreview, learningContext } = useStudent();
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
@@ -42,17 +44,46 @@ export const TeachMePage: React.FC = () => {
   const steps = getLessonStepsForTopic(topicId);
   const currentStep = steps[currentStepIndex] || steps[0];
   const question = currentStep?.checkQuestion;
-  const currentTopic = MOCK_TOPICS.find((t) => t.id === topicId);
+  const [resolvedTopic, setResolvedTopic] = useState<Topic | null>(() => {
+    return MOCK_TOPICS.find((t) => t.id === topicId) || null;
+  });
 
   useEffect(() => {
-    if (currentTopic) {
-      setCurriculumSubject(currentTopic.subjectId, currentTopic.id);
+    let isMounted = true;
+    if (!topicId) return;
+
+    const localMatch = MOCK_TOPICS.find((t) => t.id.toLowerCase() === topicId.toLowerCase());
+    if (localMatch) {
+      setResolvedTopic(localMatch);
+    }
+
+    fetchCurriculumTopics(undefined, learningContext.grade).then((topics) => {
+      if (isMounted && topics && topics.length > 0) {
+        const match = topics.find((t) => t.id.toLowerCase() === topicId.toLowerCase());
+        if (match) {
+          setResolvedTopic(match);
+        }
+      }
+    }).catch((err) => console.warn('[TeachMePage] Curriculum topic lookup error:', err));
+
+    return () => { isMounted = false; };
+  }, [topicId, learningContext.grade]);
+
+  // Authoritative subject resolution:
+  // 1. resolvedTopic.subjectId (from PostgreSQL or fixture)
+  // 2. learningContext.subjectId ONLY if the student's active context matches this topic
+  // NEVER fall back to learningContext.subjectId if learningContext.topicId !== topicId (Finding 2)
+  const resolvedSubjectId = resolvedTopic?.subjectId || (learningContext.topicId === topicId ? learningContext.subjectId : undefined);
+
+  useEffect(() => {
+    if (resolvedSubjectId && topicId) {
+      setCurriculumSubject(resolvedSubjectId, topicId);
     }
     setCurrentStepIndex(0);
     setSelectedOptionId(null);
     setIsAnswerSubmitted(false);
     setIsLessonFinished(false);
-  }, [topicId]);
+  }, [topicId, resolvedSubjectId]);
 
   const handleSelectOption = (optionId: string) => {
     if (isAnswerSubmitted) return;
@@ -206,7 +237,7 @@ export const TeachMePage: React.FC = () => {
             </div>
           ) : (
             <div className="rounded-2xl overflow-hidden border border-slate-800 shadow-xl">
-              <SubjectConceptVisualizer topicId={topicId} subjectId={currentTopic?.subjectId} language={language} />
+              <SubjectConceptVisualizer topicId={topicId} subjectId={resolvedSubjectId} language={language} />
             </div>
           )}
 
@@ -347,8 +378,13 @@ export const TeachMePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      const subId = currentTopic?.subjectId || 'history';
-                      const topId = currentTopic?.id || topicId || '';
+                      const subId = resolvedTopic?.subjectId || resolvedSubjectId;
+                      const topId = resolvedTopic?.id || topicId || '';
+                      if (!subId) {
+                        console.error('TeachMePage: Missing subject context for topic navigation', { topicId });
+                        navigate('/subjects');
+                        return;
+                      }
                       const qText = question.questionText[language];
                       const prompt = language === 'si'
                         ? `මෙම විභාග ප්‍රශ්නය සහ එහි මූලධර්මය මට තවදුරටත් විස්තර කරන්න: "${qText}"`
@@ -378,11 +414,16 @@ export const TeachMePage: React.FC = () => {
             <button
               type="button"
               onClick={() => {
-                const subId = currentTopic?.subjectId || 'ict';
-                const topId = currentTopic?.id || topicId || '';
-                const topicTitle = currentTopic?.title?.[language] || currentTopic?.title?.en || '';
+                const subId = resolvedTopic?.subjectId || resolvedSubjectId;
+                const topId = resolvedTopic?.id || topicId || '';
+                if (!subId) {
+                  console.error('TeachMePage: Missing subject context for step navigation', { topicId });
+                  navigate('/subjects');
+                  return;
+                }
+                const topicTitle = resolvedTopic?.title?.[language] || resolvedTopic?.title?.en || '';
                 const stepTitle = currentStep?.title?.[language] || currentStep?.title?.en || '';
-                const chapterPrefix = currentTopic?.chapterNumber ? `Chapter ${currentTopic.chapterNumber}` : '';
+                const chapterPrefix = resolvedTopic?.chapterNumber ? `Chapter ${resolvedTopic.chapterNumber}` : '';
                 const queryText = language === 'si'
                   ? `${topicTitle} (${stepTitle}) ${chapterPrefix ? `${chapterPrefix} ගැන විස්තර කරන්න` : 'ගැන විස්තර කරන්න'}`
                   : language === 'ta'

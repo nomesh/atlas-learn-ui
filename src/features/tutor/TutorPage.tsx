@@ -30,6 +30,8 @@ import { useTutorVoice } from '../../hooks/useTutorVoice';
 import { CitationDrawer } from './CitationDrawer';
 import { RichContentRenderer } from './RichContentRenderer';
 import { tutorService } from '../../api/tutorApi';
+import { MOCK_TOPICS } from '../../mocks/curriculumData';
+import { fetchCurriculumTopics } from '../../api/curriculumApi';
 import { setTutorLeaseToken } from '../../api/client';
 import { AuthGate, GuestBanner } from '../../components/auth/AuthGate';
 import {
@@ -40,7 +42,7 @@ import {
   getDeviceFriendlyName,
   type TutorLeaseResponse,
 } from '../../api/authApi';
-import type { ChatMessage, SourceCitation, TutorAction, Language } from '../../types';
+import type { ChatMessage, SourceCitation, TutorAction, Language, Topic } from '../../types';
 
 export const detectCurriculumContextFromMessage = (
   message: string,
@@ -364,9 +366,28 @@ export const TutorPage: React.FC = () => {
     login,
   } = useStudent();
 
+  const [curriculumTopics, setCurriculumTopics] = useState<Topic[]>(() => MOCK_TOPICS);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchCurriculumTopics(undefined, grade).then((remote) => {
+      if (isMounted && remote && remote.length > 0) {
+        const remoteIds = new Set(remote.map((r) => r.id.toLowerCase()));
+        const combined = [...remote, ...MOCK_TOPICS.filter((m) => !remoteIds.has(m.id.toLowerCase()))];
+        setCurriculumTopics(combined);
+      }
+    }).catch((err) => console.warn('[TutorPage] Curriculum fetch failed, using local fixtures:', err));
+    return () => { isMounted = false; };
+  }, [grade]);
+
   const paramSubject = searchParams.get('subject');
   const paramTopic = searchParams.get('topic');
-  const activeSubjectId = paramSubject || learningContext.subjectId || (grade === 'grade-10' ? 'history' : 'science');
+  const foundTopic = paramTopic ? curriculumTopics.find((t) => t.id.toLowerCase() === paramTopic.toLowerCase()) : undefined;
+  // Authoritative subject resolution without arbitrary grade-based defaults (Finding 3):
+  // If the topic explicitly belongs to a known subject, honor the topic's subject to prevent URL corruption
+  const activeSubjectId = (foundTopic && paramSubject && foundTopic.subjectId.toLowerCase() !== paramSubject.toLowerCase())
+    ? foundTopic.subjectId
+    : (paramSubject || (foundTopic?.subjectId) || learningContext.subjectId || 'science');
   const defaultTopicForSubject = (sub?: string) => {
     if (sub === 'ict') return 'number-systems';
     if (sub === 'history') return 'history-gr10-sources';
@@ -383,11 +404,21 @@ export const TutorPage: React.FC = () => {
   // Centralized Tutor Voice & Talking Character Stage
   const tutorVoice = useTutorVoice((st) => setTutorState(st));
 
+  // Correct URL params if contradictory subject was passed in URL query
+  useEffect(() => {
+    if (foundTopic && paramSubject && foundTopic.subjectId !== paramSubject) {
+      console.warn(`[TutorPage] Correcting conflicting URL subject '${paramSubject}' to topic subject '${foundTopic.subjectId}' for topic '${paramTopic}'`);
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.set('subject', foundTopic.subjectId);
+      setSearchParams(nextParams, { replace: true });
+    }
+  }, [foundTopic, paramSubject, paramTopic, searchParams, setSearchParams]);
+
   useEffect(() => {
     if (paramSubject || paramTopic) {
       setCurriculumSubject(activeSubjectId, activeTopicId);
     }
-  }, [paramSubject, paramTopic]);
+  }, [paramSubject, paramTopic, activeSubjectId, activeTopicId]);
 
   const [inputMessage, setInputMessage] = useState('');
   const [isAudioActive, setIsAudioActive] = useState(false);
@@ -725,8 +756,12 @@ Would you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore an
       return;
     }
 
-    // Intercept switch-to-mock action
+    // Intercept switch-to-mock action (forbidden in production)
     if (textToSend === '__SWITCH_TO_MOCK__') {
+      if (import.meta.env.PROD) {
+        console.warn('[TutorPage] Mock mode is strictly forbidden in production builds.');
+        return;
+      }
       tutorService.setMockMode(true);
       setIsMockMode(true);
       const studentMsgs = messages.filter((m) => m.role === 'student');
@@ -1024,32 +1059,34 @@ Would you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore an
         </div>
 
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          {/* Mode Switcher Badge (Demo vs Live) */}
-          <button
-            type="button"
-            onClick={() => {
-              const next = !isMockMode;
-              tutorService.setMockMode(next);
-              setIsMockMode(next);
-            }}
-            className={`px-2.5 py-1 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5 ${
-              isMockMode
-                ? 'bg-amber-400/20 text-amber-200 border border-amber-400/40 hover:bg-amber-400/30'
-                : 'bg-emerald-400/20 text-emerald-200 border border-emerald-400/40 hover:bg-emerald-400/30'
-            }`}
-            title={
-              isMockMode
-                ? 'Running in Offline Demo Mode. Click to switch to Live Backend.'
-                : 'Connected to Live Backend API. Click to switch to Offline Demo Mode.'
-            }
-          >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                isMockMode ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'
+          {/* Mode Switcher Badge (Demo vs Live) - Hidden in Production (Finding 6) */}
+          {!import.meta.env.PROD && (
+            <button
+              type="button"
+              onClick={() => {
+                const next = !isMockMode;
+                tutorService.setMockMode(next);
+                setIsMockMode(next);
+              }}
+              className={`px-2.5 py-1 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5 ${
+                isMockMode
+                  ? 'bg-amber-400/20 text-amber-200 border border-amber-400/40 hover:bg-amber-400/30'
+                  : 'bg-emerald-400/20 text-emerald-200 border border-emerald-400/40 hover:bg-emerald-400/30'
               }`}
-            />
-            <span>{isMockMode ? 'Demo Mode' : 'Live API'}</span>
-          </button>
+              title={
+                isMockMode
+                  ? 'Running in Offline Demo Mode. Click to switch to Live Backend.'
+                  : 'Connected to Live Backend API. Click to switch to Offline Demo Mode.'
+              }
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  isMockMode ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'
+                }`}
+              />
+              <span>{isMockMode ? 'Demo Mode' : 'Live API'}</span>
+            </button>
+          )}
 
           {/* Audio TTS toggle placeholder */}
           <button
@@ -1090,6 +1127,26 @@ Would you like to start with Chapter 1: **Inscriptions (Sellipi)** or explore an
           </button>
         </div>
       </div>
+
+      {/* Prominent Mock Mode Warning Banner - Only outside production (Finding 6) */}
+      {!import.meta.env.PROD && isMockMode && (
+        <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 py-2 flex items-center justify-between gap-3 text-amber-800 text-xs font-semibold">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping flex-shrink-0" />
+            <span>⚠️ MOCK TUTOR MODE — BACKEND BYPASSED (Responses generated from local offline fixtures)</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              tutorService.setMockMode(false);
+              setIsMockMode(false);
+            }}
+            className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white text-[11px] rounded-lg transition-colors flex-shrink-0 font-bold"
+          >
+            Switch to Live Backend
+          </button>
+        </div>
+      )}
 
       {/* 2. Multi-Turn Conversation Thread */}
       <div
