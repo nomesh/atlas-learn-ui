@@ -343,3 +343,104 @@ test('REG-10: MockTutorAdapter handles science-gr10-ch3-structure-of-matter with
   );
 });
 
+// ============================================================================
+// P0 R3: SIMULATION RESOLUTION & INTEGRITY TESTS
+// ============================================================================
+
+test('SIM-01: Structure of Matter resolves simulation capability and visualizer key deterministically', async () => {
+  const { hasSimulation } = await import('../src/components/interactive/SubjectConceptVisualizer.tsx');
+  const { getScienceVisualizerKey } = await import('../src/components/interactive/ScienceConceptVisualizer.tsx');
+
+  const topicId = 'science-gr10-ch3-structure-of-matter';
+  assert.strictEqual(hasSimulation(topicId, 'science'), true, 'Structure of matter must have simulation capability');
+  assert.strictEqual(getScienceVisualizerKey(topicId), 'structure-of-matter', 'Structure of matter must map to structure-of-matter key');
+
+  // Verify Sinhala / Tamil / hint mappings
+  assert.strictEqual(getScienceVisualizerKey('ch3-structure-of-matter'), 'structure-of-matter');
+  assert.strictEqual(getScienceVisualizerKey('science-topic', 'පදාර්ථයේ ව්‍යුහය'), 'structure-of-matter');
+  assert.strictEqual(getScienceVisualizerKey('science-topic', 'electron shell configuration'), 'structure-of-matter');
+});
+
+test('SIM-02: Motion resolves simulation capability and remains isolated from Structure of Matter', async () => {
+  const { hasSimulation } = await import('../src/components/interactive/SubjectConceptVisualizer.tsx');
+  const { getScienceVisualizerKey } = await import('../src/components/interactive/ScienceConceptVisualizer.tsx');
+
+  const topicId = 'science-gr10-ch2-motion';
+  assert.strictEqual(hasSimulation(topicId, 'science'), true, 'Motion must have simulation capability');
+  assert.strictEqual(getScienceVisualizerKey(topicId), 'motion', 'Motion must map to motion key');
+  assert.notStrictEqual(getScienceVisualizerKey(topicId), 'structure-of-matter', 'Motion must never map to structure-of-matter');
+});
+
+test('SIM-03: Rate of Reactions resolves simulation capability across Teach Me and AI Tutor Companion', async () => {
+  const { hasSimulation } = await import('../src/components/interactive/SubjectConceptVisualizer.tsx');
+  const { getScienceVisualizerKey } = await import('../src/components/interactive/ScienceConceptVisualizer.tsx');
+
+  const topicId = 'science-gr10-ch17-rate-of-reactions';
+  assert.strictEqual(hasSimulation(topicId, 'science'), true, 'Rate of reactions must have simulation capability');
+  assert.strictEqual(getScienceVisualizerKey(topicId), 'rate-reactions', 'Rate of reactions must map to rate-reactions key');
+});
+
+test('SIM-04: Negative Proof - Unsupported Science chapter returns hasSimulation=false (prevents empty Live Simulation shell)', async () => {
+  const { hasSimulation } = await import('../src/components/interactive/SubjectConceptVisualizer.tsx');
+  const { getScienceVisualizerKey } = await import('../src/components/interactive/ScienceConceptVisualizer.tsx');
+
+  // Chapter 5 (Friction) and Chapter 1 (Quantification) currently have no interactive simulation
+  assert.strictEqual(hasSimulation('science-gr10-ch5-friction', 'science'), false, 'Friction must return false for simulation capability');
+  assert.strictEqual(getScienceVisualizerKey('science-gr10-ch5-friction'), null, 'Friction visualizer key must be null');
+
+  assert.strictEqual(hasSimulation('science-gr10-ch1-quantification', 'science'), false, 'Quantification must return false');
+  assert.strictEqual(getScienceVisualizerKey('science-gr10-ch1-quantification'), null, 'Quantification visualizer key must be null');
+});
+
+test('SIM-05: Negative Proof - Unknown/custom topic returns hasSimulation=false with no fallback visualizer', async () => {
+  const { hasSimulation } = await import('../src/components/interactive/SubjectConceptVisualizer.tsx');
+  const { getScienceVisualizerKey } = await import('../src/components/interactive/ScienceConceptVisualizer.tsx');
+  const { getMathsVisualizerKey } = await import('../src/components/interactive/MathsConceptVisualizer.tsx');
+  const { getHistoryVisualizerKey } = await import('../src/components/interactive/HistoryConceptVisualizer.tsx');
+
+  const unknownTopic = 'custom-unknown-topic-999';
+  assert.strictEqual(hasSimulation(unknownTopic), false, 'Unknown topic must have hasSimulation=false');
+  assert.strictEqual(getScienceVisualizerKey(unknownTopic), null, 'Science visualizer key must be null');
+  assert.strictEqual(getMathsVisualizerKey(unknownTopic), null, 'Maths visualizer key must be null');
+  assert.strictEqual(getHistoryVisualizerKey(unknownTopic), null, 'History visualizer key must be null');
+});
+
+test('SIM-06: Maths and History capability contracts resolve correctly and reject unsupported topics', async () => {
+  const { hasSimulation } = await import('../src/components/interactive/SubjectConceptVisualizer.tsx');
+  const { getMathsVisualizerKey } = await import('../src/components/interactive/MathsConceptVisualizer.tsx');
+  const { getHistoryVisualizerKey } = await import('../src/components/interactive/HistoryConceptVisualizer.tsx');
+
+  // Maths supported topic
+  assert.strictEqual(hasSimulation('maths-gr10-ch1-perimeter', 'maths'), true);
+  assert.strictEqual(getMathsVisualizerKey('maths-gr10-ch1-perimeter'), 'perimeter');
+
+  // Maths unsupported chapter
+  assert.strictEqual(hasSimulation('maths-gr10-ch99-unsupported', 'maths'), false);
+  assert.strictEqual(getMathsVisualizerKey('maths-gr10-ch99-unsupported'), null);
+
+  // History supported topic
+  assert.strictEqual(hasSimulation('history-gr10-ch4-sluice', 'history'), true);
+  assert.strictEqual(getHistoryVisualizerKey('history-gr10-ch4-sluice'), 'sluice');
+
+  // History unsupported chapter
+  assert.strictEqual(hasSimulation('history-gr10-ch99-unsupported', 'history'), false);
+  assert.strictEqual(getHistoryVisualizerKey('history-gr10-ch99-unsupported'), null);
+});
+
+test('SIM-07: Cross-chapter sequential transition updates visualizer mode deterministically', async () => {
+  const { hasSimulation } = await import('../src/components/interactive/SubjectConceptVisualizer.tsx');
+  const { getScienceVisualizerKey } = await import('../src/components/interactive/ScienceConceptVisualizer.tsx');
+
+  const chapterSequence = [
+    { topicId: 'science-gr10-ch2-motion', expectedKey: 'motion', hasSim: true },
+    { topicId: 'science-gr10-ch3-structure-of-matter', expectedKey: 'structure-of-matter', hasSim: true },
+    { topicId: 'science-gr10-ch5-friction', expectedKey: null, hasSim: false },
+    { topicId: 'science-gr10-ch17-rate-of-reactions', expectedKey: 'rate-reactions', hasSim: true },
+  ];
+
+  for (const step of chapterSequence) {
+    assert.strictEqual(hasSimulation(step.topicId, 'science'), step.hasSim);
+    assert.strictEqual(getScienceVisualizerKey(step.topicId), step.expectedKey);
+  }
+});
+

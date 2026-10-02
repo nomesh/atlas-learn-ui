@@ -14,6 +14,7 @@ import {
 
 interface ReactionRateVisualizerProps {
   language?: 'en' | 'si' | 'ta';
+  standalone?: boolean;
 }
 
 interface Particle {
@@ -27,6 +28,7 @@ interface Particle {
 
 export const ReactionRateVisualizer: React.FC<ReactionRateVisualizerProps> = ({
   language = 'en',
+  standalone = true,
 }) => {
   // Reaction conditions
   const [temperature, setTemperature] = useState<number>(30); // 20°C to 80°C
@@ -160,39 +162,61 @@ export const ReactionRateVisualizer: React.FC<ReactionRateVisualizerProps> = ({
   };
 
   return (
-    <div className="rounded-3xl bg-slate-900 border border-slate-800 text-white p-5 sm:p-7 shadow-2xl space-y-6">
+    <div className={standalone ? "rounded-3xl bg-slate-900 border border-slate-800 text-white p-5 sm:p-7 shadow-2xl space-y-6" : "space-y-5 text-white"}>
       {/* Header bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold border border-amber-500/30 shadow-inner">
-            <Flame className="w-5 h-5 animate-pulse" />
+      {standalone ? (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold border border-amber-500/30 shadow-inner">
+              <Flame className="w-5 h-5 animate-pulse" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                <span>{titles[language]}</span>
+                <span className="text-[10px] uppercase font-mono px-2.5 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-800">
+                  Grade 10 Ch 17
+                </span>
+              </h3>
+              <p className="text-xs text-slate-400">
+                {language === 'si'
+                  ? 'උෂ්ණත්වය, සාන්ද්‍රණය, පෘෂ්ඨික වර්ගඵලය සහ උත්ප්‍රේරක මඟින් ගැටුම් සීඝ්‍රතාව වෙනස්වන අයුරු සජීවීව නිරීක්ෂණය කරන්න.'
+                  : language === 'ta'
+                  ? 'வெப்பநிலை, செறிவு, மேற்பரப்பளவு மற்றும் ஊக்கி மூலம் மோதுகை வீதம் மாறுபடுவதை நேரடியாக அவதானியுங்கள்.'
+                  : 'Simulate how kinetic energy, concentration, surface area, and catalysts alter collision frequency & activation energy.'}
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-              <span>{titles[language]}</span>
-              <span className="text-[10px] uppercase font-mono px-2.5 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-800">
-                Grade 10 Ch 17
-              </span>
-            </h3>
-            <p className="text-xs text-slate-400">
-              {language === 'si'
-                ? 'උෂ්ණත්වය, සාන්ද්‍රණය, පෘෂ්ඨික වර්ගඵලය සහ උත්ප්‍රේරක මඟින් ගැටුම් සීඝ්‍රතාව වෙනස්වන අයුරු සජීවීව නිරීක්ෂණය කරන්න.'
-                : language === 'ta'
-                ? 'வெப்பநிலை, செறிவு, மேற்பரப்பளவு மற்றும் ஊக்கி மூலம் மோதுகை வீதம் மாறுபடுவதை நேரடியாக அவதானியுங்கள்.'
-                : 'Simulate how kinetic energy, concentration, surface area, and catalysts alter collision frequency & activation energy.'}
-            </p>
-          </div>
-        </div>
 
-        <button
-          type="button"
-          onClick={handleReset}
-          className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 transition-all border border-slate-700 font-semibold"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>Reset Lab</span>
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 transition-all border border-slate-700 font-semibold"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Reset Lab</span>
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+              <Flame className="w-3.5 h-3.5 text-amber-400" />
+              {titles[language]}
+            </span>
+            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-800">
+              Grade 10 Ch 17
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 transition-all border border-slate-700 font-medium"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>Reset Lab</span>
+          </button>
+        </div>
+      )}
 
       {/* Experiment Selector Tabs */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-1.5 bg-slate-950/70 rounded-2xl border border-slate-800/80">

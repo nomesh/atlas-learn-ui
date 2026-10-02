@@ -24,14 +24,8 @@ interface MathsVisualizerProps {
   activeModeHint?: string;
 }
 
-export const MathsConceptVisualizer: React.FC<MathsVisualizerProps> = ({
-  topicId,
-  language = 'en',
-  activeModeHint,
-}) => {
-  // Determine normalized math subtopic key
-  const normalizedKey = React.useMemo(() => {
-    const raw = `${topicId} ${activeModeHint || ''}`.toLowerCase();
+export function getMathsVisualizerKey(topicId: string, activeModeHint?: string): string | null {
+  const raw = `${topicId} ${activeModeHint || ''}`.toLowerCase();
     if (raw.includes('ch1-perimeter') || raw.includes('perimeter') || raw.includes('පරිමිතිය') || raw.includes('சுற்றளவு')) return 'perimeter';
     if (raw.includes('ch2-real-numbers') || raw.includes('real-number') || raw.includes('surd') || raw.includes('තාත්වික') || raw.includes('மெய் எண்கள்')) return 'real-numbers';
     if (raw.includes('ch3-indices') || raw.includes('indices') || raw.includes('logarithm') || raw.includes('දර්ශක') || raw.includes('மடக்கை')) return 'indices-logarithms';
@@ -56,8 +50,23 @@ export const MathsConceptVisualizer: React.FC<MathsVisualizerProps> = ({
     if (raw.includes('ch22-probability') || raw.includes('probability') || raw.includes('සම්භාවිතාව') || raw.includes('நிகழ்தகவு')) return 'probability';
     if (raw.includes('ch23-statistics') || raw.includes('statistics') || raw.includes('mean') || raw.includes('සංඛ්‍යානය') || raw.includes('புள்ளியியல்')) return 'statistics';
 
-    return 'perimeter';
+    return null;
+}
+
+export const MathsConceptVisualizer: React.FC<MathsVisualizerProps> = ({
+  topicId,
+  language = 'en',
+  activeModeHint,
+}) => {
+  // Determine normalized math subtopic key
+  const normalizedKey = React.useMemo(() => {
+    return getMathsVisualizerKey(topicId, activeModeHint);
   }, [topicId, activeModeHint]);
+
+  if (!normalizedKey) {
+    return null;
+  }
+
 
   // --------------------------------------------------------------------------
   // CHAPTER 1: PERIMETER OF SECTORS

@@ -21,7 +21,7 @@ import { ScratchBlockVisualizer } from '../../components/interactive/ScratchBloc
 import { MicrocontrollerVisualizer } from '../../components/interactive/MicrocontrollerVisualizer';
 import { UrlAnatomyVisualizer } from '../../components/interactive/UrlAnatomyVisualizer';
 import { WordProcessingVisualizer } from '../../components/interactive/WordProcessingVisualizer';
-import { SubjectConceptVisualizer } from '../../components/interactive/SubjectConceptVisualizer';
+import { SubjectConceptVisualizer, hasSimulation } from '../../components/interactive/SubjectConceptVisualizer';
 import { RichContentRenderer } from './RichContentRenderer';
 
 interface CurriculumCompanionPaneProps {
@@ -276,50 +276,52 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
           </p>
         </div>
 
-        {/* 3. Interactive Data Representation / Visualizer Widget */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Interactive Concept Explorer</span>
-            </span>
-            <span className="text-[10px] text-cyan-300 font-mono">Real-time Simulation</span>
+        {/* 3. Interactive Data Representation / Visualizer Widget (Only rendered if topic has simulation) */}
+        {hasSimulation(activeTopic.id, currentSubject.id, activeModeHint) && (
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Interactive Concept Explorer</span>
+              </span>
+              <span className="text-[10px] text-cyan-300 font-mono">Real-time Simulation</span>
+            </div>
+
+            {activeTopic.id === 'number-systems' && (
+              <ElectricSwitchVisualizer language={language} showByteBuilder={true} />
+            )}
+
+            {activeTopic.id === 'configuring-formatting-computer' && (
+              <ResolutionVisualizer language={language} />
+            )}
+
+            {activeTopic.id === 'programming' && (
+              <ScratchBlockVisualizer language={language} />
+            )}
+
+            {activeTopic.id === 'physical-computing' && (
+              <MicrocontrollerVisualizer language={language} />
+            )}
+
+            {activeTopic.id === 'internet' && (
+              <UrlAnatomyVisualizer language={language} />
+            )}
+
+            {activeTopic.id === 'word-processing' && (
+              <WordProcessingVisualizer language={language} />
+            )}
+
+            {/* Interactive Subject Concept Visualizer for Maths, Science, History, etc. */}
+            {currentSubject.id !== 'ict' && !['number-systems', 'configuring-formatting-computer', 'programming', 'physical-computing', 'internet', 'word-processing'].includes(activeTopic.id) && (
+              <SubjectConceptVisualizer
+                topicId={activeTopic.id}
+                subjectId={currentSubject.id}
+                language={language}
+                activeModeHint={activeModeHint}
+              />
+            )}
           </div>
-
-          {activeTopic.id === 'number-systems' && (
-            <ElectricSwitchVisualizer language={language} showByteBuilder={true} />
-          )}
-
-          {activeTopic.id === 'configuring-formatting-computer' && (
-            <ResolutionVisualizer language={language} />
-          )}
-
-          {activeTopic.id === 'programming' && (
-            <ScratchBlockVisualizer language={language} />
-          )}
-
-          {activeTopic.id === 'physical-computing' && (
-            <MicrocontrollerVisualizer language={language} />
-          )}
-
-          {activeTopic.id === 'internet' && (
-            <UrlAnatomyVisualizer language={language} />
-          )}
-
-          {activeTopic.id === 'word-processing' && (
-            <WordProcessingVisualizer language={language} />
-          )}
-
-          {/* Interactive Subject Concept Visualizer for Maths, Science, History, etc. */}
-          {currentSubject.id !== 'ict' && !['number-systems', 'configuring-formatting-computer', 'programming', 'physical-computing', 'internet', 'word-processing'].includes(activeTopic.id) && (
-            <SubjectConceptVisualizer
-              topicId={activeTopic.id}
-              subjectId={currentSubject.id}
-              language={language}
-              activeModeHint={activeModeHint}
-            />
-          )}
-        </div>
+        )}
 
         {/* 4. Multi-Step Detailed Lesson Walkthrough */}
         <div className="space-y-3">

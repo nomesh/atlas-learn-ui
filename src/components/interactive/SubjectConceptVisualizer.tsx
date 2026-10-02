@@ -11,9 +11,9 @@ import {
   Atom,
   Cpu
 } from 'lucide-react';
-import { MathsConceptVisualizer } from './MathsConceptVisualizer';
-import { ScienceConceptVisualizer } from './ScienceConceptVisualizer';
-import { HistoryConceptVisualizer } from './HistoryConceptVisualizer';
+import { MathsConceptVisualizer, getMathsVisualizerKey } from './MathsConceptVisualizer';
+import { ScienceConceptVisualizer, getScienceVisualizerKey } from './ScienceConceptVisualizer';
+import { HistoryConceptVisualizer, getHistoryVisualizerKey } from './HistoryConceptVisualizer';
 import { GeneralSubjectVisualizer } from './GeneralSubjectVisualizer';
 import { MOCK_TOPICS, MOCK_SUBJECTS } from '../../mocks/curriculumData';
 
@@ -22,6 +22,49 @@ interface SubjectConceptVisualizerProps {
   subjectId?: string;
   language?: 'en' | 'si' | 'ta';
   activeModeHint?: string;
+}
+
+export function hasSimulation(topicId?: string, subjectId?: string, activeModeHint?: string): boolean {
+  if (!topicId) return false;
+
+  const currentTopic = MOCK_TOPICS.find((t) => t.id === topicId);
+  const effectiveSubjectId = subjectId || currentTopic?.subjectId || (
+    topicId.startsWith('math') ? 'maths' :
+    topicId.startsWith('sci') ? 'science' :
+    topicId.startsWith('hist') ? 'history' :
+    topicId.includes('english') ? 'english' :
+    topicId.includes('geography') ? 'geography' :
+    topicId.includes('ict') ? 'ict' :
+    ''
+  );
+
+  if (effectiveSubjectId === 'science') {
+    return getScienceVisualizerKey(topicId, activeModeHint) !== null;
+  }
+  if (effectiveSubjectId === 'maths') {
+    return getMathsVisualizerKey(topicId, activeModeHint) !== null;
+  }
+  if (effectiveSubjectId === 'history') {
+    return getHistoryVisualizerKey(topicId, activeModeHint) !== null;
+  }
+  if (effectiveSubjectId === 'ict') {
+    return ['number-systems', 'configuring-formatting-computer', 'programming', 'physical-computing', 'internet', 'word-processing'].includes(topicId);
+  }
+  if (effectiveSubjectId === 'english') {
+    const raw = `${topicId} ${activeModeHint || ''}`.toLowerCase();
+    return raw.includes('english') || raw.includes('grammar') || raw.includes('tense');
+  }
+  if (effectiveSubjectId === 'geography') {
+    const raw = `${topicId} ${activeModeHint || ''}`.toLowerCase();
+    return raw.includes('geography') || raw.includes('peneplain') || raw.includes('monsoon');
+  }
+
+  // Cross-domain fallback check:
+  if (getScienceVisualizerKey(topicId, activeModeHint) !== null) return true;
+  if (getMathsVisualizerKey(topicId, activeModeHint) !== null) return true;
+  if (getHistoryVisualizerKey(topicId, activeModeHint) !== null) return true;
+
+  return false;
 }
 
 export const SubjectConceptVisualizer: React.FC<SubjectConceptVisualizerProps> = ({
@@ -43,8 +86,16 @@ export const SubjectConceptVisualizer: React.FC<SubjectConceptVisualizerProps> =
     if (topicId.startsWith('hist')) return 'history';
     if (topicId.includes('english')) return 'english';
     if (topicId.includes('geography')) return 'geography';
-    return 'science';
+    return '';
   }, [subjectId, currentTopic, topicId]);
+
+  const canSimulate = useMemo(() => {
+    return hasSimulation(topicId, effectiveSubjectId, activeModeHint);
+  }, [topicId, effectiveSubjectId, activeModeHint]);
+
+  if (!canSimulate) {
+    return null;
+  }
 
   // 2. Resolve Domain for interactive workbench rendering
   const domain = useMemo(() => {

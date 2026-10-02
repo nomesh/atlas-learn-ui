@@ -25,8 +25,7 @@ import { ScratchBlockVisualizer } from '../../components/interactive/ScratchBloc
 import { MicrocontrollerVisualizer } from '../../components/interactive/MicrocontrollerVisualizer';
 import { UrlAnatomyVisualizer } from '../../components/interactive/UrlAnatomyVisualizer';
 import { WordProcessingVisualizer } from '../../components/interactive/WordProcessingVisualizer';
-import { ReactionRateVisualizer } from '../../components/interactive/ReactionRateVisualizer';
-import { SubjectConceptVisualizer } from '../../components/interactive/SubjectConceptVisualizer';
+import { SubjectConceptVisualizer, hasSimulation } from '../../components/interactive/SubjectConceptVisualizer';
 import { RichContentRenderer, MathView } from '../tutor/RichContentRenderer';
 import { AuthGate, GuestBanner } from '../../components/auth/AuthGate';
 
@@ -231,15 +230,11 @@ export const TeachMePage: React.FC = () => {
             <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
               <WordProcessingVisualizer language={language} />
             </div>
-          ) : topicId === 'science-gr10-ch17-rate-of-reactions' ? (
-            <div className="rounded-2xl overflow-hidden border border-slate-800 shadow-xl">
-              <ReactionRateVisualizer language={language} />
-            </div>
-          ) : (
+          ) : hasSimulation(topicId, resolvedSubjectId) ? (
             <div className="rounded-2xl overflow-hidden border border-slate-800 shadow-xl">
               <SubjectConceptVisualizer topicId={topicId} subjectId={resolvedSubjectId} language={language} />
             </div>
-          )}
+          ) : null}
 
           {/* 3. Real-World Sri Lankan Context */}
           <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/70 text-slate-800">

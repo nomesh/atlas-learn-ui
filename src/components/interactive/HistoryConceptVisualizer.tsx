@@ -26,13 +26,8 @@ interface HistoryVisualizerProps {
 
 export type HistoryMode = 'settlements' | 'political' | 'society' | 'sluice' | 'practical' | 'kingdoms' | 'kandy' | 'renaissance' | 'western' | 'brahmi';
 
-export const HistoryConceptVisualizer: React.FC<HistoryVisualizerProps> = ({
-  topicId,
-  language = 'en',
-  activeModeHint,
-}) => {
-  const getInitialHistoryMode = (tId: string, hint?: string): HistoryMode => {
-    const combined = `${tId} ${hint || ''}`.toLowerCase();
+export function getHistoryVisualizerKey(topicId: string, activeModeHint?: string): HistoryMode | null {
+  const combined = `${topicId} ${activeModeHint || ''}`.toLowerCase();
     if (combined.includes('settlement') || combined.includes('pre-historic') || combined.includes('pahiyangala') || combined.includes('ibbankatuwa') || combined.includes('ජනාවාස')) {
       return 'settlements';
     }
@@ -63,14 +58,24 @@ export const HistoryConceptVisualizer: React.FC<HistoryVisualizerProps> = ({
     if (combined.includes('source') || combined.includes('brahmi') || combined.includes('sellipi') || combined.includes('මූලාශ්‍ර')) {
       return 'brahmi';
     }
-    return 'sluice';
-  };
+    return null;
+}
 
-  const [historyMode, setHistoryMode] = useState<HistoryMode>(() => getInitialHistoryMode(topicId, activeModeHint));
+export const HistoryConceptVisualizer: React.FC<HistoryVisualizerProps> = ({
+  topicId,
+  language = 'en',
+  activeModeHint,
+}) => {
+  const [historyMode, setHistoryMode] = useState<HistoryMode | null>(() => getHistoryVisualizerKey(topicId, activeModeHint));
 
   useEffect(() => {
-    setHistoryMode(getInitialHistoryMode(topicId, activeModeHint));
+    setHistoryMode(getHistoryVisualizerKey(topicId, activeModeHint));
   }, [topicId, activeModeHint]);
+
+  if (!historyMode) {
+    return null;
+  }
+
 
   // Settlements state
   const [settlementEra, setSettlementEra] = useState<'prehistoric' | 'protohistoric' | 'earlyhistoric'>('prehistoric');

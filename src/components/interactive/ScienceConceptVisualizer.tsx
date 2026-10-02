@@ -15,10 +15,27 @@ import {
   Droplets
 } from 'lucide-react';
 
+import { ReactionRateVisualizer } from './ReactionRateVisualizer';
+
 interface ScienceVisualizerProps {
   topicId: string;
   language?: 'en' | 'si' | 'ta';
   activeModeHint?: string;
+}
+
+export function getScienceVisualizerKey(topicId: string, activeModeHint?: string): string | null {
+  const raw = `${topicId} ${activeModeHint || ''}`.toLowerCase();
+  if (raw.includes('ch2-motion') || raw.includes('motion') || raw.includes('velocity') || raw.includes('චලිතය') || raw.includes('இயக்கம்')) return 'motion';
+  if (raw.includes('ch3-structure-of-matter') || raw.includes('structure-of-matter') || raw.includes('electron') || raw.includes('isotope') || raw.includes('පදාර්ථයේ ව්‍යුහය')) return 'structure-of-matter';
+  if (raw.includes('ch4-newtons-laws') || raw.includes('newton') || raw.includes('f=ma') || raw.includes('නිව්ටන්')) return 'newtons-laws';
+  if (raw.includes('ch6-cells') || raw.includes('cell') || raw.includes('organelle') || raw.includes('සෛල') || raw.includes('கலம்')) return 'cells';
+  if (raw.includes('ch10-chemical-bonds') || raw.includes('bond') || raw.includes('ionic') || raw.includes('covalent') || raw.includes('බන්ධන')) return 'chemical-bonds';
+  if (raw.includes('ch15-hydrostatic') || raw.includes('pressure') || raw.includes('pascal') || raw.includes('පීඩනය') || raw.includes('அமுக்கம்')) return 'hydrostatic-pressure';
+  if (raw.includes('ch17-rate-of-reactions') || raw.includes('rate-of-reaction') || raw.includes('rate-reactions') || raw.includes('collision') || raw.includes('සීඝ්‍රතාව')) return 'rate-reactions';
+  if (raw.includes('ch19-current-electricity') || raw.includes('ohm') || raw.includes('circuit') || raw.includes('විද්‍යුතය') || raw.includes('மின்னோட்டம்')) return 'current-electricity';
+  if (raw.includes('ch20-inheritance') || raw.includes('mendel') || raw.includes('gene') || raw.includes('පාරම්පරිකතාව') || raw.includes('பரம்பரை')) return 'inheritance';
+
+  return null;
 }
 
 export const ScienceConceptVisualizer: React.FC<ScienceVisualizerProps> = ({
@@ -27,31 +44,7 @@ export const ScienceConceptVisualizer: React.FC<ScienceVisualizerProps> = ({
   activeModeHint,
 }) => {
   const normalizedKey = React.useMemo(() => {
-    const raw = `${topicId} ${activeModeHint || ''}`.toLowerCase();
-    if (raw.includes('ch1-chemical-basis') || raw.includes('biomolecule') || raw.includes('ජෛව අණු')) return 'chemical-basis';
-    if (raw.includes('ch2-motion') || raw.includes('motion') || raw.includes('velocity') || raw.includes('චලිතය') || raw.includes('இயக்கம்')) return 'motion';
-    if (raw.includes('ch3-structure-of-matter') || raw.includes('electron') || raw.includes('isotope') || raw.includes('පදාර්ථයේ ව්‍යුහය')) return 'structure-of-matter';
-    if (raw.includes('ch4-newtons-laws') || raw.includes('newton') || raw.includes('f=ma') || raw.includes('නිව්ටන්')) return 'newtons-laws';
-    if (raw.includes('ch5-friction') || raw.includes('friction') || raw.includes('ඝර්ෂණය') || raw.includes('உராய்வு')) return 'friction';
-    if (raw.includes('ch6-cells') || raw.includes('cell') || raw.includes('organelle') || raw.includes('සෛල') || raw.includes('கலம்')) return 'cells';
-    if (raw.includes('ch7-quantification') || raw.includes('mole') || raw.includes('avogadro') || raw.includes('මවුල')) return 'quantification';
-    if (raw.includes('ch13-classification') || raw.includes('classification') || raw.includes('kingdom') || raw.includes('වර්ගීකරණය')) return 'classification';
-    if (raw.includes('ch8-characteristics') || raw.includes('characteristics-of-organisms') || raw.includes('mrs gren') || raw.includes('ජීවීන්ගේ ලක්ෂණ')) return 'characteristics-organisms';
-    if (raw.includes('ch9-resultant-force') || raw.includes('resultant') || raw.includes('vector') || raw.includes('සම්ප්‍රයුක්ත')) return 'resultant-force';
-    if (raw.includes('ch10-chemical-bonds') || raw.includes('bond') || raw.includes('ionic') || raw.includes('covalent') || raw.includes('බන්ධන')) return 'chemical-bonds';
-    if (raw.includes('ch11-turning-effect') || raw.includes('moment') || raw.includes('lever') || raw.includes('ඝූර්ණය') || raw.includes('திருப்பம்')) return 'turning-effect';
-    if (raw.includes('ch12-equilibrium') || raw.includes('equilibrium') || raw.includes('stability') || raw.includes('සමතුලිතතාව')) return 'equilibrium';
-    if (raw.includes('ch14-continuity') || raw.includes('mitosis') || raw.includes('meiosis') || raw.includes('සෛල බෙදීම')) return 'continuity-life';
-    if (raw.includes('ch15-hydrostatic') || raw.includes('pressure') || raw.includes('pascal') || raw.includes('පීඩනය') || raw.includes('அமுக்கம்')) return 'hydrostatic-pressure';
-    if (raw.includes('ch16-changes-in-matter') || raw.includes('exothermic') || raw.includes('endothermic') || raw.includes('තාපදායක')) return 'changes-in-matter';
-    if (raw.includes('ch17-rate-of-reactions') || raw.includes('rate') || raw.includes('collision') || raw.includes('සීඝ්‍රතාව')) return 'rate-reactions';
-    if (raw.includes('ch18-work-energy-power') || raw.includes('work') || raw.includes('kinetic') || raw.includes('කාර්යය') || raw.includes('வேலை')) return 'work-energy-power';
-    if (raw.includes('ch19-current-electricity') || raw.includes('ohm') || raw.includes('circuit') || raw.includes('විද්‍යුතය') || raw.includes('மின்னோட்டம்')) return 'current-electricity';
-    if (raw.includes('ch20-inheritance') || raw.includes('mendel') || raw.includes('gene') || raw.includes('පාරම්පරිකතාව') || raw.includes('பரம்பரை')) return 'inheritance';
-    if (raw.includes('photosynthesis') || raw.includes('chloroplast') || raw.includes('ප්‍රභාසංස්ලේෂණය')) return 'photosynthesis';
-    if (raw.includes('respiration') || raw.includes('lung') || raw.includes('alveoli') || raw.includes('ශ්වසන')) return 'respiration';
-
-    return 'newtons-laws';
+    return getScienceVisualizerKey(topicId, activeModeHint);
   }, [topicId, activeModeHint]);
 
   // Motion State
@@ -81,12 +74,18 @@ export const ScienceConceptVisualizer: React.FC<ScienceVisualizerProps> = ({
   const [cellType, setCellType] = useState<'plant' | 'animal'>('plant');
   const [activeOrganelle, setActiveOrganelle] = useState<string>('nucleus');
 
-  // Chemical Bonds State
+  // Chemical Bonds & Structure of Matter State
   const [bondType, setBondType] = useState<'ionic' | 'covalent'>('ionic');
+  const [transferred, setTransferred] = useState<boolean>(false);
+  const [covalentOverlap, setCovalentOverlap] = useState<number>(65);
 
   // Inheritance State (Mendel's monohybrid cross)
   const [parent1, setParent1] = useState<'Tt'>('Tt');
   const [parent2, setParent2] = useState<'Tt'>('Tt');
+
+  if (!normalizedKey) {
+    return null;
+  }
 
   return (
     <div className="space-y-4 text-slate-100">
@@ -344,13 +343,131 @@ export const ScienceConceptVisualizer: React.FC<ScienceVisualizerProps> = ({
         </div>
       )}
 
+      {/* STRUCTURE OF MATTER (ATOMIC STRUCTURE & BOHR ELECTRON CONFIGURATION) */}
+      {normalizedKey === 'structure-of-matter' && (
+        <div className="space-y-4">
+          <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-4">
+            <div className="flex items-center justify-between text-xs text-slate-400 border-b border-slate-800/80 pb-2">
+              <span className="font-semibold text-rose-300">Atomic Structure & Electron Shell Configuration</span>
+              <span className="font-mono text-[11px] text-cyan-300">Grade 10 Science Chapter 3</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 items-center justify-center gap-4 py-3">
+              {/* Sodium Atom / Ion */}
+              <div className="flex flex-col items-center text-center p-3 rounded-xl bg-slate-900/60 border border-cyan-500/20">
+                <div className="relative w-28 h-28 flex items-center justify-center">
+                  {/* Shell 3 (Outer) - disappears when transferred */}
+                  {!transferred && (
+                    <div className="absolute inset-0 rounded-full border border-dashed border-amber-400/60 animate-pulse">
+                      <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 w-2.5 h-2.5 rounded-full bg-amber-400 shadow-sm shadow-amber-400/80" title="1 Valence Electron" />
+                    </div>
+                  )}
+                  {/* Shell 2 (8 electrons) */}
+                  <div className="absolute inset-2 rounded-full border border-cyan-400/40" />
+                  {/* Shell 1 (2 electrons) */}
+                  <div className="absolute inset-5 rounded-full border border-cyan-400/30" />
+                  {/* Nucleus */}
+                  <div className={`w-12 h-12 rounded-full flex flex-col items-center justify-center text-xs font-bold transition-all shadow-md ${
+                    transferred ? 'bg-cyan-500 text-slate-950 ring-4 ring-cyan-400/30' : 'bg-cyan-950 border border-cyan-400 text-cyan-200'
+                  }`}>
+                    <span>Na</span>
+                    <span className="text-[9px] font-mono">{transferred ? '+1' : '11p'}</span>
+                  </div>
+                </div>
+                <span className="text-xs font-bold text-slate-200 mt-2">
+                  {transferred ? 'Sodium Cation (Na⁺)' : 'Sodium Atom (Na)'}
+                </span>
+                <span className="text-[10px] text-cyan-400 font-mono">
+                  Config: {transferred ? '[2, 8]⁺ (Stable Octet)' : '2, 8, 1 (Unstable)'}
+                </span>
+              </div>
+
+              {/* Transfer Action Center */}
+              <div className="flex flex-col items-center justify-center text-center space-y-2">
+                <button
+                  type="button"
+                  onClick={() => setTransferred(!transferred)}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all shadow-lg flex items-center gap-1.5 ${
+                    transferred 
+                      ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700' 
+                      : 'bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white shadow-rose-500/25 animate-bounce'
+                  }`}
+                >
+                  {transferred ? (
+                    <>
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Reset Reaction</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Transfer 1 e⁻ ➔</span>
+                    </>
+                  )}
+                </button>
+                <span className="text-[11px] text-slate-400 max-w-[130px] leading-tight">
+                  {transferred 
+                    ? 'Strong electrostatic attraction binds Na⁺ and Cl⁻ into NaCl crystal lattice!' 
+                    : 'Sodium donates its lone 3s¹ valence electron to Chlorine.'}
+                </span>
+              </div>
+
+              {/* Chlorine Atom / Ion */}
+              <div className="flex flex-col items-center text-center p-3 rounded-xl bg-slate-900/60 border border-emerald-500/20">
+                <div className="relative w-28 h-28 flex items-center justify-center">
+                  {/* Shell 3 (7 electrons, gets 8th) */}
+                  <div className={`absolute inset-0 rounded-full border transition-all ${
+                    transferred ? 'border-emerald-400/80 ring-2 ring-emerald-400/20' : 'border-dashed border-emerald-400/40'
+                  }`}>
+                    {transferred && (
+                      <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 w-2.5 h-2.5 rounded-full bg-amber-400 shadow-md shadow-amber-400" title="Gained Electron from Na!" />
+                    )}
+                  </div>
+                  {/* Shell 2 (8 electrons) */}
+                  <div className="absolute inset-2 rounded-full border border-emerald-400/30" />
+                  {/* Shell 1 (2 electrons) */}
+                  <div className="absolute inset-5 rounded-full border border-emerald-400/20" />
+                  {/* Nucleus */}
+                  <div className={`w-12 h-12 rounded-full flex flex-col items-center justify-center text-xs font-bold transition-all shadow-md ${
+                    transferred ? 'bg-emerald-500 text-slate-950 ring-4 ring-emerald-400/30' : 'bg-emerald-950 border border-emerald-400 text-emerald-200'
+                  }`}>
+                    <span>Cl</span>
+                    <span className="text-[9px] font-mono">{transferred ? '-1' : '17p'}</span>
+                  </div>
+                </div>
+                <span className="text-xs font-bold text-slate-200 mt-2">
+                  {transferred ? 'Chloride Anion (Cl⁻)' : 'Chlorine Atom (Cl)'}
+                </span>
+                <span className="text-[10px] text-emerald-400 font-mono">
+                  Config: {transferred ? '[2, 8, 8]⁻ (Stable Octet)' : '2, 8, 7 (Needs 1 e⁻)'}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg text-xs space-y-1">
+              <div className="flex items-center justify-between text-slate-300">
+                <span className="font-semibold">Subatomic & Octet Principle:</span>
+                <span className="font-mono text-cyan-300 font-bold">2Na (s) + Cl₂ (g) ➔ 2NaCl (s)</span>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                {language === 'si'
+                  ? 'සෝඩියම් පරමාණුව (පරමාණුක ක්‍රමාංකය 11, ඉලෙක්ට්‍රෝන වින්‍යාසය 2,8,1) සිය බාහිර ඉලෙක්ට්‍රෝනය ක්ලෝරීන් (17: 2,8,7) වෙත පරිත්‍යාග කර ස්ථායී අෂ්ටක වින්‍යාසයක් සාදයි.'
+                  : language === 'ta'
+                  ? 'சோடியம் அணு (அணுவெண் 11, இலத்திரன் நிலைமை 2,8,1) தனது ஈற்றோட்டு இலத்திரனை குளோரினுக்கு (17: 2,8,7) வழங்கி நிலைபேறான அட்டம அமைப்பைப் பெறுகிறது.'
+                  : 'Sodium (Atomic No. 11, config 2,8,1) transfers its single 3s valence electron to Chlorine (Atomic No. 17, config 2,8,7), enabling both ions to achieve noble gas stable octet configurations [2,8]⁺ and [2,8,8]⁻.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 6. CHEMICAL BONDS */}
       {normalizedKey === 'chemical-bonds' && (
         <div className="space-y-4">
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={() => setBondType('ionic')}
+              onClick={() => { setBondType('ionic'); setTransferred(false); }}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
                 bondType === 'ionic' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-300'
               }`}
@@ -359,7 +476,7 @@ export const ScienceConceptVisualizer: React.FC<ScienceVisualizerProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setBondType('covalent')}
+              onClick={() => { setBondType('covalent'); setTransferred(false); }}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
                 bondType === 'covalent' ? 'bg-cyan-600 text-white' : 'bg-slate-800 text-slate-300'
               }`}
@@ -367,14 +484,39 @@ export const ScienceConceptVisualizer: React.FC<ScienceVisualizerProps> = ({
               Covalent Bonding (H₂O)
             </button>
           </div>
-          <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800 text-xs">
-            {bondType === 'ionic' ? (
-              <p>Sodium (Na: 2,8,1) donates 1 valence electron to Chlorine (Cl: 2,8,7) to form stable ions Na⁺ and Cl⁻ held by electrostatic attraction.</p>
-            ) : (
-              <p>Oxygen shares two pairs of electrons with two Hydrogen atoms, forming stable covalent single bonds with full outer electron shells.</p>
-            )}
-          </div>
+          {bondType === 'ionic' ? (
+            <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800 text-xs space-y-3">
+              <div className="flex justify-between items-center text-slate-400">
+                <span className="font-semibold text-amber-300">Ionic Electron Transfer (Na ➔ Cl)</span>
+                <span className="font-mono text-[11px] text-cyan-300">Grade 10 Chapter 10</span>
+              </div>
+              <p className="text-slate-300">Sodium (Na: 2,8,1) donates 1 valence electron to Chlorine (Cl: 2,8,7) to form stable ions Na⁺ and Cl⁻ held by electrostatic attraction.</p>
+            </div>
+          ) : (
+            <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800 text-xs space-y-3">
+              <div className="flex justify-between items-center text-slate-400">
+                <span className="font-semibold text-cyan-300">Covalent Orbital Overlap (H₂O)</span>
+                <span className="font-mono text-sky-400 font-bold">{covalentOverlap}% Overlap</span>
+              </div>
+              <div>
+                <input
+                  type="range"
+                  min="20"
+                  max="100"
+                  value={covalentOverlap}
+                  onChange={(e) => setCovalentOverlap(Number(e.target.value))}
+                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                />
+              </div>
+              <p className="text-slate-300">Oxygen shares two pairs of electrons with two Hydrogen atoms, forming stable covalent single bonds with full outer electron shells.</p>
+            </div>
+          )}
         </div>
+      )}
+
+      {/* RATE OF REACTIONS (PARTICLE COLLISION THEORY) */}
+      {normalizedKey === 'rate-reactions' && (
+        <ReactionRateVisualizer language={language} standalone={false} />
       )}
 
       {/* 7. INHERITANCE & MENDELIAN GENETICS */}
