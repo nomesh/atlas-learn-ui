@@ -72,6 +72,8 @@ export interface RAGResponse {
   };
   memoryTrick?: MemoryTrick;
   keyPoints?: string[];
+  /** Model that produced this answer, as reported by the backend (LIVE only; dev diagnostics). */
+  runtime?: { provider?: string; model?: string };
 }
 
 export interface TutorAction {

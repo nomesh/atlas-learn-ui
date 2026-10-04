@@ -5,6 +5,7 @@ import { Footer } from './Footer';
 import { MobileBottomNav } from './MobileBottomNav';
 import { OnboardingModal } from '../../features/onboarding/OnboardingModal';
 import { StudentSignInModal } from '../auth/StudentSignInModal';
+import { TutorRuntimeBadge } from '../dev/TutorRuntimeBadge';
 
 export const AppShell: React.FC = () => {
   const location = useLocation();
@@ -41,6 +42,9 @@ export const AppShell: React.FC = () => {
 
       {/* Portal-level Student Authentication & Registration Modal */}
       <StudentSignInModal />
+
+      {/* Development-only: shows whether Tutor answers come from LIVE backend or MOCK fixtures. Never rendered in production builds. */}
+      {!import.meta.env.PROD && <TutorRuntimeBadge />}
     </div>
   );
 };

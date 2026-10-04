@@ -1,5 +1,7 @@
 import { apiClient } from './client';
 import type { LearningContext, RAGResponse, SourceCitation } from '../types';
+import { resolveTutorMode } from './tutorMode';
+import type { TutorModeInfo, TutorModeSource, TutorRuntimeInfo } from './tutorMode';
 
 export interface TutorClearOptions {
   grade?: string;
@@ -39,10 +41,15 @@ export class AtlasLiveTutorAdapter implements TutorAdapter {
       timeout: 180000,
     });
 
+    const meta = (data as { metadata?: Record<string, unknown> }).metadata;
+    const provider = typeof meta?.llmProvider === 'string' ? meta.llmProvider : undefined;
+    const model = typeof meta?.llmModel === 'string' ? meta.llmModel : undefined;
+
     return {
       answer: data.answer,
       sources: data.sources || [],
       suggestedFollowUps: data.suggestedFollowUps || [],
+      ...(provider || model ? { runtime: { provider, model } } : {}),
     };
   }
 
@@ -7733,15 +7740,74 @@ Thank you for your question! Here is a structured educational explanation based 
 class TutorService {
   private adapter: TutorAdapter;
   private mockMode: boolean;
+  private source: TutorModeSource;
+  private runtime: TutorRuntimeInfo | undefined;
+  private readonly listeners = new Set<() => void>();
+  private snapshot: TutorModeInfo;
 
   constructor() {
-    const isProd = typeof import.meta !== 'undefined' && import.meta.env?.PROD;
-    const storedMode = !isProd && typeof localStorage !== 'undefined' ? localStorage.getItem('atlas_force_mock') : null;
-    const useMock = !isProd && (storedMode !== null ? storedMode === 'true' : (typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_MOCK_API !== 'false'));
-    this.mockMode = useMock;
-    this.adapter = useMock ? new MockTutorAdapter() : new AtlasLiveTutorAdapter();
-    console.info(`[TutorService] Initialized with ${useMock ? 'MockTutorAdapter' : 'AtlasLiveTutorAdapter'}`);
+    const hasViteEnv = typeof import.meta !== 'undefined' && !!import.meta.env;
+    const isProd = hasViteEnv && !!import.meta.env.PROD;
+    let storedOverride: string | null = null;
+    try {
+      storedOverride = !isProd && typeof localStorage !== 'undefined' ? localStorage.getItem('atlas_force_mock') : null;
+    } catch {
+      storedOverride = null;
+    }
+    const resolved = resolveTutorMode({
+      isProd,
+      hasViteEnv,
+      storedOverride,
+      envFlag: hasViteEnv ? import.meta.env.VITE_USE_MOCK_API : undefined,
+    });
+    this.mockMode = resolved.mode === 'mock';
+    this.source = resolved.source;
+    this.adapter = this.mockMode ? new MockTutorAdapter() : new AtlasLiveTutorAdapter();
+    this.snapshot = this.buildSnapshot();
+    console.info(
+      `[TutorService] Initialized with ${this.mockMode ? 'MockTutorAdapter' : 'AtlasLiveTutorAdapter'} (source: ${this.source})`
+    );
+    if (resolved.source === 'env:invalid-defaults-to-live') {
+      console.error(
+        `[TutorService] VITE_USE_MOCK_API has an invalid value; expected 'true' or 'false'. Using LIVE.`
+      );
+    }
   }
+
+  private hasStoredOverride(): boolean {
+    try {
+      if (typeof localStorage === 'undefined') return false;
+      const v = localStorage.getItem('atlas_force_mock');
+      return v === 'true' || v === 'false';
+    } catch {
+      return false;
+    }
+  }
+
+  private buildSnapshot(): TutorModeInfo {
+    return {
+      mode: this.mockMode ? 'mock' : 'live',
+      source: this.source,
+      runtime: this.mockMode ? undefined : this.runtime,
+      hasStoredOverride: this.hasStoredOverride(),
+    };
+  }
+
+  private publish(): void {
+    this.snapshot = this.buildSnapshot();
+    this.listeners.forEach((l) => l());
+  }
+
+  /** useSyncExternalStore-compatible subscription for the dev badge. */
+  public subscribe = (listener: () => void): (() => void) => {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  };
+
+  /** Stable snapshot (identity changes only when something changed). */
+  public getModeInfo = (): TutorModeInfo => this.snapshot;
 
   public isMockMode(): boolean {
     if (typeof import.meta !== 'undefined' && import.meta.env?.PROD) {
@@ -7754,19 +7820,46 @@ class TutorService {
     if (typeof import.meta !== 'undefined' && import.meta.env?.PROD) {
       console.warn('[TutorService] Mock mode cannot be enabled in production environments.');
       this.mockMode = false;
+      this.source = 'production-build';
       this.adapter = new AtlasLiveTutorAdapter();
+      this.publish();
       return;
     }
     this.mockMode = useMock;
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('atlas_force_mock', String(useMock));
+    this.source = 'localStorage-override';
+    this.runtime = undefined;
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('atlas_force_mock', String(useMock));
+      }
+    } catch {
+      /* storage unavailable: keep in-memory mode only */
     }
     this.adapter = useMock ? new MockTutorAdapter() : new AtlasLiveTutorAdapter();
     console.info(`[TutorService] Switched to ${useMock ? 'MockTutorAdapter' : 'AtlasLiveTutorAdapter'}`);
+    this.publish();
+  }
+
+  /**
+   * Remove the persisted dev override and fall back to .env resolution. Takes effect after reload,
+   * because the env value is baked in when the dev server starts.
+   */
+  public clearModeOverride(): void {
+    try {
+      if (typeof localStorage !== 'undefined') localStorage.removeItem('atlas_force_mock');
+    } catch {
+      /* ignore */
+    }
+    this.publish();
   }
 
   public async askTutor(question: string, context: LearningContext): Promise<RAGResponse> {
-    return this.adapter.ask(question, context);
+    const response = await this.adapter.ask(question, context);
+    if (!this.mockMode && response.runtime && (response.runtime.provider || response.runtime.model)) {
+      this.runtime = response.runtime;
+      this.publish();
+    }
+    return response;
   }
 
   public async clearConversation(conversationId: string, options?: TutorClearOptions): Promise<void> {
