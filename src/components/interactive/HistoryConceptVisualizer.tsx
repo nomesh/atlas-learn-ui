@@ -72,9 +72,6 @@ export const HistoryConceptVisualizer: React.FC<HistoryVisualizerProps> = ({
     setHistoryMode(getHistoryVisualizerKey(topicId, activeModeHint));
   }, [topicId, activeModeHint]);
 
-  if (!historyMode) {
-    return null;
-  }
 
 
   // Settlements state
@@ -154,6 +151,11 @@ export const HistoryConceptVisualizer: React.FC<HistoryVisualizerProps> = ({
       setHistoryMode('sluice');
     }
   }, [activeModeHint]);
+
+  // Hooks above run unconditionally; bail out only after all of them (Rules of Hooks).
+  if (!historyMode) {
+    return null;
+  }
 
   return (
     <div className="space-y-4 text-slate-100">

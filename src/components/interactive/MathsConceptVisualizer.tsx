@@ -63,9 +63,6 @@ export const MathsConceptVisualizer: React.FC<MathsVisualizerProps> = ({
     return getMathsVisualizerKey(topicId, activeModeHint);
   }, [topicId, activeModeHint]);
 
-  if (!normalizedKey) {
-    return null;
-  }
 
 
   // --------------------------------------------------------------------------
@@ -244,6 +241,11 @@ export const MathsConceptVisualizer: React.FC<MathsVisualizerProps> = ({
   // CHAPTER 23: STATISTICS
   // --------------------------------------------------------------------------
   const [assumedMean, setAssumedMean] = useState<number>(25);
+
+  // Hooks above run unconditionally; bail out only after all of them (Rules of Hooks).
+  if (!normalizedKey) {
+    return null;
+  }
 
   return (
     <div className="space-y-4 text-slate-100">

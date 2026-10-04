@@ -98,12 +98,8 @@ export const SubjectConceptVisualizer: React.FC<SubjectConceptVisualizerProps> =
   }, [subjectId, currentTopic, topicId]);
 
   const canSimulate = useMemo(() => {
-    return hasSimulation(topicId, effectiveSubjectId, activeModeHint);
-  }, [topicId, effectiveSubjectId, activeModeHint]);
-
-  if (!canSimulate) {
-    return null;
-  }
+    return hasSimulation(topicId, effectiveSubjectId, activeModeHint, grade);
+  }, [topicId, effectiveSubjectId, activeModeHint, grade]);
 
   // 2. Resolve Domain for interactive workbench rendering
   const domain = useMemo(() => {
@@ -161,6 +157,11 @@ export const SubjectConceptVisualizer: React.FC<SubjectConceptVisualizerProps> =
     }
     return topicId ? topicId.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : 'Curriculum Concept Visualizer';
   }, [currentTopic, domain, language, topicId]);
+
+  // All hooks above run on every render. Only now is it safe to bail out (Rules of Hooks).
+  if (!canSimulate) {
+    return null;
+  }
 
   return (
     <div className="bg-slate-900 text-slate-100 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-5">
