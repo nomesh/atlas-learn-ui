@@ -3,7 +3,6 @@ import {
   Activity,
   Zap,
   Flame,
-  Eye,
   Layers,
   Gauge,
   Sliders,
@@ -16,6 +15,7 @@ import {
 } from 'lucide-react';
 
 import { ReactionRateVisualizer } from './ReactionRateVisualizer';
+import { CellExplorer } from './CellExplorer';
 
 interface ScienceVisualizerProps {
   topicId: string;
@@ -70,10 +70,6 @@ export const ScienceConceptVisualizer: React.FC<ScienceVisualizerProps> = ({
   const [res, setRes] = useState<number>(4);
   const currentI = (volt / res).toFixed(2);
   const powerW = (volt * Number(currentI)).toFixed(1);
-
-  // Cells State
-  const [cellType, setCellType] = useState<'plant' | 'animal'>('plant');
-  const [activeOrganelle, setActiveOrganelle] = useState<string>('nucleus');
 
   // Chemical Bonds & Structure of Matter State
   const [bondType, setBondType] = useState<'ionic' | 'covalent'>('ionic');
@@ -299,54 +295,8 @@ export const ScienceConceptVisualizer: React.FC<ScienceVisualizerProps> = ({
         </div>
       )}
 
-      {/* 5. PLANT & ANIMAL CELLS */}
-      {normalizedKey === 'cells' && (
-        <div className="space-y-4">
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setCellType('plant')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
-                cellType === 'plant' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300'
-              }`}
-            >
-              Plant Cell (ශාක සෛලය)
-            </button>
-            <button
-              type="button"
-              onClick={() => setCellType('animal')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
-                cellType === 'animal' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300'
-              }`}
-            >
-              Animal Cell (සත්ත්ව සෛලය)
-            </button>
-          </div>
-          <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800 text-xs space-y-2">
-            <div className="flex flex-wrap gap-2">
-              {['nucleus', 'mitochondria', ...(cellType === 'plant' ? ['chloroplast', 'cellWall', 'vacuole'] : [])].map((org) => (
-                <button
-                  key={org}
-                  type="button"
-                  onClick={() => setActiveOrganelle(org)}
-                  className={`px-2.5 py-1 rounded text-xs font-medium capitalize ${
-                    activeOrganelle === org ? 'bg-sky-600 text-white' : 'bg-slate-800 text-slate-300'
-                  }`}
-                >
-                  {org}
-                </button>
-              ))}
-            </div>
-            <div className="p-3 bg-slate-900 rounded-lg text-slate-200">
-              {activeOrganelle === 'nucleus' && 'Nucleus: Contains genetic material (DNA) controlling all cellular metabolism.'}
-              {activeOrganelle === 'mitochondria' && 'Mitochondria: Generates cellular ATP energy via aerobic respiration.'}
-              {activeOrganelle === 'chloroplast' && 'Chloroplast: Contains green chlorophyll to synthesize glucose via photosynthesis.'}
-              {activeOrganelle === 'cellWall' && 'Cell Wall: Rigid cellulose layer providing mechanical support and shape.'}
-              {activeOrganelle === 'vacuole' && 'Central Vacuole: Large storage organelle maintaining osmotic turgor pressure.'}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 5. PLANT & ANIMAL CELLS (modular Cell Explorer) */}
+      {normalizedKey === 'cells' && <CellExplorer language={language} />}
 
       {/* STRUCTURE OF MATTER (ATOMIC STRUCTURE & BOHR ELECTRON CONFIGURATION) */}
       {normalizedKey === 'structure-of-matter' && (
