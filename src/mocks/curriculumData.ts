@@ -4157,6 +4157,46 @@ export function generateUniversalLessonSteps(topic: Topic): LessonStep[] {
   ];
 }
 
+/**
+ * Known equivalent topic IDs. Both spellings must resolve to the same canonical topic.
+ * Keys and values are lower-case.
+ */
+export const TOPIC_ID_ALIASES: Readonly<Record<string, string>> = {
+  'science-gr10-ch6-cell-structure': 'science-gr10-ch6-cells',
+};
+
+/** Resolve a topic ID to its canonical form (identity when no alias is registered). */
+export function canonicalTopicId(id?: string | null): string {
+  const lower = (id || '').toLowerCase().trim();
+  return TOPIC_ID_ALIASES[lower] ?? lower;
+}
+
+/** Infer a grade ("grade-10") from IDs shaped like "science-gr10-ch6-cells". */
+function inferGradeFromTopicId(id: string): string | undefined {
+  const m = id.match(/(?:^|[-_])gr(\d{1,2})(?:[-_]|$)/);
+  return m ? `grade-${parseInt(m[1], 10)}` : undefined;
+}
+
+/** Infer a subject ("science", "maths", ...) from IDs shaped like "science-gr10-ch6-cells". */
+function inferSubjectFromTopicId(id: string): string | undefined {
+  if (!/(?:^|[-_])gr\d{1,2}(?:[-_]|$)/.test(id)) return undefined;
+  const prefix = id.split(/[-_]/)[0];
+  if (prefix === 'math' || prefix === 'maths') return 'maths';
+  if (['science', 'history', 'ict', 'english', 'geography'].includes(prefix)) return prefix;
+  return undefined;
+}
+
+/**
+ * Resolve a topic from a (possibly unknown, aliased or loosely written) topic ID.
+ *
+ * Context-integrity contract (R1-R4 / curriculum integrity):
+ *  - The result NEVER crosses grade or subject boundaries. When a grade/subject is known
+ *    (explicit preference, or encoded in the ID such as "science-gr10-...") the resolved
+ *    topic must have the same grade and subject.
+ *  - Fuzzy fallbacks (chapter number, substring) only run inside the known grade AND subject
+ *    scope, and only when they produce exactly one candidate. With no scope there is no
+ *    fuzzy fallback at all.
+ */
 export function findTopicResilient(
   list: Topic[],
   id?: string | null,
@@ -4164,72 +4204,53 @@ export function findTopicResilient(
   preferredGrade?: string | null
 ): Topic | undefined {
   if (!id || !list || list.length === 0) return undefined;
-  const lower = id.toLowerCase().trim();
-  const prefSub = preferredSubjectId?.toLowerCase().trim();
-  const prefGrade = preferredGrade?.toLowerCase().trim();
+  const lower = canonicalTopicId(id);
+  const rawLower = id.toLowerCase().trim();
 
-  // Scoped lists: prioritized by subject and grade matching
-  const scopedList = list.filter((t) => {
+  // Effective scope: explicit preference wins; otherwise infer from the ID itself.
+  const prefSub = preferredSubjectId?.toLowerCase().trim() || inferSubjectFromTopicId(rawLower) || inferSubjectFromTopicId(lower);
+  const prefGrade = preferredGrade?.toLowerCase().trim() || inferGradeFromTopicId(rawLower) || inferGradeFromTopicId(lower);
+
+  const inScope = (t: Topic): boolean => {
     if (prefSub && t.subjectId.toLowerCase() !== prefSub) return false;
     if (prefGrade && t.grade.toLowerCase() !== prefGrade) return false;
     return true;
-  });
+  };
+  const scopedList = list.filter(inScope);
 
-  const subjectOnlyList = prefSub ? list.filter((t) => t.subjectId.toLowerCase() === prefSub) : list;
+  // 1. Exact match (canonical ID) inside scope.
+  const exact = scopedList.find((t) => t.id.toLowerCase() === lower);
+  if (exact) return exact;
 
-  // 1. Exact match within scopedList first, then subjectOnlyList, then global
-  const exactScoped = scopedList.find((t) => t.id.toLowerCase() === lower);
-  if (exactScoped) return exactScoped;
-
-  const exactSub = subjectOnlyList.find((t) => t.id.toLowerCase() === lower);
-  if (exactSub) return exactSub;
-
-  if (!prefSub) {
-    const exactGlobal = list.find((t) => t.id.toLowerCase() === lower);
-    if (exactGlobal) return exactGlobal;
-  }
-
-  // 2. Normalized slug matching (ignoring -of-, -in-, -the-, -and-, and trailing 's' on words like newtons -> newton)
+  // 2. Normalized slug matching (ignoring -of-, -in-, -the-, -and-, and trailing 's').
   const normalize = (s: string) =>
     s
       .toLowerCase()
       .replace(/-(of|in|the|and)-/g, '-')
       .replace(/s\b/g, '')
       .replace(/[-_ ]/g, '');
-
   const normalizedTarget = normalize(lower);
-  const slugScoped = scopedList.find((t) => normalize(t.id) === normalizedTarget);
-  if (slugScoped) return slugScoped;
+  const slug = scopedList.find((t) => normalize(t.id) === normalizedTarget);
+  if (slug) return slug;
 
-  const slugSub = subjectOnlyList.find((t) => normalize(t.id) === normalizedTarget);
-  if (slugSub) return slugSub;
+  // Fuzzy fallbacks require a fully known scope (grade AND subject). Otherwise a loosely
+  // written ID could land on another grade's topic.
+  if (!prefSub || !prefGrade) return undefined;
 
-  if (!prefSub) {
-    const slugGlobal = list.find((t) => normalize(t.id) === normalizedTarget);
-    if (slugGlobal) return slugGlobal;
-  }
-
-  // 3. Chapter number matching e.g. "ch14", "ch-14", "chapter-14", "chapter 14"
+  // 3. Chapter number matching ("ch6", "chapter-6") strictly within grade + subject.
   const chMatch = lower.match(/(?:ch|chapter)[-_ ]*(\d+)/i);
   if (chMatch) {
     const chNum = parseInt(chMatch[1], 10);
-    // Prioritize strictly within scopedList (matching both subject and grade!)
-    const byChScoped = scopedList.find((t) => t.chapterNumber === chNum);
-    if (byChScoped) return byChScoped;
-
-    // Only if no specific grade was requested, allow matching within same subject
-    if (!prefGrade) {
-      const byChSub = subjectOnlyList.find((t) => t.chapterNumber === chNum);
-      if (byChSub) return byChSub;
-    }
+    const byCh = scopedList.filter((t) => t.chapterNumber === chNum);
+    if (byCh.length === 1) return byCh[0];
   }
 
-  // 4. Substring inclusion if distinctive
-  const subScoped = scopedList.find((t) => lower.includes(t.id.toLowerCase()) || t.id.toLowerCase().includes(lower));
-  if (subScoped) return subScoped;
-
-  const subMatch = subjectOnlyList.find((t) => lower.includes(t.id.toLowerCase()) || t.id.toLowerCase().includes(lower));
-  if (subMatch) return subMatch;
+  // 4. Substring inclusion within scope, only when unambiguous.
+  const sub = scopedList.filter((t) => {
+    const tid = t.id.toLowerCase();
+    return lower.includes(tid) || tid.includes(lower);
+  });
+  if (sub.length === 1) return sub[0];
 
   return undefined;
 }
