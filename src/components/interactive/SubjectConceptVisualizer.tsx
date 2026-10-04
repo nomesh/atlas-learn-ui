@@ -15,19 +15,25 @@ import { MathsConceptVisualizer, getMathsVisualizerKey } from './MathsConceptVis
 import { ScienceConceptVisualizer, getScienceVisualizerKey } from './ScienceConceptVisualizer';
 import { HistoryConceptVisualizer, getHistoryVisualizerKey } from './HistoryConceptVisualizer';
 import { GeneralSubjectVisualizer } from './GeneralSubjectVisualizer';
-import { MOCK_TOPICS, MOCK_SUBJECTS } from '../../mocks/curriculumData';
+import { MOCK_TOPICS, MOCK_SUBJECTS, findTopicResilient } from '../../mocks/curriculumData';
 
 interface SubjectConceptVisualizerProps {
   topicId?: string;
   subjectId?: string;
+  grade?: string;
+  topicTitle?: {
+    en: string;
+    si?: string;
+    ta?: string;
+  };
   language?: 'en' | 'si' | 'ta';
   activeModeHint?: string;
 }
 
-export function hasSimulation(topicId?: string, subjectId?: string, activeModeHint?: string): boolean {
+export function hasSimulation(topicId?: string, subjectId?: string, activeModeHint?: string, grade?: string): boolean {
   if (!topicId) return false;
 
-  const currentTopic = MOCK_TOPICS.find((t) => t.id === topicId);
+  const currentTopic = findTopicResilient(MOCK_TOPICS, topicId, subjectId, grade);
   const effectiveSubjectId = subjectId || currentTopic?.subjectId || (
     topicId.startsWith('math') ? 'maths' :
     topicId.startsWith('sci') ? 'science' :
@@ -70,13 +76,15 @@ export function hasSimulation(topicId?: string, subjectId?: string, activeModeHi
 export const SubjectConceptVisualizer: React.FC<SubjectConceptVisualizerProps> = ({
   topicId = '',
   subjectId = '',
+  grade,
+  topicTitle,
   language = 'en',
   activeModeHint,
 }) => {
   // 1. Resolve Curriculum Topic and Subject metadata
   const currentTopic = useMemo(() => {
-    return MOCK_TOPICS.find((t) => t.id === topicId);
-  }, [topicId]);
+    return findTopicResilient(MOCK_TOPICS, topicId, subjectId, grade);
+  }, [topicId, subjectId, grade]);
 
   const effectiveSubjectId = useMemo(() => {
     if (subjectId) return subjectId;
@@ -130,6 +138,9 @@ export const SubjectConceptVisualizer: React.FC<SubjectConceptVisualizerProps> =
 
   // 3. Dynamic Header Display Title
   const displayTitle = useMemo(() => {
+    if (topicTitle) {
+      return topicTitle[language] || topicTitle.en;
+    }
     if (currentTopic) {
       return currentTopic.title[language] || currentTopic.title.en;
     }
@@ -214,6 +225,7 @@ export const SubjectConceptVisualizer: React.FC<SubjectConceptVisualizerProps> =
         <GeneralSubjectVisualizer
           topicId={topicId}
           subjectId={domain}
+          grade={grade}
           language={language}
           activeModeHint={activeModeHint}
         />

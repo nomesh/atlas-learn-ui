@@ -154,14 +154,25 @@ export const StudentHomePage: React.FC = () => {
                 placeholder={t('home.askTutorPrompt')}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                    navigate(`/tutor?q=${encodeURIComponent(e.currentTarget.value.trim())}`);
+                    const params = new URLSearchParams();
+                    params.set('q', e.currentTarget.value.trim());
+                    if (continueTopic?.subjectId) params.set('subject', continueTopic.subjectId);
+                    if (continueTopic?.id) params.set('topic', continueTopic.id);
+                    if (grade) params.set('grade', grade);
+                    navigate(`/tutor?${params.toString()}`);
                   }
                 }}
                 className="flex-1 bg-transparent px-3 py-2 text-sm text-white placeholder:text-cyan-200/60 focus:outline-none"
               />
               <button
                 type="button"
-                onClick={() => navigate('/tutor')}
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  if (continueTopic?.subjectId) params.set('subject', continueTopic.subjectId);
+                  if (continueTopic?.id) params.set('topic', continueTopic.id);
+                  if (grade) params.set('grade', grade);
+                  navigate(`/tutor?${params.toString()}`);
+                }}
                 className="px-4 py-2 bg-white text-atlas-navy hover:bg-cyan-50 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
               >
                 <span>Ask</span>

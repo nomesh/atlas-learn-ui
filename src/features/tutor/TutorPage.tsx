@@ -30,7 +30,7 @@ import { useTutorVoice } from '../../hooks/useTutorVoice';
 import { CitationDrawer } from './CitationDrawer';
 import { RichContentRenderer } from './RichContentRenderer';
 import { tutorService } from '../../api/tutorApi';
-import { MOCK_TOPICS } from '../../mocks/curriculumData';
+import { MOCK_TOPICS, findTopicResilient } from '../../mocks/curriculumData';
 import { fetchCurriculumTopics } from '../../api/curriculumApi';
 import { setTutorLeaseToken } from '../../api/client';
 import { AuthGate, GuestBanner } from '../../components/auth/AuthGate';
@@ -217,16 +217,22 @@ export const detectCurriculumContextFromMessage = (
     return { subjectId: 'history', topicId: 'history-gr10-ancient-society' };
   }
 
-  // History Chapter 5: Hydraulic / Science & Tech
+  // History Chapter 5: Hydraulic / Science & Tech (Ancient Sri Lankan irrigation)
   if (
-    lower.includes('hydraulic') ||
-    lower.includes('වාරි') ||
     lower.includes('bisokotuwa') ||
     lower.includes('බිසෝකොටුව') ||
     lower.includes('yoda ela') ||
     lower.includes('යෝධ ඇළ') ||
     lower.includes('ralapanawa') ||
     lower.includes('රළපනාව') ||
+    lower.includes('sorabora') ||
+    lower.includes('සොරබොර') ||
+    lower.includes('cascade system') ||
+    lower.includes('ellangawa') ||
+    lower.includes('ඇල්ලංගාව') ||
+    lower.includes('වාරි ශිෂ්ටාචාරය') ||
+    lower.includes('ancient hydraulic') ||
+    lower.includes('ancient irrigation') ||
     ((lower.includes('chapter 5') || lower.includes('5 වන පාඩම')) &&
       (currentSubject === 'history' || lower.includes('history') || lower.includes('ඉතිහාසය')))
   ) {
@@ -315,7 +321,7 @@ export const detectCurriculumContextFromMessage = (
     return { subjectId: 'history', topicId: 'history-gr10-sources' };
   }
 
-  // Maths: Pythagoras
+  // Maths Chapter 10: Pythagoras
   if (
     lower.includes('pythagor') ||
     lower.includes('hypotenuse') ||
@@ -323,20 +329,188 @@ export const detectCurriculumContextFromMessage = (
     lower.includes('right-angled triangle') ||
     lower.includes('පයිතගරස්') ||
     lower.includes('සෘජුකෝණී ත්‍රිකෝණ') ||
-    lower.includes('பைதகரசு')
+    lower.includes('பைதகரசு') ||
+    ((lower.includes('chapter 10') || lower.includes('10 වන පාඩම') || lower.includes('ch 10') || lower.includes('ch-10')) &&
+      (currentSubject === 'maths' || lower.includes('maths') || lower.includes('ගණිතය') || lower.includes('கணிதம்')))
   ) {
-    return { subjectId: 'maths', topicId: 'maths-gr10-ch08-pythagoras' };
+    return { subjectId: 'maths', topicId: 'maths-gr10-ch10-pythagoras' };
   }
 
-  // Maths: Perimeter
+  // Maths Chapter 1: Perimeter
   if (
     lower.includes('perimeter') ||
     lower.includes('පරිමිතිය') ||
     lower.includes('சுற்றளவு') ||
     lower.includes('sector of a circle') ||
-    lower.includes('arc length')
+    lower.includes('arc length') ||
+    ((lower.includes('chapter 1') || lower.includes('1 වන පාඩම') || lower.includes('ch 1') || lower.includes('ch-1')) &&
+      (currentSubject === 'maths' || lower.includes('maths') || lower.includes('ගණිතය')))
   ) {
     return { subjectId: 'maths', topicId: 'maths-gr10-ch1-perimeter' };
+  }
+
+  // Science Chapter 10: Chemical Bonds
+  if (
+    lower.includes('chemical bond') ||
+    lower.includes('රසායනික බන්ධන') ||
+    lower.includes('இரசாயனப் பிணைப்புகள்') ||
+    lower.includes('ionic bond') ||
+    lower.includes('covalent bond') ||
+    lower.includes('metallic bond') ||
+    lower.includes('අයනික බන්ධන') ||
+    lower.includes('සහසංයුජ බන්ධන') ||
+    lower.includes('ලෝහක බන්ධන') ||
+    lower.includes('octet rule') ||
+    lower.includes('අෂ්ටක නියමය') ||
+    lower.includes('electronegativity') ||
+    lower.includes('විද්‍යුත් සෘණතාව') ||
+    ((lower.includes('chapter 10') || lower.includes('10 වන පාඩම') || lower.includes('පාඩම 10') || lower.includes('ch 10') || lower.includes('ch-10')) &&
+      (currentSubject === 'science' || lower.includes('science') || lower.includes('විද්‍යාව') || lower.includes('bond') || lower.includes('බන්ධන') || lower.includes('பிணைப்பு')))
+  ) {
+    return { subjectId: 'science', topicId: 'science-gr10-ch10-chemical-bonds' };
+  }
+
+  // Science Chapter 14: Continuity of Life
+  if (
+    lower.includes('continuity') ||
+    lower.includes('mitosis') ||
+    lower.includes('meiosis') ||
+    lower.includes('cell division') ||
+    lower.includes('අඛණ්ඩතාව') ||
+    lower.includes('සෛල බෙදීම') ||
+    lower.includes('අනුනන') ||
+    lower.includes('ඌනන') ||
+    lower.includes('கலப்பிரிவு') ||
+    lower.includes('இழையுருப்பிரிவு') ||
+    lower.includes('ஒடுக்கற்பிரிவு') ||
+    ((lower.includes('chapter 14') || lower.includes('14 වන පාඩම') || lower.includes('පාඩම 14') || lower.includes('ch 14')) &&
+      (currentSubject === 'science' || lower.includes('science') || lower.includes('විද්‍යාව') || lower.includes('life')))
+  ) {
+    return { subjectId: 'science', topicId: 'science-gr10-ch14-continuity-of-life' };
+  }
+
+  // Science Chapter 13: Classification of Organisms
+  if (
+    lower.includes('classification') ||
+    lower.includes('වර්ගීකරණය') ||
+    lower.includes('வகைப்பாடு') ||
+    lower.includes('five kingdom') ||
+    lower.includes('පංච රාජධානි') ||
+    lower.includes('monera') ||
+    lower.includes('protista') ||
+    lower.includes('dichotomous') ||
+    lower.includes('ද්විපද යතුරු') ||
+    ((lower.includes('chapter 13') || lower.includes('13 වන පාඩම') || lower.includes('පාඩම 13') || lower.includes('ch 13')) &&
+      (currentSubject === 'science' || lower.includes('science') || lower.includes('විද්‍යාව') || lower.includes('organism')))
+  ) {
+    return { subjectId: 'science', topicId: 'science-gr10-ch13-classification-of-organisms' };
+  }
+
+  // Science Chapter 15: Hydrostatic Pressure & Hydraulic Machines
+  if (
+    lower.includes('hydrostatic') ||
+    lower.includes('fluid pressure') ||
+    lower.includes('liquid pressure') ||
+    lower.includes('පීඩනය') ||
+    lower.includes('ද්‍රවස්ථිතික') ||
+    lower.includes('ද්‍රව පීඩනය') ||
+    lower.includes('அமுக்கம்') ||
+    lower.includes('pascal') ||
+    lower.includes('පැස්කල්') ||
+    lower.includes('archimedes') ||
+    lower.includes('hρg') ||
+    lower.includes('h*rho*g') ||
+    lower.includes('hpg') ||
+    lower.includes('u-tube') ||
+    lower.includes('manometer') ||
+    lower.includes('hydraulic machine') ||
+    lower.includes('hydraulic press') ||
+    lower.includes('hydraulic jack') ||
+    lower.includes('hydraulic brake') ||
+    lower.includes('hydraulic lift') ||
+    lower.includes('හයිඩ්‍රොලික්') ||
+    ((lower.includes('chapter 15') || lower.includes('15 වන පාඩම') || lower.includes('පාඩම 15') || lower.includes('ch 15') || lower.includes('ch-15')) &&
+      (currentSubject === 'science' || lower.includes('science') || lower.includes('විද්‍යාව') || !currentSubject))
+  ) {
+    return { subjectId: 'science', topicId: 'science-gr10-ch15-hydrostatic-pressure' };
+  }
+
+  // Science Chapter 1: Chemical Basis of Life
+  if (
+    lower.includes('chemical basis') ||
+    lower.includes('රසායනික පදනම') ||
+    lower.includes('biomolecules') ||
+    lower.includes('carbohydrate') ||
+    lower.includes('protein') ||
+    lower.includes('ජෛව අණු') ||
+    ((lower.includes('chapter 1') || lower.includes('1 වන පාඩම') || lower.includes('ch 1')) &&
+      (currentSubject === 'science' || lower.includes('science') || lower.includes('විද්‍යාව')))
+  ) {
+    return { subjectId: 'science', topicId: 'science-gr10-ch1-chemical-basis' };
+  }
+
+  // Science Chapter 2: Linear Motion
+  if (
+    lower.includes('linear motion') ||
+    lower.includes('චලිතය') ||
+    lower.includes('සරල රේඛීය') ||
+    lower.includes('v = u + at') ||
+    lower.includes('velocity-time') ||
+    ((lower.includes('chapter 2') || lower.includes('2 වන පාඩම') || lower.includes('ch 2')) &&
+      (currentSubject === 'science' || lower.includes('science') || lower.includes('විද්‍යාව')))
+  ) {
+    return { subjectId: 'science', topicId: 'science-gr10-ch2-linear-motion' };
+  }
+
+  // Science Chapter 3: Structure of Matter
+  if (
+    lower.includes('structure of matter') ||
+    lower.includes('පදාර්ථයේ ව්‍යුහය') ||
+    lower.includes('bohr') ||
+    lower.includes('electron configuration') ||
+    lower.includes('isotope') ||
+    lower.includes('සමස්ථානික') ||
+    ((lower.includes('chapter 3') || lower.includes('3 වන පාඩම') || lower.includes('ch 3')) &&
+      (currentSubject === 'science' || lower.includes('science') || lower.includes('විද්‍යාව')))
+  ) {
+    return { subjectId: 'science', topicId: 'science-gr10-ch3-structure-of-matter' };
+  }
+
+  // Science Chapter 4: Newton's Laws
+  if (
+    lower.includes('newton') ||
+    lower.includes('නිව්ටන්') ||
+    lower.includes('f = ma') ||
+    lower.includes('momentum') ||
+    ((lower.includes('chapter 4') || lower.includes('4 වන පාඩම') || lower.includes('ch 4')) &&
+      (currentSubject === 'science' || lower.includes('science') || lower.includes('විද්‍යාව')))
+  ) {
+    return { subjectId: 'science', topicId: 'science-gr10-ch4-newton-laws' };
+  }
+
+  // Science Chapter 17: Rate of Reactions
+  if (
+    lower.includes('rate of reaction') ||
+    lower.includes('ප්‍රතික්‍රියා සීඝ්‍රතාව') ||
+    lower.includes('collision theory') ||
+    lower.includes('catalyst') ||
+    lower.includes('ගැටුම් වාදය') ||
+    ((lower.includes('chapter 17') || lower.includes('17 වන පාඩම') || lower.includes('ch 17')) &&
+      (currentSubject === 'science' || lower.includes('science') || lower.includes('විද්‍යාව')))
+  ) {
+    return { subjectId: 'science', topicId: 'science-gr10-ch17-rate-of-reactions' };
+  }
+
+  // Science Chapter 20: Inheritance
+  if (
+    lower.includes('inheritance') ||
+    lower.includes('mendel') ||
+    lower.includes('පාරම්පරිකතාව') ||
+    lower.includes('monohybrid') ||
+    ((lower.includes('chapter 20') || lower.includes('20 වන පාඩම') || lower.includes('ch 20')) &&
+      (currentSubject === 'science' || lower.includes('science') || lower.includes('විද්‍යාව')))
+  ) {
+    return { subjectId: 'science', topicId: 'science-gr10-ch20-inheritance' };
   }
 
   // Science: Photosynthesis
@@ -601,6 +775,27 @@ export function buildInitialGreeting(
         'Equations of Motion (v=u+at, s=ut+1/2at²)',
         'Velocity-Time Graph Interpretation'
       ];
+    } else if (top.includes('chemical-bond') || top.includes('bond') || top.includes('ch10') || top.includes('ch-10')) {
+      enGreeting = `Ayubowan ${studentName}! I am your **ATLAS Tutor for Grade 10 Science — Chemical Bonds**.\n\nI can help you explore the Octet Rule, Ionic bonds (electron transfer), Covalent bonds (electron sharing), polar molecules, electronegativity, and Metallic bonding.\n\nWhat would you like to explore first?`;
+      siGreeting = `ආයුබෝවන් ${studentName}! මම ඔබගේ **10 ශ්‍රේණිය විද්‍යාව — රසායනික බන්ධන** ගුරුතුමා.\n\nඅෂ්ටක නියමය, අයනික බන්ධන (ඉලෙක්ට්‍රෝන හුවමාරුව), සහසංයුජ බන්ධන (ඉලෙක්ට්‍රෝන හවුලේ තබා ගැනීම), ධ්‍රැවීය අණු, විද්‍යුත් සෘණතාව සහ ලෝහක බන්ධන පිළිබඳ ඕනෑම කරුණක් මා සමඟ සාකච්ඡා කළ හැක.\n\nඅපි කුමන කරුණෙන් පටන් ගනිමුද?`;
+      taGreeting = `வணக்கம் ${studentName}! நான் உங்கள் **தரம் 10 விஞ்ஞானம் — இரசாயனப் பிணைப்புகள்** ஆசிரியர்.\n\nஎண்ம விதி, அயன் பிணைப்புகள், பங்கீட்டுப் பிணைப்புகள் மற்றும் உலோகப் பிணைப்புகள் பற்றி நாம் கற்கலாம்.\n\nநாம் எதிலிருந்து தொடங்கலாம்?`;
+      keyPoints = [
+        'Octet Rule & Stability',
+        'Ionic Bonding & Electron Transfer',
+        'Covalent Bonding & Electron Sharing',
+        'Electronegativity & Polar Molecules',
+        'Metallic Bonding'
+      ];
+    } else if (top.includes('continuity') || top.includes('mitosis') || top.includes('ch14') || top.includes('ch-14')) {
+      enGreeting = `Ayubowan ${studentName}! I am your **ATLAS Tutor for Grade 10 Science — Continuity of Life**.\n\nI can help you explore Cell Division, Mitosis vs Meiosis, chromosome behaviors, diploid vs haploid daughter cells, and genetic variation.\n\nWhat would you like to explore first?`;
+      siGreeting = `ආයුබෝවන් ${studentName}! මම ඔබගේ **10 ශ්‍රේණිය විද්‍යාව — ජීවයේ අඛණ්ඩතාව** ගුරුතුමා.\n\nසෛල බෙදීම, අනුනනය (Mitosis) සහ ඌනනය (Meiosis), වර්ණදේහ චලනය, ද්විගුණ සහ ඒකගුණ සෛල මෙන්ම ප්‍රවේණික ප්‍රභේදනය පිළිබඳ කරුණු සාකච්ඡා කරමු.\n\nඅපි කුමන කොටසින් පටන් ගනිමුද?`;
+      taGreeting = `வணக்கம் ${studentName}! நான் உங்கள் **தரம் 10 விஞ்ஞானம் — வாழ்க்கையின் தொடர்ச்சி** ஆசிரியர்.\n\nகலப்பிரிவு, இழையுருப்பிரிவு மற்றும் ஒடுக்கற்பிரிவு படிநிலைகள் பற்றி நாம் கற்கலாம்.\n\nநாம் எதிலிருந்து தொடங்கலாம்?`;
+      keyPoints = [
+        'Importance of Cell Division',
+        'Mitosis (Stages & Daughter Cells)',
+        'Meiosis (Stages & Genetic Variation)',
+        'Diploid (2n) vs Haploid (n) Cells'
+      ];
     } else {
       enGreeting = `Ayubowan ${studentName}! I am your **ATLAS Tutor for Science**.\n\nWhat science topic would you like to explore together today?`;
       siGreeting = `ආයුබෝවන් ${studentName}! මම ඔබගේ **විද්‍යාව** ගුරුතුමා.\n\nඅද අපි කුමන විද්‍යා පාඩමෙන් පටන් ගනිමුද?`;
@@ -682,20 +877,21 @@ export const TutorPage: React.FC = () => {
 
   const paramSubject = searchParams.get('subject');
   const paramTopic = searchParams.get('topic');
-  const foundTopic = paramTopic ? curriculumTopics.find((t) => t.id.toLowerCase() === paramTopic.toLowerCase()) : undefined;
-  // Authoritative subject resolution without arbitrary grade-based defaults (Finding 3):
-  // If the topic explicitly belongs to a known subject, honor the topic's subject to prevent URL corruption
-  const activeSubjectId = (foundTopic && paramSubject && foundTopic.subjectId.toLowerCase() !== paramSubject.toLowerCase())
-    ? foundTopic.subjectId
-    : (paramSubject || (foundTopic?.subjectId) || learningContext.subjectId || 'science');
+
+  // Scoped topic resolution honoring URL subject first
+  const foundTopic = findTopicResilient(curriculumTopics, paramTopic, paramSubject || undefined, grade);
+  // Authoritative subject resolution: URL query param is primary, then topic subject, then student context
+  const activeSubjectId = paramSubject || (foundTopic?.subjectId) || learningContext.subjectId || 'science';
   const defaultTopicForSubject = (sub?: string) => {
     if (sub === 'ict') return 'number-systems';
     if (sub === 'history') return 'history-gr10-sources';
-    if (sub === 'maths') return 'maths-gr10-ch08-pythagoras';
+    if (sub === 'maths') return 'maths-gr10-ch10-pythagoras';
     if (sub === 'science') return 'science-gr10-ch1-chemical-basis';
     return undefined;
   };
-  const activeTopicId = paramTopic || learningContext.topicId;
+  const activeTopicId = (foundTopic && (!paramSubject || foundTopic.subjectId.toLowerCase() === paramSubject.toLowerCase())) 
+    ? foundTopic.id 
+    : (paramTopic || learningContext.topicId);
   const companionTopicId = activeTopicId || defaultTopicForSubject(activeSubjectId);
   const effectiveTopicId = activeTopicId || companionTopicId || 'default';
   const userScope = currentUser?.id || 'guest';
@@ -711,16 +907,6 @@ export const TutorPage: React.FC = () => {
 
   // Centralized Tutor Voice & Talking Character Stage
   const tutorVoice = useTutorVoice((st) => setTutorState(st));
-
-  // Correct URL params if contradictory subject was passed in URL query
-  useEffect(() => {
-    if (foundTopic && paramSubject && foundTopic.subjectId !== paramSubject) {
-      console.warn(`[TutorPage] Correcting conflicting URL subject '${paramSubject}' to topic subject '${foundTopic.subjectId}' for topic '${paramTopic}'`);
-      const nextParams = new URLSearchParams(searchParams);
-      nextParams.set('subject', foundTopic.subjectId);
-      setSearchParams(nextParams, { replace: true });
-    }
-  }, [foundTopic, paramSubject, paramTopic, searchParams, setSearchParams]);
 
   useEffect(() => {
     if (paramSubject || paramTopic) {
@@ -1029,7 +1215,11 @@ export const TutorPage: React.FC = () => {
         login();
         return;
       }
-      const token = await syncLeaseState(false);
+      let token = await syncLeaseState(false);
+      if (!token) {
+        // If conflict occurs when learner sends a message, attempt an immediate session takeover
+        token = await syncLeaseState(true);
+      }
       if (!token) {
         console.warn('[TutorPage] Aborting live message send: No active lease token.');
         if (deviceLimitNotice) {
@@ -1062,17 +1252,30 @@ export const TutorPage: React.FC = () => {
 
     const studentMessageText = text || (language === 'si' ? 'කරුණාකර මෙම පෙළපොත් ප්‍රශ්නය හෝ රූප සටහන පියවරෙන් පියවර විසඳා පෙන්වන්න' : language === 'ta' ? 'தயவுசெய்து இந்த பாடநூல் வினா அல்லது வரைபடத்தை படிப்படியாக விளக்குக' : 'Please analyze and solve this textbook question/diagram step by step');
 
-    // Context detection: automatically detect subject and chapter/topic from question
-    const detected = detectCurriculumContextFromMessage(studentMessageText, activeSubjectId);
-    const targetSubjectId = detected?.subjectId || activeSubjectId;
-    const targetTopicId = detected?.topicId || activeTopicId || defaultTopicForSubject(targetSubjectId);
+    // Context Authority & Session Immutability:
+    // When the learner arrived from a known curriculum location (URL query params, learningContext,
+    // or established active session), that curriculum context is authoritative and IMMUTABLE.
+    // Keyword detection is strictly a fallback for context-free entry points (e.g. global search bar).
+    const hasAuthoritativeContext = Boolean(
+      paramSubject ||
+      (paramTopic && foundTopic) ||
+      (activeSubjectId && activeTopicId && activeTopicId !== 'default')
+    );
 
-    if (detected) {
-      setCurriculumSubject(detected.subjectId, detected.topicId);
-      const nextParams = new URLSearchParams(searchParams);
-      nextParams.set('subject', detected.subjectId);
-      nextParams.set('topic', detected.topicId);
-      setSearchParams(nextParams, { replace: true });
+    let targetSubjectId = activeSubjectId;
+    let targetTopicId = activeTopicId || defaultTopicForSubject(targetSubjectId);
+
+    if (!hasAuthoritativeContext && (!activeTopicId || activeTopicId === 'default')) {
+      const detected = detectCurriculumContextFromMessage(studentMessageText);
+      if (detected) {
+        targetSubjectId = detected.subjectId;
+        targetTopicId = detected.topicId;
+        setCurriculumSubject(detected.subjectId, detected.topicId);
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.set('subject', detected.subjectId);
+        nextParams.set('topic', detected.topicId);
+        setSearchParams(nextParams, { replace: true });
+      }
     }
 
     const studentMsg: ChatMessage = {
@@ -1094,6 +1297,8 @@ export const TutorPage: React.FC = () => {
     try {
       const response = await tutorService.askTutor(studentMessageText, {
         ...learningContext,
+        productType: 'LEARN_CURRICULUM',
+        grade: grade || learningContext.grade || 'grade-10',
         subjectId: targetSubjectId,
         topicId: targetTopicId,
         imageUrl: currentImg?.previewUrl,
@@ -1153,11 +1358,21 @@ export const TutorPage: React.FC = () => {
       console.error('[Tutor Error]:', err);
       setTutorState('encouraging');
 
+      const isTimeout =
+        (err as Error)?.message?.toLowerCase().includes('timeout') ||
+        (err as { code?: string })?.code === 'ECONNABORTED';
+
       let errorText = language === 'si'
-        ? 'සමාවන්න, සන්නිවේදන දෝෂයක් සිදුවිය. කරුණාකර නැවත උත්සාහ කරන්න.'
+        ? (isTimeout
+            ? 'AI ගුරුතුමා ගැඹුරු පාඩම් සටහන පිළියෙල කරමින් සිටියදී කාල සීමාව ඉක්මවා ගියේය. කරුණාකර නැවත උත්සාහ කරන්න.'
+            : 'සමාවන්න, සන්නිවේදන දෝෂයක් සිදුවිය. කරුණාකර නැවත උත්සාහ කරන්න.')
         : language === 'ta'
-        ? 'மன்னிக்கவும், இணைப்புப் பிழை ஏற்பட்டது. சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.'
-        : 'I encountered a brief connection issue. Let us try that again in a moment.';
+        ? (isTimeout
+            ? 'AI ஆசிரியர் விரிவான பாடக் குறிப்பைத் தயாரிக்கும் போது நேரம் முடிந்தது. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.'
+            : 'மன்னிக்கவும், இணைப்புப் பிழை ஏற்பட்டது. சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.')
+        : (isTimeout
+            ? 'The AI Tutor took a bit longer than expected to prepare detailed lesson notes. Please try asking again.'
+            : 'I encountered a brief connection issue. Let us try that again in a moment.');
 
       const axiosErr = err as {
         response?: {
@@ -1172,7 +1387,15 @@ export const TutorPage: React.FC = () => {
       };
       const status = axiosErr?.response?.status;
       const errorCode = axiosErr?.response?.data?.error || axiosErr?.response?.data?.status;
-      let errorActions: TutorAction[] | undefined = undefined;
+      let errorActions: TutorAction[] | undefined = isTimeout
+        ? [
+            {
+              id: `retry-${Date.now()}`,
+              label: language === 'si' ? '🔄 නැවත උත්සාහ කරන්න' : language === 'ta' ? '🔄 மீண்டும் முயற்சிக்க' : '🔄 Try Again',
+              prompt: studentMessageText,
+            },
+          ]
+        : undefined;
 
       if (status === 428 || errorCode === 'LEASE_REQUIRED') {
         // HTTP 428 Precondition Required: Tutor lease required
@@ -1924,6 +2147,7 @@ export const TutorPage: React.FC = () => {
         <CurriculumCompanionPane
           subjectId={activeSubjectId}
           topicId={companionTopicId}
+          topics={curriculumTopics}
           language={language}
           activeModeHint={activeModeHint}
           onAskQuestion={(query) => handleSendMessage(query)}

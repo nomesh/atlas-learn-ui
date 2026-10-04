@@ -22,7 +22,7 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import { useStudent } from '../../state/studentContext';
-import { registerStudent, loginWithPassword, type RegisterResponse } from '../../api/authApi';
+import { registerStudent, loginWithPassword, redirectToLogin, type RegisterResponse } from '../../api/authApi';
 import type { LearnSessionData } from '../../api/authApi';
 import { ATLAS_MARK } from '../../brand/assets';
 import type { Grade, Language } from '../../types';
@@ -184,24 +184,76 @@ export const StudentSignInModal: React.FC = () => {
       applySession(data);
       await refreshSession();
     } catch (err: unknown) {
-      const resp = (err as { response?: { status?: number; data?: { message?: string; error?: string } } })?.response;
+      const resp = (err as {
+        response?: {
+          status?: number;
+          data?: { message?: string; error?: string; status?: string };
+        };
+      })?.response;
       const status = resp?.status;
       const serverMsg = resp?.data?.message || resp?.data?.error;
+      const accountStatus = resp?.data?.status;
+      const errorKey = (resp?.data?.error || '').toUpperCase();
+      const msgLower = (serverMsg || '').toLowerCase();
 
       if (status === 401) {
         setErrorMessage('Incorrect username or password. Please verify your credentials.');
       } else if (status === 403) {
-        if (serverMsg && serverMsg.toLowerCase().includes('device')) {
+        if (errorKey === 'DEVICE_LIMIT_EXCEEDED' || msgLower.includes('device')) {
           setErrorMessage(
             'Device limit reached: You can register a maximum of 2 devices. Please sign in from an existing device or contact support.'
           );
-        } else if (serverMsg && serverMsg.toLowerCase().includes('activation')) {
-          setErrorMessage(serverMsg);
+        } else if (
+          accountStatus === 'PENDING_PAYMENT' ||
+          msgLower.includes('payment') ||
+          msgLower.includes('awaiting payment') ||
+          msgLower.includes('activation')
+        ) {
+          setErrorMessage(
+            'Your account is awaiting payment activation. Please send your payment slip via WhatsApp to Neural Works.'
+          );
+        } else if (
+          accountStatus === 'SUSPENDED' ||
+          msgLower.includes('suspended')
+        ) {
+          setErrorMessage(
+            'Your ATLAS Learn account has been suspended. Please contact support via WhatsApp.'
+          );
+        } else if (
+          accountStatus === 'EXPIRED' ||
+          msgLower.includes('expired')
+        ) {
+          setErrorMessage(
+            'Your ATLAS Learn subscription has expired. Please contact support via WhatsApp.'
+          );
+        } else if (
+          errorKey === 'GRADE_ACCESS_DENIED' ||
+          msgLower.includes('grade')
+        ) {
+          setErrorMessage(
+            serverMsg || 'Access denied: You do not have permission to access the requested grade curriculum.'
+          );
         } else {
-          setErrorMessage(serverMsg || 'Access denied. Your account may be pending payment activation or suspended.');
+          setErrorMessage(
+            serverMsg && serverMsg !== 'Forbidden' && serverMsg !== 'Access Denied'
+              ? serverMsg
+              : 'Access denied. Please check your credentials or contact support.'
+          );
         }
+      } else if (status === 404) {
+        setErrorMessage('Authentication service endpoint not found. Please contact support.');
+      } else if (status === 405) {
+        setErrorMessage('Direct password sign-in is not supported on this endpoint. Please use the standard sign-in portal.');
+      } else if (status && status >= 500) {
+        setErrorMessage(
+          serverMsg && serverMsg !== 'Internal Server Error'
+            ? serverMsg
+            : 'Authentication server error. Please try again shortly or contact support.'
+        );
       } else {
-        setErrorMessage(serverMsg || 'Could not connect to the authentication server. Please check your internet connection.');
+        setErrorMessage(
+          serverMsg || 'Could not connect to the authentication server. Please check your internet connection.'
+        );
       }
     } finally {
       setIsSubmitting(false);
@@ -265,10 +317,10 @@ export const StudentSignInModal: React.FC = () => {
   };
 
   const whatsappHref = regResult
-    ? `https://wa.me/${(regResult.whatsappSupportNumber || '+94771234567').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+    ? `https://wa.me/${(regResult.whatsappSupportNumber || '+94714219219').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
         `Hello Neural Works! I just registered for ATLAS Learn.\n\nStudent ID: ${regResult.studentId}\nName: ${regResult.fullName}\nGrade: ${regResult.grade}\n\nHere is my payment slip for account activation.`
       )}`
-    : '#';
+    : 'https://wa.me/94714219219';
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
@@ -375,9 +427,36 @@ export const StudentSignInModal: React.FC = () => {
           
           {/* Error Banner */}
           {errorMessage && (
-            <div className="p-3.5 bg-red-50 border border-red-200 rounded-2xl text-xs text-red-800 flex items-start gap-2.5 animate-in fade-in">
-              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1 font-medium">{errorMessage}</div>
+            <div className="p-3.5 bg-red-50 border border-red-200 rounded-2xl text-xs text-red-800 space-y-2 animate-in fade-in">
+              <div className="flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 font-medium leading-relaxed">{errorMessage}</div>
+              </div>
+              {(errorMessage.includes('WhatsApp') || errorMessage.includes('support') || errorMessage.includes('payment')) && (
+                <div className="pl-6.5 pt-0.5">
+                  <a
+                    href="https://wa.me/94714219219?text=Hello%20Neural%20Works%20support%2C%20I%20need%20assistance%20with%20my%20ATLAS%20Learn%20account."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] rounded-lg transition-all shadow-xs"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 fill-white" />
+                    <span>Contact Support on WhatsApp (+94 714 219219)</span>
+                  </a>
+                </div>
+              )}
+              {errorMessage.includes('Keycloak') && (
+                <div className="pl-6.5 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => redirectToLogin('/')}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-[11px] rounded-lg transition-all shadow-xs cursor-pointer"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-white" />
+                    <span>Open Keycloak SSO Portal</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -414,7 +493,7 @@ export const StudentSignInModal: React.FC = () => {
                 />
               </div>
 
-              <div className="pt-2">
+              <div className="pt-2 space-y-2.5">
                 <button
                   type="submit"
                   disabled={isSubmitting || !loginUsername || !loginPassword}
@@ -431,6 +510,24 @@ export const StudentSignInModal: React.FC = () => {
                       <span>Sign In to Learn</span>
                     </>
                   )}
+                </button>
+
+                <div className="relative my-1">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-200"></div>
+                  </div>
+                  <div className="relative flex justify-center text-[10px] uppercase font-bold text-slate-400">
+                    <span className="bg-white px-2">Or Single Sign-On</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => redirectToLogin('/')}
+                  className="w-full py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-2xl border border-slate-200 shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  <ShieldCheck className="w-4 h-4 text-sky-600" />
+                  <span>Sign In via Keycloak SSO Portal</span>
                 </button>
               </div>
 
@@ -759,12 +856,12 @@ export const StudentSignInModal: React.FC = () => {
               Need assistance?
             </span>
             <a
-              href="https://wa.me/94771234567"
+              href="https://wa.me/94714219219"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sky-600 hover:underline font-semibold"
             >
-              WhatsApp Support (+94 77 123 4567)
+              WhatsApp Support (+94 714 219219)
             </a>
           </div>
 

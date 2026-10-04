@@ -82,7 +82,7 @@ export function getTutorLeaseToken(): string | null {
 
 export const apiClient = axios.create({
   baseURL,
-  timeout: 30000,
+  timeout: 120000,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

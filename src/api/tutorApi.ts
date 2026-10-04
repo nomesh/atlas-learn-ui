@@ -26,6 +26,7 @@ export class AtlasLiveTutorAdapter implements TutorAdapter {
     const { data } = await apiClient.post<RAGResponse & { suggestedFollowUps?: string[] }>('/api/learn/tutor', {
       conversationId: context.conversationId,
       message: question,
+      productType: context.productType || 'LEARN_CURRICULUM',
       grade: context.grade,
       subject: context.subjectId,
       language: context.language,
@@ -34,6 +35,8 @@ export class AtlasLiveTutorAdapter implements TutorAdapter {
       chapterId: context.chapterId,
       action: context.action,
       imageUrl: context.imageUrl,
+    }, {
+      timeout: 180000,
     });
 
     return {

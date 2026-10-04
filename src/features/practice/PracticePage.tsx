@@ -66,7 +66,12 @@ export const PracticePage: React.FC = () => {
   const handleAskTutor = () => {
     if (!question) return;
     const prompt = `I am practicing this question: "${question.questionText.en}". Can you explain why the correct answer is option "${question.options.find(o => o.id === question.correctOptionId)?.text.en}"?`;
-    navigate(`/tutor?q=${encodeURIComponent(prompt)}`);
+    const params = new URLSearchParams();
+    params.set('q', prompt);
+    if (question.subjectId) params.set('subject', question.subjectId);
+    if (question.topicId) params.set('topic', question.topicId);
+    if (question.grade) params.set('grade', question.grade);
+    navigate(`/tutor?${params.toString()}`);
   };
 
   if (!isAuthenticated) {

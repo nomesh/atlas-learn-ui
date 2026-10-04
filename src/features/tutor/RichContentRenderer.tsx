@@ -82,12 +82,16 @@ export const MathView: React.FC<{
     clean = clean
       .replace(/\x0crac/g, '\\frac')
       .replace(/\x09imes/g, '\\times')
-      .replace(/\\\\([a-zA-Z]+)/g, (_, cmd) => '\\' + cmd);
+      .replace(/\\\\([a-zA-Z]+)/g, (_, cmd) => '\\' + cmd)
+      .replace(/[➔→]|->/g, '\\rightarrow ')
+      .replace(/[⇒]|=>/g, '\\implies ')
+      .replace(/•/g, '\\cdot ');
 
     try {
       const html = katex.renderToString(clean, {
         displayMode,
         throwOnError: false,
+        strict: 'ignore',
         output: 'htmlAndMathml',
       });
       // If KaTeX fell back to error coloring (#cc0000), consider it invalid

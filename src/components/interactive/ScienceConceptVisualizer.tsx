@@ -27,10 +27,11 @@ export function getScienceVisualizerKey(topicId: string, activeModeHint?: string
   const raw = `${topicId} ${activeModeHint || ''}`.toLowerCase();
   if (raw.includes('ch2-motion') || raw.includes('motion') || raw.includes('velocity') || raw.includes('චලිතය') || raw.includes('இயக்கம்')) return 'motion';
   if (raw.includes('ch3-structure-of-matter') || raw.includes('structure-of-matter') || raw.includes('electron') || raw.includes('isotope') || raw.includes('පදාර්ථයේ ව්‍යුහය')) return 'structure-of-matter';
-  if (raw.includes('ch4-newtons-laws') || raw.includes('newton') || raw.includes('f=ma') || raw.includes('නිව්ටන්')) return 'newtons-laws';
-  if (raw.includes('ch6-cells') || raw.includes('cell') || raw.includes('organelle') || raw.includes('සෛල') || raw.includes('கலம்')) return 'cells';
+  if (raw.includes('ch4-newton') || raw.includes('newton') || raw.includes('f=ma') || raw.includes('නිව්ටන්') || raw.includes('நியூட்டன்')) return 'newtons-laws';
+  if (raw.includes('ch6-cell') || raw.includes('cell') || raw.includes('organelle') || raw.includes('සෛල') || raw.includes('கலம்')) return 'cells';
   if (raw.includes('ch10-chemical-bonds') || raw.includes('bond') || raw.includes('ionic') || raw.includes('covalent') || raw.includes('බන්ධන')) return 'chemical-bonds';
-  if (raw.includes('ch15-hydrostatic') || raw.includes('pressure') || raw.includes('pascal') || raw.includes('පීඩනය') || raw.includes('அமுக்கம்')) return 'hydrostatic-pressure';
+  if (raw.includes('ch14') || raw.includes('continuity') || raw.includes('mitosis') || raw.includes('meiosis') || raw.includes('cell-division') || raw.includes('අඛණ්ඩතාව') || raw.includes('සෛල බෙදීම') || raw.includes('අනුනන') || raw.includes('ඌනන') || raw.includes('கலப்பிரிவு') || raw.includes('இழையுருப்பிரிவு') || raw.includes('ஒடுக்கற்பிரிவு')) return 'cell-division';
+  if (raw.includes('ch15-hydrostatic') || raw.includes('hydrostatic') || raw.includes('pressure') || raw.includes('pascal') || raw.includes('පීඩනය') || raw.includes('ද්‍රවස්ථිතික') || raw.includes('அமுக்கம்')) return 'hydrostatic-pressure';
   if (raw.includes('ch17-rate-of-reactions') || raw.includes('rate-of-reaction') || raw.includes('rate-reactions') || raw.includes('collision') || raw.includes('සීඝ්‍රතාව')) return 'rate-reactions';
   if (raw.includes('ch19-current-electricity') || raw.includes('ohm') || raw.includes('circuit') || raw.includes('විද්‍යුතය') || raw.includes('மின்னோட்டம்')) return 'current-electricity';
   if (raw.includes('ch20-inheritance') || raw.includes('mendel') || raw.includes('gene') || raw.includes('පාරම්පරිකතාව') || raw.includes('பரம்பரை')) return 'inheritance';
@@ -82,6 +83,10 @@ export const ScienceConceptVisualizer: React.FC<ScienceVisualizerProps> = ({
   // Inheritance State (Mendel's monohybrid cross)
   const [parent1, setParent1] = useState<'Tt'>('Tt');
   const [parent2, setParent2] = useState<'Tt'>('Tt');
+
+  // Cell Division State (Mitosis vs Meiosis)
+  const [divisionType, setDivisionType] = useState<'mitosis' | 'meiosis'>('mitosis');
+  const [divisionStage, setDivisionStage] = useState<number>(2);
 
   if (!normalizedKey) {
     return null;
@@ -519,7 +524,230 @@ export const ScienceConceptVisualizer: React.FC<ScienceVisualizerProps> = ({
         <ReactionRateVisualizer language={language} standalone={false} />
       )}
 
-      {/* 7. INHERITANCE & MENDELIAN GENETICS */}
+      {/* 8. CELL DIVISION & CONTINUITY OF LIFE (MITOSIS VS MEIOSIS) */}
+      {normalizedKey === 'cell-division' && (
+        <div className="space-y-4">
+          {/* Header Controls: Division Type Selector & Stage Stepper */}
+          <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setDivisionType('mitosis')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    divisionType === 'mitosis'
+                      ? 'bg-cyan-500 text-slate-950 shadow-md font-extrabold'
+                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  }`}
+                >
+                  {language === 'si' ? 'අනුනන විභාජනය (Mitosis)' : language === 'ta' ? 'இழையுருப்பிரிவு (Mitosis)' : 'Mitosis (Equational)'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDivisionType('meiosis')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    divisionType === 'meiosis'
+                      ? 'bg-purple-500 text-white shadow-md font-extrabold'
+                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  }`}
+                >
+                  {language === 'si' ? 'ඌනන විභාජනය (Meiosis)' : language === 'ta' ? 'ஒடுக்கற்பிரிவு (Meiosis)' : 'Meiosis (Reductional)'}
+                </button>
+              </div>
+
+              <span className="text-[11px] font-mono text-cyan-300">
+                {divisionType === 'mitosis' ? '2n ➔ 2n (2 Cells)' : '2n ➔ n (4 Cells)'}
+              </span>
+            </div>
+
+            {/* Stages Stepper */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              {[
+                { id: 0, en: '1. Interphase', si: '1. අන්තර්කලාව', ta: '1. இடைக்கலாவத்தை' },
+                { id: 1, en: '2. Prophase', si: '2. ප්‍රාක්කලාව', ta: '2. முன்கலாவத்தை' },
+                { id: 2, en: '3. Metaphase', si: '3. මධ්‍යකලාව', ta: '3. மத்தியகலாவத்தை' },
+                { id: 3, en: '4. Anaphase', si: '4. අපකලාව', ta: '4. பின்கலாவத்தை' },
+                { id: 4, en: '5. Telophase', si: '5. අන්තකලාව', ta: '5. இறுதிக்கலாவத்தை' },
+              ].map((st) => (
+                <button
+                  key={st.id}
+                  type="button"
+                  onClick={() => setDivisionStage(st.id)}
+                  className={`flex-1 min-w-[100px] py-1.5 px-2 rounded-xl text-xs font-bold text-center transition-all ${
+                    divisionStage === st.id
+                      ? divisionType === 'mitosis'
+                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 shadow-sm'
+                        : 'bg-purple-500/20 text-purple-300 border border-purple-400/50 shadow-sm'
+                      : 'bg-slate-900 text-slate-400 border border-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  {st[language] || st.en}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Interactive Cell Canvas / Visual Stage Representation */}
+          <div className="p-5 bg-gradient-to-b from-slate-950 to-slate-900 rounded-2xl border border-slate-800 space-y-4">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-cyan-400" />
+                <span>
+                  {divisionStage === 0 && (language === 'si' ? 'අන්තර්කලාව: DNA ප්‍රතිවලිත වීම සහ සෛල වර්ධනය' : language === 'ta' ? 'இடைக்கலாவத்தை: DNA பிரதியாக்கம்' : 'Interphase: DNA Replication & Cell Growth')}
+                  {divisionStage === 1 && (language === 'si' ? 'ප්‍රාක්කලාව: වර්ණදේහ ඝනීභවනය සහ තර්කුව සෑදීම' : language === 'ta' ? 'முன்கலாவத்தை: நிறமூர்த்தங்கள் சுருங்குதல்' : 'Prophase: Chromosome Condensation & Spindle Formation')}
+                  {divisionStage === 2 && (language === 'si' ? 'මධ්‍යකලාව: සමක තලයේ වර්ණදේහ පෙළගැස්ම' : language === 'ta' ? 'மத்தியகலாவத்தை: மத்திய கோட்டில் வரிசையாதல்' : 'Metaphase: Chromosomes Align on Equator')}
+                  {divisionStage === 3 && (language === 'si' ? 'අපකලාව: වර්ණදේහ ධ්‍රැව දෙසට ඇදී යාම' : language === 'ta' ? 'பின்கலாவத்தை: நிறமூர்த்தங்கள் எதிர் முனைகளுக்கு நகர்தல்' : 'Anaphase: Chromatids / Chromosomes Move to Opposite Poles')}
+                  {divisionStage === 4 && (language === 'si' ? 'අන්තකලාව සහ සෛලප්ලාස්ම බෙදීම (Cytokinesis)' : language === 'ta' ? 'இறுதிக்கலாவத்தை & சைட்டோபிளாசப் பிரிவு' : 'Telophase & Cytokinesis: Daughter Cell Formation')}
+                </span>
+              </span>
+              <span className="font-mono text-[11px] text-slate-400">
+                Grade 10 Science • Chapter 14
+              </span>
+            </div>
+
+            {/* Simulated Microscopic Cell Stage Graphic */}
+            <div className="h-44 sm:h-52 w-full rounded-2xl bg-slate-950/80 border border-slate-800 relative flex items-center justify-center overflow-hidden p-4">
+              {/* Spindle poles */}
+              {divisionStage >= 1 && divisionStage <= 3 && (
+                <>
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-1 text-[10px] text-amber-400 font-mono">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
+                    <span>North Centrosome</span>
+                  </div>
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1 text-[10px] text-amber-400 font-mono">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
+                    <span>South Centrosome</span>
+                  </div>
+                  {/* Spindle fibers lines */}
+                  <div className="absolute inset-x-10 inset-y-8 border-x border-cyan-500/20 border-dashed rounded-full pointer-events-none" />
+                </>
+              )}
+
+              {/* Stage 0: Interphase */}
+              {divisionStage === 0 && (
+                <div className="w-32 h-32 rounded-full border-2 border-dashed border-cyan-400/40 bg-cyan-950/20 flex flex-col items-center justify-center p-3 text-center space-y-1">
+                  <div className="w-20 h-20 rounded-full bg-sky-900/30 border border-sky-400/30 flex items-center justify-center">
+                    <span className="text-[10px] text-sky-200 font-mono">Chromatin (2n)</span>
+                  </div>
+                  <span className="text-[9px] text-slate-400">Nuclear Envelope Intact</span>
+                </div>
+              )}
+
+              {/* Stage 1: Prophase */}
+              {divisionStage === 1 && (
+                <div className="w-36 h-36 rounded-full border border-dashed border-amber-400/30 bg-slate-900/40 relative flex items-center justify-center">
+                  <div className="flex gap-3">
+                    <div className="px-2 py-1 bg-cyan-500/30 border border-cyan-400 text-cyan-200 rounded text-[11px] font-bold">X (2n)</div>
+                    <div className="px-2 py-1 bg-purple-500/30 border border-purple-400 text-purple-200 rounded text-[11px] font-bold">X (2n)</div>
+                  </div>
+                  <span className="absolute bottom-2 text-[9px] text-amber-300">Dissolving Envelope</span>
+                </div>
+              )}
+
+              {/* Stage 2: Metaphase (Aligned at equator) */}
+              {divisionStage === 2 && (
+                <div className="w-full h-full relative flex items-center justify-center">
+                  <div className="absolute inset-x-6 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-amber-400/40" />
+                  <div className="relative z-10 flex gap-4">
+                    <div className="px-3 py-1.5 bg-cyan-500 text-slate-950 rounded-lg text-xs font-extrabold shadow-lg shadow-cyan-500/30">
+                      XX (Equator)
+                    </div>
+                    <div className="px-3 py-1.5 bg-purple-500 text-white rounded-lg text-xs font-extrabold shadow-lg shadow-purple-500/30">
+                      XX (Equator)
+                    </div>
+                  </div>
+                  <span className="absolute top-2 right-4 text-[10px] text-amber-300 font-mono">Equatorial Plate</span>
+                </div>
+              )}
+
+              {/* Stage 3: Anaphase (Sister chromatids or homologous separated) */}
+              {divisionStage === 3 && (
+                <div className="w-full h-full flex flex-col justify-between py-4 items-center">
+                  <div className="flex gap-4">
+                    <div className="px-2.5 py-1 bg-cyan-500/80 text-slate-950 rounded text-xs font-bold">V ➔ Pole 1</div>
+                    <div className="px-2.5 py-1 bg-purple-500/80 text-white rounded text-xs font-bold">V ➔ Pole 1</div>
+                  </div>
+                  <div className="text-[10px] text-slate-400 font-mono">Spindle fibers pulling centromeres</div>
+                  <div className="flex gap-4">
+                    <div className="px-2.5 py-1 bg-cyan-500/80 text-slate-950 rounded text-xs font-bold">Λ ➔ Pole 2</div>
+                    <div className="px-2.5 py-1 bg-purple-500/80 text-white rounded text-xs font-bold">Λ ➔ Pole 2</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Stage 4: Telophase & Cytokinesis */}
+              {divisionStage === 4 && (
+                <div className="flex items-center gap-4">
+                  {divisionType === 'mitosis' ? (
+                    <>
+                      <div className="w-24 h-24 rounded-full border-2 border-cyan-400 bg-cyan-950/30 flex flex-col items-center justify-center p-2 text-center shadow-lg">
+                        <span className="text-xs font-bold text-cyan-300">Daughter 1</span>
+                        <span className="text-[10px] text-emerald-400 font-mono font-bold">2n (Diploid)</span>
+                      </div>
+                      <div className="w-24 h-24 rounded-full border-2 border-cyan-400 bg-cyan-950/30 flex flex-col items-center justify-center p-2 text-center shadow-lg">
+                        <span className="text-xs font-bold text-cyan-300">Daughter 2</span>
+                        <span className="text-[10px] text-emerald-400 font-mono font-bold">2n (Diploid)</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {[1, 2, 3, 4].map((g) => (
+                        <div key={g} className="w-16 h-16 rounded-full border border-purple-400 bg-purple-950/30 flex flex-col items-center justify-center p-1 text-center shadow-sm">
+                          <span className="text-[10px] font-bold text-purple-300">Gamete {g}</span>
+                          <span className="text-[9px] text-emerald-400 font-mono font-bold">n (Haploid)</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* High-Yield Curriculum Comparison Matrix */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 text-xs">
+              <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800 space-y-1">
+                <span className="text-slate-400 text-[10px] uppercase font-bold">
+                  {language === 'si' ? 'වර්ණදේහ සංඛ්‍යාව' : language === 'ta' ? 'நிறமூர்த்த எண்ணிக்கை' : 'Chromosome Outcome'}
+                </span>
+                <p className="font-extrabold text-cyan-300 text-sm">
+                  {divisionType === 'mitosis' ? '2n ➔ 2n (නොවෙනස්ව පවතී)' : '2n ➔ n (අර්ධයක් වේ)'}
+                </p>
+                <span className="text-[10px] text-slate-400 block">
+                  {divisionType === 'mitosis' ? 'Diploid preserved' : 'Haploid reduced for gametes'}
+                </span>
+              </div>
+
+              <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800 space-y-1">
+                <span className="text-slate-400 text-[10px] uppercase font-bold">
+                  {language === 'si' ? 'සෑදෙන සෛල සංඛ්‍යාව' : language === 'ta' ? 'உருவாகும் கலங்கள்' : 'Daughter Cells'}
+                </span>
+                <p className="font-extrabold text-amber-300 text-sm">
+                  {divisionType === 'mitosis' ? 'සර්වසම සෛල 2ක් (2 Cells)' : 'ප්‍රභේදිත සෛල 4ක් (4 Cells)'}
+                </p>
+                <span className="text-[10px] text-slate-400 block">
+                  {divisionType === 'mitosis' ? 'Genetically Identical' : 'Crossing-over Variation'}
+                </span>
+              </div>
+
+              <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800 space-y-1">
+                <span className="text-slate-400 text-[10px] uppercase font-bold">
+                  {language === 'si' ? 'ප්‍රධාන වැදගත්කම' : language === 'ta' ? 'முக்கிய பயன்' : 'Biological Significance'}
+                </span>
+                <p className="font-extrabold text-emerald-300 text-sm">
+                  {divisionType === 'mitosis'
+                    ? (language === 'si' ? 'දේහ වර්ධනය සහ අලුත්වැඩියාව' : language === 'ta' ? 'உடல் வளர்ச்சி மற்றும் புனரமைப்பு' : 'Body Growth & Repair')
+                    : (language === 'si' ? 'ජන්මානු සෑදීම සහ ප්‍රභේදනය' : language === 'ta' ? 'புணரி உருவாக்கம்' : 'Gametes & Variation')}
+                </p>
+                <span className="text-[10px] text-slate-400 block">
+                  {divisionType === 'mitosis' ? 'Asexual reproduction & tissues' : 'Sexual reproduction & genetics'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 9. INHERITANCE & MENDELIAN GENETICS */}
       {normalizedKey === 'inheritance' && (
         <div className="space-y-4">
           <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800 font-mono text-xs space-y-2">

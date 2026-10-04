@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   BookOpen, 
   Sparkles, 
@@ -7,13 +7,13 @@ import {
   Zap, 
   Cpu, 
   CheckCircle2, 
-  HelpCircle,
-  ExternalLink,
-  Layers,
-  ArrowRight,
-  AlertTriangle
+  HelpCircle, 
+  ExternalLink, 
+  Layers, 
+  ArrowRight, 
+  AlertTriangle 
 } from 'lucide-react';
-import { MOCK_SUBJECTS, MOCK_TOPICS, getLessonStepsForTopic } from '../../mocks/curriculumData';
+import { MOCK_SUBJECTS, MOCK_TOPICS, getLessonStepsForTopic, findTopicResilient as findTopicResilientCore } from '../../mocks/curriculumData';
 import { useStudent } from '../../state/studentContext';
 import { ElectricSwitchVisualizer } from '../../components/interactive/ElectricSwitchVisualizer';
 import { ResolutionVisualizer } from '../../components/interactive/ResolutionVisualizer';
@@ -23,18 +23,103 @@ import { UrlAnatomyVisualizer } from '../../components/interactive/UrlAnatomyVis
 import { WordProcessingVisualizer } from '../../components/interactive/WordProcessingVisualizer';
 import { SubjectConceptVisualizer, hasSimulation } from '../../components/interactive/SubjectConceptVisualizer';
 import { RichContentRenderer } from './RichContentRenderer';
+import type { Topic } from '../../types';
+
+export function findTopicResilient(list: Topic[], id?: string, preferredSubjectId?: string): Topic | undefined {
+  return findTopicResilientCore(list, id, preferredSubjectId);
+}
 
 interface CurriculumCompanionPaneProps {
   subjectId: string;
   topicId?: string;
+  topics?: Topic[];
   language: 'en' | 'si' | 'ta';
   activeModeHint?: string;
   onAskQuestion: (query: string) => void;
   onSelectTopic: (newTopicId: string) => void;
 }
 
+const getTopicDeepDive = (topicId: string, language: 'en' | 'si' | 'ta' = 'en', topic?: Topic) => {
+  const lower = (topicId || '').toLowerCase();
 
-const getTopicDeepDive = (topicId: string) => {
+  // Science Chapter 10: Chemical Bonds
+  if (lower.includes('chemical-bond') || lower.includes('chemical-basis') === false && (lower.includes('bond') || lower.includes('ch10') || lower.includes('ch-10'))) {
+    return {
+      examTrap: language === 'si'
+        ? '⚠️ අ.පො.ස. සා/පෙළ විභාග උගුල: අයනික බන්ධන (Ionic bonds) සෑදෙන්නේ ලෝහ සහ අලෝහ අතර ඉලෙක්ට්‍රෝන හුවමාරුවෙනි. සහසංයුජ බන්ධන (Covalent bonds) සෑදෙන්නේ අලෝහ පරමාණු අතර ඉලෙක්ට්‍රෝන හවුලේ තබා ගැනීමෙනි (Octet rule). ලෝහක බන්ධන වල නිදහස් ඉලෙක්ට්‍රෝන සමුද්‍රයක් පවතී!'
+        : language === 'ta'
+        ? '⚠️ க.பொ.த சா/தர பரீட்சை எச்சரிக்கை: அயன் பிணைப்புகள் உலோகங்களுக்கும் அல்லுலோகங்களுக்கும் இடையே இலத்திரன் பரிமாற்றத்தால் உருவாகின்றன. பங்கீட்டுப் பிணைப்புகள் இலத்திரன் பகிர்வால் உருவாகின்றன!'
+        : '⚠️ O/L Exam Trap: Ionic bonds form via transfer of electrons between metal and non-metal atoms; Covalent bonds form via mutual sharing of electron pairs between non-metals to satisfy the Octet Rule!',
+      challenge: language === 'si'
+        ? '🎯 අන්තර්ක්‍රියාකාරී අභියෝගය: NaCl (අයනික) සහ CH₄ හෝ H₂O (සහසංයුජ) අණු අතර බන්ධන ව්‍යුහය සංසන්දනය කරන්න!'
+        : language === 'ta'
+        ? '🎯 சவால்: NaCl (அயன்) மற்றும் H₂O (பங்கீட்டு) மூலக்கூறுகளின் பிணைப்பு அமைப்பை ஒப்பிடுக!'
+        : '🎯 Interactive Challenge: Compare electron sharing vs transfer in NaCl (ionic) and H₂O/CH₄ (covalent) structures!',
+      clarifyPrompt: language === 'si'
+        ? 'රසායනික බන්ධන: අෂ්ටක නියමය, අයනික බන්ධන සහ සහසංයුජ බන්ධන සෑදෙන ආකාරය පියවරෙන් පියවර පැහැදිලි කරන්න'
+        : language === 'ta'
+        ? 'இரசாயனப் பிணைப்புகள்: எண்ம விதி, அயன் மற்றும் பங்கீட்டுப் பிணைப்புகள் உருவாவதை விளக்குக'
+        : 'Can you explain Chemical Bonds: Octet Rule, Ionic bonding, and Covalent bonding step-by-step?',
+      verifyPrompt: language === 'si'
+        ? 'NaCl අණුවේ අයනික බන්ධනය සහ Cl₂ අණුවේ සහසංයුජ බන්ධනය අතර වෙනස කුමක්ද?'
+        : language === 'ta'
+        ? 'NaCl அயன் பிணைப்புக்கும் Cl₂ பங்கீட்டுப் பிணைப்புக்கும் உள்ள வேறுபாடு என்ன?'
+        : 'What is the key difference between the ionic bond in NaCl and covalent bond in Cl₂?'
+    };
+  }
+
+  // Science Chapter 14: Continuity of Life
+  if (lower.includes('continuity') || lower.includes('ch14')) {
+    return {
+      examTrap: language === 'si'
+        ? '⚠️ අ.පො.ස. සා/පෙළ විභාග උගුල: අනුනනයේදී (Mitosis) දූහිතෘ සෛලවල වර්ණදේහ සංඛ්‍යාව නොවෙනස්ව පවතී (2n ➔ 2n). නමුත් ඌනනයේදී (Meiosis) වර්ණදේහ සංඛ්‍යාව අර්ධයක් බවට පත්වේ (2n ➔ n) සහ ප්‍රවේණික ප්‍රභේදනය ඇතිවේ!'
+        : language === 'ta'
+        ? '⚠️ க.பொ.த சா/தர பரீட்சை எச்சரிக்கை: இழையுருப்பிரிவில் நிறமூர்த்த எண்ணிக்கை மாறாது (2n ➔ 2n). ஒடுக்கற்பிரிவில் நிறமூர்த்த எண்ணிக்கை பாதியாகக் குறைகிறது (2n ➔ n)!'
+        : '⚠️ O/L Exam Trap: Mitosis produces 2 identical diploid daughter cells (2n ➔ 2n) for growth & repair; Meiosis produces 4 non-identical haploid gametes (2n ➔ n) introducing genetic variation!',
+      challenge: language === 'si'
+        ? '🎯 අන්තර්ක්‍රියාකාරී අභියෝගය: ඉහත සෛල බෙදීමේ ආකෘතිය භාවිතයෙන් අනුනනය සහ ඌනනය අතර වෙනස්කම් සංසන්දනය කරන්න!'
+        : language === 'ta'
+        ? '🎯 சவால்: இழையுருப்பிரிவு மற்றும் ஒடுக்கற்பிரிவு படிநிலைகளை ஒப்பிட்டுப் பாருங்கள்!'
+        : '🎯 Interactive Challenge: Toggle between Mitosis and Meiosis in the simulation above to trace chromosome behavior across all stages!',
+      clarifyPrompt: language === 'si'
+        ? 'ජීවයේ අඛණ්ඩතාව: සෛල බෙදීම, අනුනනය සහ ඌනනය අතර වෙනස පියවරෙන් පියවර විස්තර කරන්න'
+        : language === 'ta'
+        ? 'வாழ்க்கையின் தொடர்ச்சி: கலப்பிரிவு, இழையுருப்பிரிவு மற்றும் ஒடுக்கற்பிரிவு படிநிலைகளை விளக்குங்கள்'
+        : 'Can you explain the main concepts of Continuity of Life (Mitosis vs Meiosis) step-by-step?',
+      verifyPrompt: language === 'si'
+        ? 'අනුනනය මගින් සෑදෙන සෛල ගණන සහ ඌනනය මගින් සෑදෙන සෛල ගණන අතර වෙනස කුමක්ද?'
+        : language === 'ta'
+        ? 'இழையுருப்பிரிவு மற்றும் ஒடுக்கற்பிரிவு மூலம் உருவாகும் மகவுக்கலங்களின் வேறுபாடுகள் எவை?'
+        : 'What is the difference between chromosome numbers in daughter cells of mitosis vs meiosis?'
+    };
+  }
+
+  // Science Chapter 13: Classification of Organisms
+  if (lower.includes('classification') || lower.includes('ch13')) {
+    return {
+      examTrap: language === 'si'
+        ? '⚠️ සා/පෙළ විභාග උගුල: පංච රාජධානි වර්ගීකරණයේදී මොනෙරා (Monera) රාජධානියේ ජීවීන් ප්‍රාග්න්‍යෂ්ටික වන අතර අනෙකුත් රාජධානි 4 (ප්‍රොටිස්ටා, දිලීර, ශාක, සත්ත්ව) සුන්‍යෂ්ටික වේ!'
+        : language === 'ta'
+        ? '⚠️ பரீட்சை எச்சரிக்கை: மொனேரா இராச்சியம் முன்கருவுடையது, ஏனைய நான்கு இராச்சியங்களும் மெய்க்கருவுடையவை!'
+        : '⚠️ Exam Trap: Monera contains prokaryotes (lacking true membrane-bound nucleus); Protista, Fungi, Plantae, and Animalia are eukaryotes!',
+      challenge: language === 'si'
+        ? '🎯 අභියෝගය: ද්විපද යතුරක් භාවිතයෙන් ජීවීන් හඳුනාගන්නා ආකාරය ගුරුතුමාගෙන් අසන්න!'
+        : language === 'ta'
+        ? '🎯 சவால்: இருகூற்றுச் சாவி மூலம் உயிரினங்களை எவ்வாறு இனம் காண்பது என வினவுங்கள்!'
+        : '🎯 Challenge: Ask the Tutor to show you how a dichotomous key classifies organisms step-by-step!',
+      clarifyPrompt: language === 'si'
+        ? 'ජීවීන් වර්ගීකරණයේ ප්‍රධාන සංකල්ප සහ පංච රාජධානි වර්ගීකරණය පියවරෙන් පියවර පහදා දෙන්න'
+        : language === 'ta'
+        ? 'உயிரினங்களின் வகைப்பாடு மற்றும் ஐந்து இராச்சிய வகைப்பாட்டை விளக்குங்கள்'
+        : 'Can you explain the main ideas of Classification of organisms step-by-step?',
+      verifyPrompt: language === 'si'
+        ? 'පංච රාජධානි වර්ගීකරණය ඉදිරිපත් කළේ කවුද? එහි රාජධානි 5 මොනවාද?'
+        : language === 'ta'
+        ? 'ஐந்து இராச்சிய வகைப்பாட்டை முன்வைத்தவர் யார்? அந்த 5 இராச்சியங்கள் எவை?'
+        : 'Who proposed the Five Kingdom classification and what are the five kingdoms?'
+    };
+  }
+
   switch (topicId) {
     case 'number-systems':
       return {
@@ -151,27 +236,49 @@ const getTopicDeepDive = (topicId: string) => {
         clarifyPrompt: 'ශ්‍රී ලංකාවට බටහිර ජාතීන්ගේ පැමිණීම සහ එහි ප්‍රතිඵල ගැන විස්තර කරන්න',
         verifyPrompt: 'පෘතුගීසි සහ ලන්දේසි පාලනයෙන් ලංකාවේ ආර්ථිකයට සහ නීතියට සිදුවූ බලපෑම් මොනවාද?'
       };
-    default:
+    default: {
+      const topicName = topic?.title?.[language] || topic?.title?.en || 'this chapter';
       return {
-        examTrap: '⚠️ National Syllabus Focus: Ensure you review past paper questions from the Educational Publications Department!',
-        challenge: '🎯 Practice Challenge: Ask the Tutor to quiz you on key terms from this chapter!',
-        clarifyPrompt: 'Can you clarify the core concepts of this lesson step-by-step?',
-        verifyPrompt: 'Can you give me a past paper question on this chapter?'
+        examTrap: language === 'si'
+          ? `⚠️ ජාතික විෂය නිර්දේශ අවධානය: ${topicName} පිළිබඳ විභාග ගැටළු විසඳීමේදී නිල පෙළපොතේ තාක්ෂණික පද සහ සම්මත ඒකක කෙරෙහි විශේෂයෙන් සැලකිලිමත් වන්න!`
+          : language === 'ta'
+          ? `⚠️ தேசிய பாடத்திட்ட கவனம்: ${topicName} தொடர்பான பரீட்சை வினாக்களுக்கு விடையளிக்கும் போது பாடநூல் கலைச்சொற்களைப் பயன்படுத்துங்கள்!`
+          : `⚠️ National Syllabus Focus: In ${topicName}, ensure you review past paper questions from the Educational Publications Department using precise textbook terminology!`,
+        challenge: language === 'si'
+          ? `🎯 අභියෝගය: ${topicName} පිළිබඳ විභාග පෙරහුරු ප්‍රශ්න සහ ප්‍රධාන සංකල්ප ගුරුතුමාගෙන් විමසන්න!`
+          : language === 'ta'
+          ? `🎯 சவால்: ${topicName} குறித்த முக்கிய கோட்பாடுகளை ஆசிரியரிடம் கேட்டுத் தெரிந்து கொள்ளுங்கள்!`
+          : `🎯 Practice Challenge: Ask the Tutor to quiz you on key terms from ${topicName}!`,
+        clarifyPrompt: language === 'si'
+          ? `${topicName} හි ප්‍රධාන කරුණු සහ විභාග සටහන් පියවරෙන් පියවර සරලව පැහැදිලි කරන්න`
+          : language === 'ta'
+          ? `${topicName} இன் முக்கிய கருத்துக்களை விரிவாகவும் எளிமையாகவும் விளக்குங்கள்`
+          : `Can you clarify the core concepts of ${topicName} step-by-step?`,
+        verifyPrompt: language === 'si'
+          ? `${topicName} පිළිබඳ පසුගිය විභාග ප්‍රශ්නයක් ලබාදෙන්න`
+          : language === 'ta'
+          ? `${topicName} தொடர்பான கடந்த கால வினா ஒன்றை வழங்குங்கள்`
+          : `Can you give me a past paper question on ${topicName}?`
       };
+    }
   }
 };
 
 export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = ({
   subjectId,
   topicId,
+  topics,
   language,
   activeModeHint,
   onAskQuestion,
   onSelectTopic,
 }) => {
   const { grade: studentGrade } = useStudent();
-  // Resolve topic if topicId was provided
-  const targetTopic = topicId ? MOCK_TOPICS.find((t) => t.id === topicId) : null;
+  const baseTopics = (topics && topics.length > 0) ? topics : MOCK_TOPICS;
+
+  // Resolve topic if topicId was provided (scoped to subjectId first)
+  const targetTopic = findTopicResilient(baseTopics, topicId, subjectId);
+
   // Current subject: from explicit subjectId, or deduced from target topic, or fallback
   const currentSubject = 
     MOCK_SUBJECTS.find((s) => s.id === subjectId) || 
@@ -179,7 +286,7 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
     MOCK_SUBJECTS[0];
 
   // Grade filter logic: ICT core topics apply across grades 8-11
-  const isMatchingGrade = (t: (typeof MOCK_TOPICS)[0]) => {
+  const isMatchingGrade = (t: Topic) => {
     if (!t.grade || !studentGrade) return true;
     if (t.grade === studentGrade) return true;
     if (t.subjectId === 'ict' && (studentGrade === 'grade-10' || studentGrade === 'grade-11' || studentGrade === 'grade-8' || studentGrade === 'grade-9')) {
@@ -188,21 +295,34 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
     return false;
   };
 
-  const gradeFilteredTopics = MOCK_TOPICS.filter(
+  const rawSubjectTopics = baseTopics.filter(
     (t) => t.subjectId === currentSubject.id && isMatchingGrade(t)
   );
-  const subjectTopics = gradeFilteredTopics.length > 0
-    ? gradeFilteredTopics
-    : MOCK_TOPICS.filter((t) => t.subjectId === currentSubject.id);
+  let subjectTopics = rawSubjectTopics.length > 0
+    ? rawSubjectTopics
+    : baseTopics.filter((t) => t.subjectId === currentSubject.id);
+
+  // Ensure targetTopic is included in the subject list if present
+  if (targetTopic && !subjectTopics.some((t) => t.id === targetTopic.id)) {
+    subjectTopics = [targetTopic, ...subjectTopics];
+  }
 
   // Active topic or first topic of subject - strictly within currentSubject
   const activeTopic = 
-    (topicId ? (subjectTopics.find((t) => t.id === topicId) || MOCK_TOPICS.find((t) => t.id === topicId && t.subjectId === currentSubject.id)) : null) || 
+    findTopicResilient(subjectTopics, topicId, currentSubject.id) || 
+    targetTopic || 
     subjectTopics[0] || 
-    MOCK_TOPICS.find((t) => t.subjectId === currentSubject.id) ||
-    MOCK_TOPICS[0];
+    baseTopics[0];
 
-  const steps = getLessonStepsForTopic(activeTopic.id);
+  const activeTabRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (activeTabRef.current) {
+      activeTabRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  }, [activeTopic?.id]);
+
+  const steps = getLessonStepsForTopic(activeTopic.id, currentSubject.id, studentGrade || activeTopic.grade);
   const [activeStepTab, setActiveStepTab] = useState(0);
 
   const currentStep = steps[activeStepTab] || steps[0];
@@ -237,6 +357,7 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
             return (
               <button
                 key={topic.id}
+                ref={isSelected ? activeTabRef : null}
                 type="button"
                 onClick={() => {
                   setActiveStepTab(0);
@@ -244,7 +365,7 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
                 }}
                 className={`px-3 py-1 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
                   isSelected
-                    ? 'bg-cyan-500 text-slate-950 shadow-md font-extrabold'
+                    ? 'bg-cyan-500 text-slate-950 shadow-md font-extrabold ring-2 ring-cyan-300'
                     : 'bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800'
                 }`}
               >
@@ -316,6 +437,8 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
               <SubjectConceptVisualizer
                 topicId={activeTopic.id}
                 subjectId={currentSubject.id}
+                grade={studentGrade || activeTopic.grade}
+                topicTitle={activeTopic.title}
                 language={language}
                 activeModeHint={activeModeHint}
               />
@@ -403,14 +526,30 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
 
               {/* Quick Prompt Generator */}
               <div className="pt-2 border-t border-slate-800/80">
-                <span className="text-[11px] text-slate-400 block mb-1.5">
-                  Frequently Asked Questions on This Concept:
+                <span className="text-[11px] text-slate-400 block mb-1.5 font-medium">
+                  {language === 'si'
+                    ? 'මෙම සංකල්පය පිළිබඳ නිතර අසන ප්‍රශ්න:'
+                    : language === 'ta'
+                    ? 'இக்கோட்பாடு குறித்த அடிக்கடி கேட்கப்படும் வினாக்கள்:'
+                    : 'Frequently Asked Questions on This Concept:'}
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {[
-                    `Give me a simple example of ${activeTopic.title.en} (${currentStep.title.en})`,
-                    `Why is ${activeTopic.title.en} important for G.C.E. O/L exams?`,
-                    `Quiz me with an exam question on ${activeTopic.title.en}`
+                    language === 'si'
+                      ? `${activeTopic.title.si || activeTopic.title.en} (${currentStep.title.si || currentStep.title.en}) සඳහා සරල උදාහරණයක් දෙන්න`
+                      : language === 'ta'
+                      ? `${activeTopic.title.ta || activeTopic.title.en} (${currentStep.title.ta || currentStep.title.en}) க்கான எளிய உதாரணத்தை வழங்கவும்`
+                      : `Give me a simple example of ${activeTopic.title.en} (${currentStep.title.en})`,
+                    language === 'si'
+                      ? `අ.පො.ස. සා/පෙළ විභාගයට ${activeTopic.title.si || activeTopic.title.en} වැදගත් වන්නේ ඇයි?`
+                      : language === 'ta'
+                      ? `க.பொ.த சா/தர பரீட்சைக்கு ${activeTopic.title.ta || activeTopic.title.en} ஏன் முக்கியமானது?`
+                      : `Why is ${activeTopic.title.en} important for G.C.E. O/L exams?`,
+                    language === 'si'
+                      ? `${activeTopic.title.si || activeTopic.title.en} පිළිබඳ විභාග පෙරහුරු ප්‍රශ්නයක් ලබාදෙන්න`
+                      : language === 'ta'
+                      ? `${activeTopic.title.ta || activeTopic.title.en} தொடர்பான மாதிரிப் பரீட்சை வினா ஒன்றை வழங்கவும்`
+                      : `Quiz me with an exam question on ${activeTopic.title.en}`
                   ].map((promptText) => (
                     <button
                       key={promptText}
@@ -428,18 +567,25 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
           )}
         </div>
 
-        
         {/* 4.5 Curriculum Deep Dive & Smart Recommendations */}
         {(() => {
-          const deepDive = getTopicDeepDive(activeTopic.id);
+          const deepDive = getTopicDeepDive(activeTopic.id, language, activeTopic);
           return (
             <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/60 border border-slate-800 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5 font-mono">
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Deep Dive & Smart Suggestions</span>
+                  <span>
+                    {language === 'si'
+                      ? 'විෂය කරුණු ගැඹුරින් විමසීම & උපදෙස්'
+                      : language === 'ta'
+                      ? 'ஆழமான வழிகாட்டல் & குறிப்புகள்'
+                      : 'Deep Dive & Smart Suggestions'}
+                  </span>
                 </span>
-                <span className="text-[10px] text-cyan-300 font-mono">Exam Master Tips</span>
+                <span className="text-[10px] text-cyan-300 font-mono">
+                  {language === 'si' ? 'විභාග සාර්ථකත්වයට උපදෙස්' : language === 'ta' ? 'பரீட்சை வெற்றி குறிப்புகள்' : 'Exam Master Tips'}
+                </span>
               </div>
 
               {/* Exam Trap Alert */}
@@ -457,14 +603,18 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
                     className="px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 border border-cyan-400/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-xs"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>Verify My Solution</span>
+                    <span>
+                      {language === 'si' ? 'මගේ පිළිතුර පරීක්ෂා කරන්න' : language === 'ta' ? 'எனது பதிலைச் சரிபார்க்கவும்' : 'Verify My Solution'}
+                    </span>
                   </button>
                   <button
                     type="button"
                     onClick={() => onAskQuestion(deepDive.clarifyPrompt)}
                     className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition-all flex items-center gap-1"
                   >
-                    <span>Clarify This Concept</span>
+                    <span>
+                      {language === 'si' ? 'මෙම සංකල්පය තවදුරටත් පැහැදිලි කරන්න' : language === 'ta' ? 'இக்கோட்பாட்டை மேலும் விளக்குங்கள்' : 'Clarify This Concept'}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -476,7 +626,11 @@ export const CurriculumCompanionPane: React.FC<CurriculumCompanionPaneProps> = (
         <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-950 to-slate-900 border border-slate-800 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Other Chapters in {currentSubject.name.en}
+              {language === 'si'
+                ? `${currentSubject.name.si || currentSubject.name.en} විෂයේ අනෙකුත් පාඩම්`
+                : language === 'ta'
+                ? `${currentSubject.name.ta || currentSubject.name.en} பாடத்தின் ஏனைய அத்தியாயங்கள்`
+                : `Other Chapters in ${currentSubject.name.en}`}
             </span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">

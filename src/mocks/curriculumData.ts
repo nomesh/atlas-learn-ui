@@ -981,7 +981,7 @@ export const MOCK_TOPICS: Topic[] = [
     completedPercentage: 0,
   },
   {
-    id: 'science-gr10-ch4-newtons-laws',
+    id: 'science-gr10-ch4-newton-laws',
     subjectId: 'science',
     chapterNumber: 4,
     grade: 'grade-10',
@@ -3928,7 +3928,9 @@ export const LESSON_STEPS_BY_TOPIC: Record<string, LessonStep[]> = {
   'science-gr10-ch1-chemical-basis': TEACH_ME_CHEMICAL_BASIS_STEPS,
   'science-gr10-ch2-motion': TEACH_ME_MOTION_STEPS,
   'science-gr10-ch4-newtons-laws': TEACH_ME_NEWTONS_LAWS_STEPS,
+  'science-gr10-ch4-newton-laws': TEACH_ME_NEWTONS_LAWS_STEPS,
   'science-gr10-ch6-cells': TEACH_ME_CELLS_STEPS,
+  'science-gr10-ch6-cell-structure': TEACH_ME_CELLS_STEPS,
   'science-gr10-ch15-hydrostatic-pressure': TEACH_ME_HYDROSTATIC_PRESSURE_STEPS,
   'science-gr10-ch17-rate-of-reactions': TEACH_ME_RATE_OF_REACTIONS_STEPS,
   'science-gr10-ch19-current-electricity': TEACH_ME_ELECTRICITY_STEPS,
@@ -4155,22 +4157,106 @@ export function generateUniversalLessonSteps(topic: Topic): LessonStep[] {
   ];
 }
 
-export function getLessonStepsForTopic(topicId?: string): LessonStep[] {
+export function findTopicResilient(
+  list: Topic[],
+  id?: string | null,
+  preferredSubjectId?: string | null,
+  preferredGrade?: string | null
+): Topic | undefined {
+  if (!id || !list || list.length === 0) return undefined;
+  const lower = id.toLowerCase().trim();
+  const prefSub = preferredSubjectId?.toLowerCase().trim();
+  const prefGrade = preferredGrade?.toLowerCase().trim();
+
+  // Scoped lists: prioritized by subject and grade matching
+  const scopedList = list.filter((t) => {
+    if (prefSub && t.subjectId.toLowerCase() !== prefSub) return false;
+    if (prefGrade && t.grade.toLowerCase() !== prefGrade) return false;
+    return true;
+  });
+
+  const subjectOnlyList = prefSub ? list.filter((t) => t.subjectId.toLowerCase() === prefSub) : list;
+
+  // 1. Exact match within scopedList first, then subjectOnlyList, then global
+  const exactScoped = scopedList.find((t) => t.id.toLowerCase() === lower);
+  if (exactScoped) return exactScoped;
+
+  const exactSub = subjectOnlyList.find((t) => t.id.toLowerCase() === lower);
+  if (exactSub) return exactSub;
+
+  if (!prefSub) {
+    const exactGlobal = list.find((t) => t.id.toLowerCase() === lower);
+    if (exactGlobal) return exactGlobal;
+  }
+
+  // 2. Normalized slug matching (ignoring -of-, -in-, -the-, -and-, and trailing 's' on words like newtons -> newton)
+  const normalize = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/-(of|in|the|and)-/g, '-')
+      .replace(/s\b/g, '')
+      .replace(/[-_ ]/g, '');
+
+  const normalizedTarget = normalize(lower);
+  const slugScoped = scopedList.find((t) => normalize(t.id) === normalizedTarget);
+  if (slugScoped) return slugScoped;
+
+  const slugSub = subjectOnlyList.find((t) => normalize(t.id) === normalizedTarget);
+  if (slugSub) return slugSub;
+
+  if (!prefSub) {
+    const slugGlobal = list.find((t) => normalize(t.id) === normalizedTarget);
+    if (slugGlobal) return slugGlobal;
+  }
+
+  // 3. Chapter number matching e.g. "ch14", "ch-14", "chapter-14", "chapter 14"
+  const chMatch = lower.match(/(?:ch|chapter)[-_ ]*(\d+)/i);
+  if (chMatch) {
+    const chNum = parseInt(chMatch[1], 10);
+    // Prioritize strictly within scopedList (matching both subject and grade!)
+    const byChScoped = scopedList.find((t) => t.chapterNumber === chNum);
+    if (byChScoped) return byChScoped;
+
+    // Only if no specific grade was requested, allow matching within same subject
+    if (!prefGrade) {
+      const byChSub = subjectOnlyList.find((t) => t.chapterNumber === chNum);
+      if (byChSub) return byChSub;
+    }
+  }
+
+  // 4. Substring inclusion if distinctive
+  const subScoped = scopedList.find((t) => lower.includes(t.id.toLowerCase()) || t.id.toLowerCase().includes(lower));
+  if (subScoped) return subScoped;
+
+  const subMatch = subjectOnlyList.find((t) => lower.includes(t.id.toLowerCase()) || t.id.toLowerCase().includes(lower));
+  if (subMatch) return subMatch;
+
+  return undefined;
+}
+
+export function getLessonStepsForTopic(
+  topicId?: string,
+  preferredSubjectId?: string,
+  preferredGrade?: string
+): LessonStep[] {
   if (!topicId) return TEACH_ME_PHOTOSYNTHESIS_STEPS;
   if (LESSON_STEPS_BY_TOPIC[topicId]) {
     return LESSON_STEPS_BY_TOPIC[topicId];
   }
-  const topic = MOCK_TOPICS.find((t) => t.id === topicId);
+  const topic = findTopicResilient(MOCK_TOPICS, topicId, preferredSubjectId, preferredGrade);
   if (topic) {
+    if (LESSON_STEPS_BY_TOPIC[topic.id]) {
+      return LESSON_STEPS_BY_TOPIC[topic.id];
+    }
     return generateUniversalLessonSteps(topic);
   }
 
   // Synthesize for any dynamically loaded or newly ingested topic ID
   const synthesizedTopic: Topic = {
     id: topicId,
-    subjectId: topicId.startsWith('hist') ? 'history' : topicId.startsWith('sci') ? 'science' : topicId.startsWith('math') ? 'maths' : 'science',
+    subjectId: (preferredSubjectId as any) || (topicId.startsWith('hist') ? 'history' : topicId.startsWith('sci') ? 'science' : topicId.startsWith('math') ? 'maths' : 'science'),
     chapterNumber: 1,
-    grade: 'grade-10',
+    grade: (preferredGrade as any) || 'grade-10',
     title: {
       en: topicId.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
       si: topicId.replace(/-/g, ' '),

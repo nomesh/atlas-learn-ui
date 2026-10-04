@@ -12,11 +12,12 @@ import {
   Droplets,
   CloudRain
 } from 'lucide-react';
-import { MOCK_TOPICS } from '../../mocks/curriculumData';
+import { MOCK_TOPICS, findTopicResilient } from '../../mocks/curriculumData';
 
 interface GeneralSubjectProps {
   topicId: string;
   subjectId?: string;
+  grade?: string;
   language?: 'en' | 'si' | 'ta';
   activeModeHint?: string;
 }
@@ -24,10 +25,11 @@ interface GeneralSubjectProps {
 export const GeneralSubjectVisualizer: React.FC<GeneralSubjectProps> = ({
   topicId,
   subjectId = 'general',
+  grade,
   language = 'en',
   activeModeHint,
 }) => {
-  const currentTopic = MOCK_TOPICS.find((t) => t.id === topicId);
+  const currentTopic = findTopicResilient(MOCK_TOPICS, topicId, subjectId, grade) || MOCK_TOPICS.find((t) => t.id === topicId);
   const title = currentTopic?.title[language] || currentTopic?.title.en || topicId.replace(/-/g, ' ');
 
   // English Grammar State

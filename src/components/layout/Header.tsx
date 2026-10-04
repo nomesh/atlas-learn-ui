@@ -161,7 +161,16 @@ export const Header: React.FC = () => {
                           <span>{grades.find((g) => g.id === (registeredGrade || grade))?.label}</span>
                         </div>
                         <p className="text-[11px] text-slate-500 leading-relaxed pt-1">
-                          You are enrolled in this grade. Your syllabus and AI Tutor are strictly aligned with this level. Contact WhatsApp support to transfer grades.
+                          You are enrolled in this grade. Your syllabus and AI Tutor are strictly aligned with this level. Contact{' '}
+                          <a
+                            href="https://wa.me/94714219219?text=Hello%20Neural%20Works%20support%2C%20I%20would%20like%20to%20request%20a%20grade%20transfer%20for%20my%20ATLAS%20Learn%20account."
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sky-600 hover:underline font-semibold"
+                          >
+                            WhatsApp support (+94 714 219219)
+                          </a>{' '}
+                          to transfer grades.
                         </p>
                       </div>
                     ) : (

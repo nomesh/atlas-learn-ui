@@ -30,6 +30,8 @@ export interface LearningContext {
   action?: string;
   /** Chapter context forwarded to backend TutorChatRequest. */
   chapterId?: string;
+  /** Product boundary, defaults to LEARN_CURRICULUM */
+  productType?: string;
 }
 
 // Exact wire citation structure from ATLAS backend

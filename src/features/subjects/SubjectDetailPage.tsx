@@ -266,10 +266,10 @@ export const SubjectDetailPage: React.FC = () => {
                     <span>{topic.lessonsCount} Structured Lessons</span>
                   </div>
                   <h3 className="text-base font-bold text-slate-900">
-                    {topic.title[language]}
+                    {topic.title?.[language] || topic.title?.en || (typeof topic.title === 'string' ? topic.title : '')}
                   </h3>
                   <p className="text-xs text-slate-500 mt-1 max-w-lg">
-                    {topic.description[language]}
+                    {topic.description?.[language] || topic.description?.en || (typeof topic.description === 'string' ? topic.description : '')}
                   </p>
                 </div>
 
@@ -289,11 +289,18 @@ export const SubjectDetailPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => {
+                      const topicTitle = topic.title?.[language] || topic.title?.en || (typeof topic.title === 'string' ? topic.title : '');
+                      let localizedQuery = `Can you explain the main ideas of ${topic.title?.en || topicTitle}?`;
+                      if (language === 'si') {
+                        localizedQuery = `${topicTitle} පිළිබඳ ප්‍රධාන කරුණු පැහැදිලි කර දෙන්න පුළුවන්ද?`;
+                      } else if (language === 'ta') {
+                        localizedQuery = `${topicTitle} இன் முக்கிய கருத்துக்களை விளக்க முடியுமா?`;
+                      }
                       setCurriculumSubject(subject.id, topic.id);
-                      navigate(`/tutor?subject=${encodeURIComponent(subject.id)}&topic=${encodeURIComponent(topic.id)}&q=${encodeURIComponent(`Can you explain the main ideas of ${topic.title.en}?`)}`);
+                      navigate(`/tutor?subject=${encodeURIComponent(subject.id)}&topic=${encodeURIComponent(topic.id)}&q=${encodeURIComponent(localizedQuery)}`);
                     }}
                     className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors"
-                    title="Ask Tutor about this topic"
+                    title={language === 'si' ? 'මෙම පාඩම ගැන ගුරුතුමාගෙන් අසන්න' : language === 'ta' ? 'இந்த பாடம் பற்றி ஆசிரியரிடம் கேளுங்கள்' : 'Ask Tutor about this topic'}
                   >
                     <Sparkles className="w-4 h-4 text-atlas-cyan" />
                   </button>
