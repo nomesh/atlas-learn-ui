@@ -47,6 +47,40 @@ export interface SourceCitation {
   supporting?: boolean | null;
 }
 
+/**
+ * Verified curriculum provenance of a textbook visual, from the backend's relational curriculum catalogue.
+ * Never filled in or guessed by the UI.
+ */
+export interface SourceVisualCurriculum {
+  resourceRevisionId: string;
+  grade?: number | null;
+  subjectCode?: string | null;
+  subjectName?: string | null;
+  language?: string | null;
+}
+
+/**
+ * Wire structure for a source visual (a textbook page preview) resolved by the backend.
+ * previewUrl / openUrl are server-built and must be used unchanged: the UI never constructs curriculum URLs.
+ */
+export interface SourceVisual {
+  visualId: string;
+  documentId?: string | null;
+  documentName?: string | null;
+  fileType?: string | null;
+  /** Physical 1-based PDF page index (not the printed page label). */
+  pageNumber?: number | null;
+  pageLabel?: string | null;
+  kind: 'PAGE_PREVIEW' | 'FIGURE_CROP';
+  caption?: string | null;
+  bbox?: { x0: number; y0: number; x1: number; y1: number } | null;
+  previewUrl: string;
+  openUrl?: string | null;
+  label?: string | null;
+  /** Present for ATLAS Learn curriculum visuals only. */
+  curriculum?: SourceVisualCurriculum | null;
+}
+
 
 export interface MemoryTrick {
   concept: string;
@@ -74,6 +108,8 @@ export interface RAGResponse {
   keyPoints?: string[];
   /** Model that produced this answer, as reported by the backend (LIVE only; dev diagnostics). */
   runtime?: { provider?: string; model?: string };
+  /** Textbook page previews; only present when the student asked for a visual and one was verified. */
+  visuals?: SourceVisual[];
 }
 
 export interface TutorAction {
@@ -120,6 +156,7 @@ export interface ChatMessage {
   memoryTrick?: MemoryTrick;
   keyPoints?: string[];
   imageUrl?: string;
+  visuals?: SourceVisual[];
 }
 
 export interface Subject {
