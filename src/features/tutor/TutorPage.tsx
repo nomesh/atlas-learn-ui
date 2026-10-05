@@ -23,6 +23,7 @@ import {
 import { CurriculumCompanionPane } from './CurriculumCompanionPane';
 import { TutorTeachingHighlighter } from './TutorTeachingHighlighter';
 import { MemoryTrickCard } from './MemoryTrickCard';
+import { TutorMessageVisuals } from './SourceVisualCard';
 import { useStudent } from '../../state/studentContext';
 import { TutorAvatar } from '../avatar/TutorAvatar';
 import { AtlasTutorTalkingStage } from '../avatar/AtlasTutorTalkingStage';
@@ -1342,6 +1343,7 @@ export const TutorPage: React.FC = () => {
         activeLang: language,
         memoryTrick: response.memoryTrick,
         keyPoints: response.keyPoints,
+        visuals: response.visuals,
       };
 
       setMessages((prev) => {
@@ -1919,6 +1921,9 @@ export const TutorPage: React.FC = () => {
                     {msg.citations && msg.citations.length > 0 && (
                       <CitationDrawer citations={msg.citations} />
                     )}
+
+                    {/* Verified textbook page previews (only when the student asked for a visual) */}
+                    <TutorMessageVisuals visuals={msg.visuals} language={msg.activeLang || language} />
 
                     {/* Immediate Quick Actions Bar (Clarify, Simpler, Sri Lankan Example) */}
                     <div className="mt-4 pt-3 border-t border-slate-100 space-y-2">

@@ -49,6 +49,10 @@ export class AtlasLiveTutorAdapter implements TutorAdapter {
       answer: data.answer,
       sources: data.sources || [],
       suggestedFollowUps: data.suggestedFollowUps || [],
+      // Server-resolved textbook visuals, passed through unchanged (URLs are never rebuilt in the UI).
+      visuals: Array.isArray(data.visuals)
+        ? data.visuals.filter((visual) => visual && typeof visual.previewUrl === 'string' && visual.previewUrl.length > 0)
+        : [],
       ...(provider || model ? { runtime: { provider, model } } : {}),
     };
   }
