@@ -1,8 +1,19 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
+import { isLoopbackUrl } from './src/api/apiBase'
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), '')
+
+  // The browser API base must never be a loopback address in a built bundle: on a student's
+  // machine localhost is their own computer. Production uses same-origin /api (nginx proxies it).
+  if (command === 'build' && isLoopbackUrl(env.VITE_API_BASE_URL)) {
+    throw new Error(
+      `VITE_API_BASE_URL=${env.VITE_API_BASE_URL} would make the browser call its own machine. ` +
+        'Leave it unset for same-origin /api; set ATLAS_DEV_API_PROXY_TARGET for the local dev proxy instead.',
+    )
+  }
+
   return {
     base: env.VITE_BASE_PATH || '/',
     plugins: [react()],
@@ -20,8 +31,10 @@ export default defineConfig(({ mode }) => {
             'Referer': 'https://translate.google.com/',
           },
         },
+        // Development only: where `npm run dev` forwards same-origin /api requests. Not a VITE_
+        // variable, so it is never exposed to (or compiled into) the browser bundle.
         '/api': {
-          target: env.VITE_API_BASE_URL || 'http://localhost:8080',
+          target: env.ATLAS_DEV_API_PROXY_TARGET || 'http://localhost:8080',
           changeOrigin: true,
         },
       },

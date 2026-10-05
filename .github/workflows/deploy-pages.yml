@@ -34,10 +34,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # GitHub Pages = standalone MOCK DEMO (no backend). This is the ONLY place that sets
+      # VITE_DEPLOYMENT_TARGET=pages-demo; the real application (learn.neuralworks.lk) is built
+      # without it and is therefore always LIVE with same-origin /api. `npm run verify:pages-demo`
+      # reproduces this exact build and checks it is MOCK and has no loopback API base.
       - name: Build
         env:
           VITE_BASE_PATH: /atlas-learn-ui/
           VITE_USE_MOCK_API: "true"
+          VITE_DEPLOYMENT_TARGET: pages-demo
         run: |
           npm run build
           cp dist/index.html dist/404.html

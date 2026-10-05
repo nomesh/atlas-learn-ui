@@ -1,6 +1,14 @@
 import axios from 'axios';
+import { resolveApiBaseUrl } from './apiBase';
 
-const baseURL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || '';
+const apiBase = resolveApiBaseUrl({
+  isProd: typeof import.meta !== 'undefined' && !!import.meta.env?.PROD,
+  configured: typeof import.meta !== 'undefined' ? import.meta.env?.VITE_API_BASE_URL : undefined,
+});
+if (apiBase.source === 'rejected-loopback-in-production') {
+  console.error('[apiClient] Ignoring a loopback VITE_API_BASE_URL in a production build; using same-origin /api.');
+}
+const baseURL = apiBase.baseURL;
 
 /**
  * Resolves the active authentication Bearer token.

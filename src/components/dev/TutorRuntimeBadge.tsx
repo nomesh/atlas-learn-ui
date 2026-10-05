@@ -5,6 +5,7 @@ import type { TutorModeSource } from '../../api/tutorMode';
 
 const SOURCE_TEXT: Record<TutorModeSource, string> = {
   'production-build': 'production build',
+  'pages-demo-build': 'GitHub Pages demo build',
   'localStorage-override': 'localStorage override (atlas_force_mock)',
   'env:VITE_USE_MOCK_API=true': 'VITE_USE_MOCK_API=true',
   'env:VITE_USE_MOCK_API=false': 'VITE_USE_MOCK_API=false',

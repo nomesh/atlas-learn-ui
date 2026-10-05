@@ -7759,6 +7759,7 @@ class TutorService {
       hasViteEnv,
       storedOverride,
       envFlag: hasViteEnv ? import.meta.env.VITE_USE_MOCK_API : undefined,
+      deploymentTarget: hasViteEnv ? import.meta.env.VITE_DEPLOYMENT_TARGET : undefined,
     });
     this.mockMode = resolved.mode === 'mock';
     this.source = resolved.source;
@@ -7809,19 +7810,16 @@ class TutorService {
   /** Stable snapshot (identity changes only when something changed). */
   public getModeInfo = (): TutorModeInfo => this.snapshot;
 
+  /** In a production build the mode is fixed by the build target (real app: LIVE, Pages demo: MOCK). */
   public isMockMode(): boolean {
-    if (typeof import.meta !== 'undefined' && import.meta.env?.PROD) {
-      return false;
-    }
     return this.mockMode;
   }
 
   public setMockMode(useMock: boolean): void {
     if (typeof import.meta !== 'undefined' && import.meta.env?.PROD) {
-      console.warn('[TutorService] Mock mode cannot be enabled in production environments.');
-      this.mockMode = false;
-      this.source = 'production-build';
-      this.adapter = new AtlasLiveTutorAdapter();
+      // Production builds never change mode at runtime: the real application stays LIVE and the
+      // GitHub Pages demo stays MOCK, whatever the browser asks for.
+      console.warn(`[TutorService] Tutor mode is fixed in production builds (${this.mockMode ? 'MOCK demo' : 'LIVE'}); request ignored.`);
       this.publish();
       return;
     }

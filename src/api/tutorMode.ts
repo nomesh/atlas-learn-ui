@@ -2,8 +2,12 @@
  * Tutor mode resolution: the single, pure source of truth for "does this build talk to the
  * real backend (LIVE) or to offline fixtures (MOCK)?".
  *
- * Three distinct situations, deliberately hard to confuse:
- *  1. production build      -> always LIVE. Mock can never be enabled (not by env, not by localStorage).
+ * Distinct situations, deliberately hard to confuse:
+ *  1. production build of the real application (learn.neuralworks.lk)
+ *                           -> always LIVE. Mock can never be enabled (not by env, not by localStorage).
+ *  1b. production build of the GitHub Pages demo (VITE_DEPLOYMENT_TARGET=pages-demo, set only by
+ *     .github/workflows/deploy-pages.yml) -> always MOCK: a standalone demo with no backend.
+ *     The browser override is ignored here too; only the build target decides.
  *  2. development, LIVE     -> real backend and real model. `npm run dev:live`.
  *  3. development, MOCK     -> offline fixtures only, for deterministic tests/E2E. `npm run dev:mock`.
  *
@@ -17,8 +21,12 @@
  */
 export type TutorMode = 'live' | 'mock';
 
+/** Build target of the standalone GitHub Pages demo. Any other value (or none) is the real application. */
+export const PAGES_DEMO_TARGET = 'pages-demo';
+
 export type TutorModeSource =
   | 'production-build'
+  | 'pages-demo-build'
   | 'localStorage-override'
   | 'env:VITE_USE_MOCK_API=true'
   | 'env:VITE_USE_MOCK_API=false'
@@ -40,10 +48,16 @@ export interface TutorModeInputs {
   storedOverride: string | null;
   /** import.meta.env.VITE_USE_MOCK_API (undefined when unset) */
   envFlag: string | undefined;
+  /** import.meta.env.VITE_DEPLOYMENT_TARGET; only 'pages-demo' changes production behaviour */
+  deploymentTarget?: string;
 }
 
 export function resolveTutorMode(input: TutorModeInputs): TutorModeResolution {
-  if (input.isProd) return { mode: 'live', source: 'production-build' };
+  if (input.isProd) {
+    return input.deploymentTarget?.trim().toLowerCase() === PAGES_DEMO_TARGET
+      ? { mode: 'mock', source: 'pages-demo-build' }
+      : { mode: 'live', source: 'production-build' };
+  }
 
   if (input.storedOverride === 'true' || input.storedOverride === 'false') {
     return { mode: input.storedOverride === 'true' ? 'mock' : 'live', source: 'localStorage-override' };
