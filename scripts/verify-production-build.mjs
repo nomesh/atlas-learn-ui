@@ -2,8 +2,9 @@
 // browser that talks to the wrong place or runs the wrong Tutor mode.
 //
 //   npm run verify:production  -> the real application (learn.neuralworks.lk):
-//        built exactly like forge-atlas-api/.github/workflows/deploy-production-learn-ui.yml
-//        (`npm run build` with no injected VITE_* variables), so only committed .env files apply.
+//        built with the env block of the "Build" step of .github/workflows/build-learn-ui-artifact.yml
+//        (read from the workflow; it injects no VITE_* variables), so only committed .env files apply.
+//        That workflow publishes the immutable artifact that production deploys.
 //        Must be: same-origin API base, Tutor LIVE (also with the browser mock override set),
 //        no loopback API target anywhere in the emitted JavaScript.
 //   npm run verify:pages-demo  -> the GitHub Pages demo:
@@ -45,7 +46,8 @@ function workflowBuildEnv(workflowPath) {
 for (const key of Object.keys(process.env)) {
   if (key.startsWith('VITE_') || key.startsWith('ATLAS_')) delete process.env[key];
 }
-const injected = target === 'pages-demo' ? workflowBuildEnv(join(root, '.github/workflows/deploy-pages.yml')) : {};
+const workflowFile = target === 'pages-demo' ? 'deploy-pages.yml' : 'build-learn-ui-artifact.yml';
+const injected = workflowBuildEnv(join(root, '.github/workflows', workflowFile));
 Object.assign(process.env, injected);
 process.chdir(root);
 

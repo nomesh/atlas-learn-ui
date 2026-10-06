@@ -1,0 +1,92 @@
+name: Build immutable Learn UI artifact
+
+# Publishes the production bundle of learn.neuralworks.lk as an immutable, per-commit GitHub release
+# `learn-ui-build-<full commit SHA>` (dist.tar.gz, dist.tar.gz.sha256, build-info.json).
+# forge-atlas-api/.github/workflows/deploy-production-learn-ui.yml deploys only these releases, by SHA.
+# A release is never overwritten: if the tag already exists the job fails instead of replacing it.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write # create the per-commit tag and release in this repository only
+
+concurrency:
+  group: learn-ui-artifact-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SOURCE_SHA: ${{ github.sha }}
+      RELEASE_TAG: learn-ui-build-${{ github.sha }}
+    steps:
+      - name: Checkout exact source commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Refuse to overwrite an existing artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "${SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]] || { echo "Source SHA is not a full commit SHA" >&2; exit 1; }
+          if gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
+            echo "Tag ${RELEASE_TAG} already exists; immutable artifacts are never replaced." >&2
+            exit 1
+          fi
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Full gate: lint, node tests, UI tests, verify:production (LIVE, same-origin /api, no loopback)
+      # and verify:pages-demo (MOCK).
+      - name: Test
+        run: npm test
+
+      # The real application build: no VITE_* variables are injected here, so only the committed .env
+      # files apply (verify:production reads this step and fails if any are added).
+      - name: Build
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          npm run build
+          test -s dist/index.html
+
+      - name: Package artifact
+        run: |
+          set -euo pipefail
+          source_epoch="$(git log -1 --format=%ct "${SOURCE_SHA}")"
+          tar --sort=name --owner=0 --group=0 --numeric-owner --mtime="@${source_epoch}" \
+            -czf dist.tar.gz -C dist .
+          sha256sum dist.tar.gz > dist.tar.gz.sha256
+          node scripts/write-build-info.mjs \
+            --dist=dist --archive=dist.tar.gz --source-sha="${SOURCE_SHA}" \
+            --repository="${GITHUB_REPOSITORY}" --run-id="${GITHUB_RUN_ID}" --run-attempt="${GITHUB_RUN_ATTEMPT}" \
+            > build-info.json
+          cat dist.tar.gz.sha256 build-info.json
+
+      - name: Publish immutable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create "${RELEASE_TAG}" dist.tar.gz dist.tar.gz.sha256 build-info.json \
+            --target "${SOURCE_SHA}" \
+            --title "Learn UI build ${SOURCE_SHA}" \
+            --notes "Production bundle of ${GITHUB_REPOSITORY}@${SOURCE_SHA}. Immutable; deploy by SHA only." \
+            --latest=false
