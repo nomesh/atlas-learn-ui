@@ -13,8 +13,10 @@ import {
 } from 'lucide-react';
 import { useStudent } from '../../state/studentContext';
 import { MOCK_SUBJECTS } from '../../mocks/curriculumData';
+import { isMockCurriculum } from '../../curriculum/liveCurriculum';
+import { LiveSubjectsView } from '../../curriculum/LiveCurriculumViews';
 
-export const SubjectsPage: React.FC = () => {
+const MockSubjectsPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { grade, language, setCurriculumSubject } = useStudent();
@@ -99,3 +101,6 @@ export const SubjectsPage: React.FC = () => {
     </div>
   );
 };
+
+/** MOCK catalogue only in the Pages demo / dev mock mode; LIVE shows only what the ATLAS API returns. */
+export const SubjectsPage: React.FC = () => (isMockCurriculum() ? <MockSubjectsPage /> : <LiveSubjectsView />);

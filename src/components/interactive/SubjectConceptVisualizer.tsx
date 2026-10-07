@@ -16,6 +16,7 @@ import { ScienceConceptVisualizer, getScienceVisualizerKey } from './ScienceConc
 import { HistoryConceptVisualizer, getHistoryVisualizerKey } from './HistoryConceptVisualizer';
 import { GeneralSubjectVisualizer } from './GeneralSubjectVisualizer';
 import { MOCK_TOPICS, MOCK_SUBJECTS, findTopicResilient } from '../../mocks/curriculumData';
+import { isMockCurriculum } from '../../curriculum/liveCurriculum';
 
 interface SubjectConceptVisualizerProps {
   topicId?: string;
@@ -31,6 +32,8 @@ interface SubjectConceptVisualizerProps {
 }
 
 export function hasSimulation(topicId?: string, subjectId?: string, activeModeHint?: string, grade?: string): boolean {
+  // Simulations are prototype content tied to the MOCK catalogue; LIVE never offers them.
+  if (!isMockCurriculum()) return false;
   if (!topicId) return false;
 
   const currentTopic = findTopicResilient(MOCK_TOPICS, topicId, subjectId, grade);

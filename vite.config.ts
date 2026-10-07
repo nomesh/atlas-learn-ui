@@ -1,4 +1,5 @@
 import { defineConfig, loadEnv } from 'vite'
+import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
 import { isLoopbackUrl } from './src/api/apiBase'
 
@@ -14,9 +15,36 @@ export default defineConfig(({ mode, command }) => {
     )
   }
 
+  // The real application build (learn.neuralworks.lk) must never contain prototype curriculum or the scripted
+  // offline Tutor. Every import of those modules resolves to an empty production stub instead. Only the GitHub
+  // Pages demo build (VITE_DEPLOYMENT_TARGET=pages-demo), the dev server and the tests use the real mock modules.
+  const deploymentTarget = (process.env.VITE_DEPLOYMENT_TARGET || env.VITE_DEPLOYMENT_TARGET || '').trim().toLowerCase()
+  const realProductionBuild = command === 'build' && deploymentTarget !== 'pages-demo'
+  const productionStubs = realProductionBuild
+    ? [
+        {
+          find: /^(?:\.{1,2}\/)+(?:[\w-]+\/)*mocks\/curriculumData$/,
+          replacement: fileURLToPath(new URL('./src/mocks/curriculumData.production.ts', import.meta.url)),
+        },
+        {
+          find: /^\.\/mockTutorAdapter$/,
+          replacement: fileURLToPath(new URL('./src/api/mockTutorAdapter.production.ts', import.meta.url)),
+        },
+        {
+          find: /^\.\/mockTutorContent$/,
+          replacement: fileURLToPath(new URL('./src/features/tutor/mockTutorContent.production.ts', import.meta.url)),
+        },
+        {
+          find: /^\.\/MockCurriculumCompanionPane$/,
+          replacement: fileURLToPath(new URL('./src/features/tutor/MockCurriculumCompanionPane.production.tsx', import.meta.url)),
+        },
+      ]
+    : []
+
   return {
     base: env.VITE_BASE_PATH || '/',
     plugins: [react()],
+    resolve: { alias: productionStubs },
     server: {
       port: 5174,
       strictPort: true,

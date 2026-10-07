@@ -28,6 +28,8 @@ import { WordProcessingVisualizer } from '../../components/interactive/WordProce
 import { SubjectConceptVisualizer, hasSimulation } from '../../components/interactive/SubjectConceptVisualizer';
 import { RichContentRenderer, MathView } from '../tutor/RichContentRenderer';
 import { AuthGate, GuestBanner } from '../../components/auth/AuthGate';
+import { isMockCurriculum } from '../../curriculum/liveCurriculum';
+import { CurriculumUnavailable } from '../../curriculum/CurriculumUnavailable';
 
 function getChapterKeyPoints(topic: Topic | null, language: 'en' | 'si' | 'ta', steps?: any[]): string[] {
   if (!topic) return [];
@@ -259,7 +261,7 @@ function getChapterKeyPoints(topic: Topic | null, language: 'en' | 'si' | 'ta', 
   ];
 }
 
-export const TeachMePage: React.FC = () => {
+const MockTeachMePage: React.FC = () => {
   const { topicId } = useParams<{ topicId: string }>();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -774,3 +776,11 @@ export const TeachMePage: React.FC = () => {
     </div>
   );
 };
+
+const LiveTeachMePageUnavailable: React.FC = () => {
+  const { language } = useStudent();
+  return <CurriculumUnavailable language={language} detail={'Structured lessons (Teach Me) are not yet available: they require verified chapter and topic records for an indexed textbook. You can ask the Tutor questions; answers show their textbook sources when the indexed textbook supports them.'} />;
+};
+
+/** LIVE never renders prototype lesson steps, practice items, mastery values or simulations. */
+export const TeachMePage: React.FC = () => (isMockCurriculum() ? <MockTeachMePage /> : <LiveTeachMePageUnavailable />);

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Grade, Language, LearningContext, TutorState } from '../types';
+import { isMockCurriculum } from '../curriculum/liveCurriculum';
 import {
   getSession,
   getProfile,
@@ -210,8 +211,9 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [session?.userId, localStudentSession?.id, grade]);
 
   const [subjectId, setSubjectId] = useState<string | undefined>('science');
-  const [topicId, setTopicId] = useState<string | undefined>('photosynthesis');
-  const [activeLessonId, setActiveLessonId] = useState<string | undefined>('sci-8-photo-1');
+  // The demo starts on a prototype lesson; LIVE starts with no topic (only API-verified topics may be selected).
+  const [topicId, setTopicId] = useState<string | undefined>(() => (isMockCurriculum() ? 'photosynthesis' : undefined));
+  const [activeLessonId, setActiveLessonId] = useState<string | undefined>(() => (isMockCurriculum() ? 'sci-8-photo-1' : undefined));
   const [tutorState, setTutorState] = useState<TutorState>('idle');
 
   const [streakDays, setStreakDays] = useState<number>(0);

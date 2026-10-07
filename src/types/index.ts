@@ -110,6 +110,8 @@ export interface RAGResponse {
   runtime?: { provider?: string; model?: string };
   /** Textbook page previews; only present when the student asked for a visual and one was verified. */
   visuals?: SourceVisual[];
+  /** LIVE only: evidence the backend actually used. safeFailure = no approved textbook evidence, no generated answer. */
+  grounding?: { evidenceCount?: number; safeFailure?: boolean };
 }
 
 export interface TutorAction {
@@ -157,6 +159,8 @@ export interface ChatMessage {
   keyPoints?: string[];
   imageUrl?: string;
   visuals?: SourceVisual[];
+  /** LIVE: the backend found no approved textbook evidence, so this answer is not textbook-grounded. */
+  noTextbookEvidence?: boolean;
 }
 
 export interface Subject {

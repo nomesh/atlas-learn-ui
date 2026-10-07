@@ -14,8 +14,10 @@ import {
 import { useStudent } from '../../state/studentContext';
 import { MOCK_SUBJECTS } from '../../mocks/curriculumData';
 import { AuthGate, GuestBanner } from '../../components/auth/AuthGate';
+import { isMockCurriculum } from '../../curriculum/liveCurriculum';
+import { CurriculumUnavailable } from '../../curriculum/CurriculumUnavailable';
 
-export const ProgressPage: React.FC = () => {
+const MockProgressPage: React.FC = () => {
   const { t } = useTranslation();
   const { 
     studentName, 
@@ -228,3 +230,11 @@ export const ProgressPage: React.FC = () => {
     </div>
   );
 };
+
+const LiveProgressPageUnavailable: React.FC = () => {
+  const { language } = useStudent();
+  return <CurriculumUnavailable language={language} detail={'Progress will appear here once verified lessons are available for your subjects.'} />;
+};
+
+/** LIVE never renders prototype lesson steps, practice items, mastery values or simulations. */
+export const ProgressPage: React.FC = () => (isMockCurriculum() ? <MockProgressPage /> : <LiveProgressPageUnavailable />);

@@ -91,6 +91,7 @@ for (const m of modes) {
 const LOOPBACK_TARGET = /(?:https?:)?\/\/(?:localhost:\d+|127(?:\.\d{1,3}){3}(?::\d+)?|0\.0\.0\.0(?::\d+)?|\[::1\](?::\d+)?)/g;
 const bundleHits = [];
 let scanned = 0;
+let bundleText = '';
 const walk = (dir) => {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const path = join(dir, entry.name);
@@ -98,16 +99,46 @@ const walk = (dir) => {
     else if (/\.(m?js|html)$/.test(entry.name)) {
       scanned++;
       const text = readFileSync(path, 'utf8');
+      bundleText += text;
       for (const m of text.matchAll(LOOPBACK_TARGET)) {
         bundleHits.push(`${entry.name}: …${text.slice(Math.max(0, m.index - 60), m.index + m[0].length + 20)}…`);
       }
     }
   }
 };
+
+// 4d. Prototype curriculum (MOCK catalogue, fallback textbook list, lesson steps, scripted offline Tutor) must not be
+// emitted into the real application bundle; the Pages demo must keep it. Markers are taken from the mock modules
+// themselves: every learner-visible prototype text plus every catalogue-qualified topic id (grade/chapter in the id).
+// Generic slugs (e.g. "photosynthesis") also key dead-in-LIVE widget switches, so they are reported, not failed on.
+const { MOCK_TOPICS, MOCK_SUBJECTS, FALLBACK_CURRICULUM_RESOURCES, LESSON_STEPS_BY_TOPIC } = await import('../src/mocks/curriculumData.ts');
+const topicIds = MOCK_TOPICS.map((t) => t.id).filter((id) => id.length > 12);
+const isCatalogueId = (id) => /(?:gr|grade-?)\d|ch\d|sci-\d|-\d+-/.test(id);
+const genericSlugs = topicIds.filter((id) => !isCatalogueId(id));
+const prototypeMarkers = [
+  ...new Set([
+    ...topicIds.filter(isCatalogueId),
+    ...MOCK_TOPICS.flatMap((t) => [t.title?.en, t.description?.en]).filter((x) => x && x.length > 18),
+    ...MOCK_SUBJECTS.map((s) => s.description.en).filter((d) => d && d.length > 20),
+    ...Object.values(LESSON_STEPS_BY_TOPIC).flat().flatMap((st) => [st.title?.en, st.concept?.en?.slice(0, 60)]).filter((x) => x && x.length > 18),
+    ...FALLBACK_CURRICULUM_RESOURCES.map((r) => r.checksumSha256),
+    'Offline Mock Mode Notice',
+  ]),
+];
+let markersFound = [];
+let slugsFound = [];
 if (!failures.some((f) => f.startsWith('vite build failed'))) {
   walk(outDir);
   if (scanned === 0) failures.push('no built JavaScript/HTML found to inspect');
   for (const hit of bundleHits) failures.push(`loopback target in built bundle: ${hit}`);
+  markersFound = prototypeMarkers.filter((m) => bundleText.includes(m));
+  slugsFound = genericSlugs.filter((m) => bundleText.includes(m));
+  if (target === 'production' && markersFound.length > 0) {
+    failures.push(`prototype curriculum leaked into the production bundle (${markersFound.length} markers, e.g. ${markersFound.slice(0, 3).join(', ')})`);
+  }
+  if (target === 'pages-demo' && markersFound.length === 0) {
+    failures.push('Pages demo bundle lost its MOCK catalogue');
+  }
 }
 rmSync(outDir, { recursive: true, force: true });
 
@@ -116,6 +147,8 @@ console.log(`[verify:${target}] effective VITE_API_BASE_URL=${JSON.stringify(env
 console.log(`[verify:${target}] effective VITE_DEPLOYMENT_TARGET=${JSON.stringify(env.VITE_DEPLOYMENT_TARGET)} VITE_USE_MOCK_API=${JSON.stringify(env.VITE_USE_MOCK_API)}`);
 console.log(`[verify:${target}] Tutor mode: ${modes.map((m) => `override=${m.storedOverride} -> ${m.mode.toUpperCase()} (${m.source})`).join('; ')}`);
 console.log(`[verify:${target}] scanned ${scanned} built files, loopback API targets found: ${bundleHits.length}`);
+console.log(`[verify:${target}] prototype curriculum markers in bundle: ${markersFound.length} of ${prototypeMarkers.length} (${target === 'production' ? 'expected 0' : 'expected > 0'})`);
+console.log(`[verify:${target}] generic topic slugs present (informational): ${slugsFound.length} of ${genericSlugs.length}${slugsFound.length ? ` (${slugsFound.join(', ')})` : ''}`);
 if (failures.length) {
   console.error(`[verify:${target}] FAILED:\n  - ${failures.join('\n  - ')}`);
   process.exit(1);

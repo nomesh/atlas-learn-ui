@@ -17,6 +17,8 @@ import { Topic } from '../../types';
 import { useStudent } from '../../state/studentContext';
 import { MOCK_SUBJECTS, MOCK_TOPICS } from '../../mocks/curriculumData';
 import { fetchCurriculumResources, fetchCurriculumTopics, CurriculumResourceItem } from '../../api/curriculumApi';
+import { isMockCurriculum } from '../../curriculum/liveCurriculum';
+import { LiveSubjectDetailView } from '../../curriculum/LiveCurriculumViews';
 
 function isSubjectMatch(book: CurriculumResourceItem, subjectId: string, subjectCode: string): boolean {
   const bCode = (book.subjectCode || '').toUpperCase();
@@ -36,7 +38,7 @@ function isSubjectMatch(book: CurriculumResourceItem, subjectId: string, subject
   );
 }
 
-export const SubjectDetailPage: React.FC = () => {
+const MockSubjectDetailPage: React.FC = () => {
   const { subjectId } = useParams<{ subjectId: string }>();
   const navigate = useNavigate();
   const { language, grade, setCurriculumSubject } = useStudent();
@@ -319,3 +321,6 @@ export const SubjectDetailPage: React.FC = () => {
     </div>
   );
 };
+
+/** LIVE: textbook availability and verified topics from the API only (no sample chapters, page ranges or badges). */
+export const SubjectDetailPage: React.FC = () => (isMockCurriculum() ? <MockSubjectDetailPage /> : <LiveSubjectDetailView />);

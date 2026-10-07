@@ -17,8 +17,10 @@ import { TutorAvatar } from '../avatar/TutorAvatar';
 import { MOCK_PRACTICE_QUESTIONS } from '../../mocks/curriculumData';
 import { AuthGate, GuestBanner } from '../../components/auth/AuthGate';
 import type { QuizQuestion } from '../../types';
+import { isMockCurriculum } from '../../curriculum/liveCurriculum';
+import { CurriculumUnavailable } from '../../curriculum/CurriculumUnavailable';
 
-export const PracticePage: React.FC = () => {
+const MockPracticePage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { language, setTutorState, isAuthenticated, isGuestPreview } = useStudent();
@@ -242,3 +244,11 @@ export const PracticePage: React.FC = () => {
     </div>
   );
 };
+
+const LivePracticePageUnavailable: React.FC = () => {
+  const { language } = useStudent();
+  return <CurriculumUnavailable language={language} detail={'Practice questions are not yet available for your grade.'} />;
+};
+
+/** LIVE never renders prototype lesson steps, practice items, mastery values or simulations. */
+export const PracticePage: React.FC = () => (isMockCurriculum() ? <MockPracticePage /> : <LivePracticePageUnavailable />);

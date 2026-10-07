@@ -21,8 +21,10 @@ import {
 import { useStudent } from '../../state/studentContext';
 import { TutorAvatar } from '../avatar/TutorAvatar';
 import { MOCK_SUBJECTS, MOCK_TOPICS } from '../../mocks/curriculumData';
+import { isMockCurriculum } from '../../curriculum/liveCurriculum';
+import { LiveSubjectsView } from '../../curriculum/LiveCurriculumViews';
 
-export const StudentHomePage: React.FC = () => {
+const MockStudentHomePage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { studentName, grade, language, streakDays, tutorState, setCurriculumSubject, learningContext } = useStudent();
@@ -376,3 +378,6 @@ export const StudentHomePage: React.FC = () => {
     </div>
   );
 };
+
+/** LIVE home: no sample "continue learning" topic or mastery values; only API-reported subject availability. */
+export const StudentHomePage: React.FC = () => (isMockCurriculum() ? <MockStudentHomePage /> : <LiveSubjectsView />);

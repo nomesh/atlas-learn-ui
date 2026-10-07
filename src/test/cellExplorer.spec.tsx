@@ -1,11 +1,18 @@
 import React from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { CellExplorer, ORGANELLES } from '../components/interactive/CellExplorer';
 import { SubjectConceptVisualizer, hasSimulation } from '../components/interactive/SubjectConceptVisualizer';
 import { getScienceVisualizerKey } from '../components/interactive/ScienceConceptVisualizer';
 import { MathsConceptVisualizer } from '../components/interactive/MathsConceptVisualizer';
 import { HistoryConceptVisualizer } from '../components/interactive/HistoryConceptVisualizer';
+import { tutorService } from '../api/tutorApi';
+
+// Interactive simulations are prototype content of the MOCK catalogue (Pages demo / local mock development);
+// LIVE never offers them (see curriculumIntegrity.spec.tsx). These wiring tests therefore run in MOCK mode.
+const initialMock = tutorService.isMockMode();
+beforeAll(() => tutorService.setMockMode(true));
+afterAll(() => tutorService.setMockMode(initialMock));
 
 afterEach(() => cleanup());
 
