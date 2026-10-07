@@ -23,9 +23,14 @@ export interface SubjectAvailability {
   languages: string[];
   indexedResources: number;
   topics: number;
-  /** An approved, indexed textbook exists: Tutor answers can be grounded in retrieved evidence. */
+  /** An operator verified this grade/subject for textbook-grounded Tutor answers. */
+  tutorScopeVerified?: boolean;
+  /**
+   * Textbook questions only: an indexed textbook in a verified scope. Every answer is grounded in retrieved evidence
+   * or refused. This alone never makes the subject's curriculum available.
+   */
   tutorAvailable: boolean;
-  /** Verified chapter/topic records exist. */
+  /** Approved persisted chapter/topic records exist: the only basis for Teach Me, Practice, Progress, topics. */
   topicsAvailable: boolean;
 }
 

@@ -38,6 +38,10 @@ export default defineConfig(({ mode, command }) => {
           find: /^\.\/MockCurriculumCompanionPane$/,
           replacement: fileURLToPath(new URL('./src/features/tutor/MockCurriculumCompanionPane.production.tsx', import.meta.url)),
         },
+        {
+          find: /^\.\/DemoVoiceButton$/,
+          replacement: fileURLToPath(new URL('./src/features/tutor/DemoVoiceButton.production.tsx', import.meta.url)),
+        },
       ]
     : []
 

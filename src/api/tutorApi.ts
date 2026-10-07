@@ -19,6 +19,13 @@ export interface TutorAdapter {
   clearConversation(conversationId: string, options?: TutorClearOptions): Promise<void>;
 }
 
+/** Shown instead of any answer that arrives without approved textbook evidence (LIVE fail-closed). */
+export const NO_EVIDENCE_REFUSAL: Record<'en' | 'si' | 'ta', string> = {
+  en: 'I could not find approved textbook evidence for this question, so I cannot answer it from your textbook.',
+  si: 'මෙම ප්‍රශ්නයට අනුමත පෙළපොත් සාක්ෂි හමු නොවූ බැවින්, ඔබේ පෙළපොතෙන් පිළිතුරු දිය නොහැක.',
+  ta: 'இந்தக் கேள்விக்கு அங்கீகரிக்கப்பட்ட பாடநூல் ஆதாரம் கிடைக்கவில்லை, எனவே உங்கள் பாடநூலிலிருந்து பதிலளிக்க முடியாது.',
+};
+
 /**
  * AtlasLiveTutorAdapter
  * Directly targets the ATLAS Learn backend AI Tutor endpoint.
@@ -47,10 +54,24 @@ export class AtlasLiveTutorAdapter implements TutorAdapter {
     const safeFailure = meta?.safeFailure === true;
     const provider = typeof meta?.llmProvider === 'string' ? meta.llmProvider : undefined;
     const model = typeof meta?.llmModel === 'string' ? meta.llmModel : undefined;
+    const sources = data.sources || [];
+
+    // Fail closed: an answer without retrieved textbook sources is never shown. The backend refuses itself
+    // (safeFailure, no LLM call); should any other answer arrive without sources, it is withheld here.
+    if (safeFailure || sources.length === 0) {
+      const lang = context.language === 'si' || context.language === 'ta' ? context.language : 'en';
+      return {
+        answer: safeFailure && typeof data.answer === 'string' && data.answer.trim() ? data.answer : NO_EVIDENCE_REFUSAL[lang],
+        sources: [],
+        suggestedFollowUps: [],
+        visuals: [],
+        grounding: { evidenceCount: 0, safeFailure: true, withheld: !safeFailure },
+      };
+    }
 
     return {
       answer: data.answer,
-      sources: data.sources || [],
+      sources,
       suggestedFollowUps: data.suggestedFollowUps || [],
       // Server-resolved textbook visuals, passed through unchanged (URLs are never rebuilt in the UI).
       visuals: Array.isArray(data.visuals)

@@ -112,6 +112,7 @@ const walk = (dir) => {
 // themselves: every learner-visible prototype text plus every catalogue-qualified topic id (grade/chapter in the id).
 // Generic slugs (e.g. "photosynthesis") also key dead-in-LIVE widget switches, so they are reported, not failed on.
 const { MOCK_TOPICS, MOCK_SUBJECTS, FALLBACK_CURRICULUM_RESOURCES, LESSON_STEPS_BY_TOPIC } = await import('../src/mocks/curriculumData.ts');
+const { MOCK_SIMULATED_VOICE_PROMPT } = await import('../src/features/tutor/mockTutorContent.ts');
 const topicIds = MOCK_TOPICS.map((t) => t.id).filter((id) => id.length > 12);
 const isCatalogueId = (id) => /(?:gr|grade-?)\d|ch\d|sci-\d|-\d+-/.test(id);
 const genericSlugs = topicIds.filter((id) => !isCatalogueId(id));
@@ -123,6 +124,9 @@ const prototypeMarkers = [
     ...Object.values(LESSON_STEPS_BY_TOPIC).flat().flatMap((st) => [st.title?.en, st.concept?.en?.slice(0, 60)]).filter((x) => x && x.length > 18),
     ...FALLBACK_CURRICULUM_RESOURCES.map((r) => r.checksumSha256),
     'Offline Mock Mode Notice',
+    // Scripted microphone "capture" of the demo: LIVE has no speech recognition and must never insert it.
+    MOCK_SIMULATED_VOICE_PROMPT,
+    'voice-input-demo',
   ]),
 ];
 let markersFound = [];

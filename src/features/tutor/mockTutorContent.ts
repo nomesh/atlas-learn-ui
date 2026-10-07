@@ -761,6 +761,9 @@ export function buildInitialGreeting(
   };
 }
 
+/** Scripted text the Pages demo inserts to simulate speech capture (MOCK only; no speech recognition exists). */
+export const MOCK_SIMULATED_VOICE_PROMPT = 'Explain photosynthesis in simple terms';
+
 /** Demo default topic per subject (MOCK only). */
 export function mockDefaultTopicForSubject(sub?: string): string | undefined {
   if (sub === 'ict') return 'number-systems';

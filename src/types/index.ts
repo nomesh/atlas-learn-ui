@@ -111,7 +111,7 @@ export interface RAGResponse {
   /** Textbook page previews; only present when the student asked for a visual and one was verified. */
   visuals?: SourceVisual[];
   /** LIVE only: evidence the backend actually used. safeFailure = no approved textbook evidence, no generated answer. */
-  grounding?: { evidenceCount?: number; safeFailure?: boolean };
+  grounding?: { evidenceCount?: number; safeFailure?: boolean; withheld?: boolean };
 }
 
 export interface TutorAction {

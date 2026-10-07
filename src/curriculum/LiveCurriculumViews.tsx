@@ -15,6 +15,16 @@ const TEXT: Record<string, Record<Language, string>> = {
   subjectsTitle: { en: 'Subjects', si: 'විෂයයන්', ta: 'பாடங்கள்' },
   indexed: { en: 'Textbook indexed', si: 'පෙළපොත සූචිගත කර ඇත', ta: 'பாடநூல் அட்டவணைப்படுத்தப்பட்டது' },
   askTutor: { en: 'Ask the Tutor', si: 'ගුරුවරයාගෙන් අසන්න', ta: 'ஆசிரியரிடம் கேளுங்கள்' },
+  textbookQuestions: {
+    en: 'Ask textbook questions',
+    si: 'පෙළපොත් ප්‍රශ්න අසන්න',
+    ta: 'பாடநூல் கேள்விகள் கேளுங்கள்',
+  },
+  textbookQuestionsNote: {
+    en: 'Answers come only from the indexed textbook and cite their pages; the Tutor refuses when it finds no evidence. Lessons and topics are not available yet.',
+    si: 'පිළිතුරු ලැබෙන්නේ සූචිගත පෙළපොතෙන් පමණි; සාක්ෂි නොමැති විට ගුරුවරයා පිළිතුරු නොදේ. පාඩම් සහ මාතෘකා තවම ලබා ගත නොහැක.',
+    ta: 'பதில்கள் அட்டவணைப்படுத்தப்பட்ட பாடநூலிலிருந்து மட்டுமே; ஆதாரம் இல்லையெனில் ஆசிரியர் பதிலளிக்காது. பாடங்களும் தலைப்புகளும் இன்னும் கிடைக்கவில்லை.',
+  },
   loading: { en: 'Loading curriculum…', si: 'විෂය නිර්දේශය පූරණය වෙමින්…', ta: 'பாடத்திட்டம் ஏற்றப்படுகிறது…' },
   loadError: {
     en: 'The curriculum could not be loaded. Please try again.',
@@ -53,7 +63,8 @@ export const LiveSubjectsView: React.FC<{ compact?: boolean }> = ({ compact }) =
   if (subjects.length === 0) {
     return <CurriculumUnavailable language={language} />;
   }
-  const ordered = [...subjects].sort((a, b) => Number(b.tutorAvailable) - Number(a.tutorAvailable));
+  const rank = (s: SubjectAvailability) => (s.topicsAvailable ? 2 : s.tutorAvailable ? 1 : 0);
+  const ordered = [...subjects].sort((a, b) => rank(b) - rank(a));
 
   return (
     <div className="space-y-4" data-testid="live-subjects">
@@ -90,15 +101,19 @@ const LiveSubjectCard: React.FC<{
   onOpen: () => void;
   onAsk: () => void;
 }> = ({ subject, language, onOpen, onAsk }) => {
-  if (!subject.tutorAvailable) {
+  // Curriculum (lessons, topics, practice, progress) is available only with approved persisted topic records.
+  if (!subject.topicsAvailable) {
     return (
       <div
         data-testid={`subject-unavailable-${subject.subjectCode}`}
-        aria-disabled="true"
-        className="p-5 rounded-3xl bg-slate-50 border border-slate-200 text-slate-500"
+        aria-disabled={subject.tutorAvailable ? undefined : 'true'}
+        className="p-5 rounded-3xl bg-slate-50 border border-slate-200 text-slate-500 space-y-2"
       >
-        <h3 className="font-bold text-slate-700">{subject.subjectName}</h3>
-        <p className="text-xs mt-1">{CURRICULUM_UNAVAILABLE_TEXT[language]}</p>
+        <div>
+          <h3 className="font-bold text-slate-700">{subject.subjectName}</h3>
+          <p className="text-xs mt-1">{CURRICULUM_UNAVAILABLE_TEXT[language]}</p>
+        </div>
+        {subject.tutorAvailable && <TextbookQuestionsAction subject={subject} language={language} onAsk={onAsk} />}
       </div>
     );
   }
@@ -126,6 +141,21 @@ const LiveSubjectCard: React.FC<{
   );
 };
 
+/** Free textbook questions, explicitly distinct from curriculum (lesson/topic) tutoring. */
+const TextbookQuestionsAction: React.FC<{ subject: SubjectAvailability; language: Language; onAsk: () => void }> = ({
+  subject,
+  language,
+  onAsk,
+}) => (
+  <div data-testid={`subject-textbook-questions-${subject.subjectCode}`} className="pt-2 border-t border-slate-200 space-y-1">
+    <button type="button" onClick={onAsk} className="inline-flex items-center gap-1.5 text-xs font-bold text-atlas-blue">
+      <MessageCircleQuestion className="w-4 h-4" />
+      {TEXT.textbookQuestions[language]} ({subject.languages.map((l) => l.toUpperCase()).join(', ')})
+    </button>
+    <p className="text-[11px] leading-relaxed text-slate-500">{TEXT.textbookQuestionsNote[language]}</p>
+  </div>
+);
+
 /** LIVE subject page: textbook availability and verified topics only; never sample chapters or page ranges. */
 export const LiveSubjectDetailView: React.FC = () => {
   const { subjectId } = useParams<{ subjectId: string }>();
@@ -152,11 +182,18 @@ export const LiveSubjectDetailView: React.FC = () => {
   if (availability.isError) {
     return <div className="max-w-4xl mx-auto space-y-4">{back}<CurriculumUnavailable language={language} detail={TEXT.loadError[language]} /></div>;
   }
-  if (!subject || !subject.tutorAvailable) {
+  if (!subject || !subject.topicsAvailable) {
     return (
       <div className="max-w-4xl mx-auto space-y-4">
         {back}
-        <CurriculumUnavailable language={language} detail={TEXT.notIndexed[language]} />
+        <CurriculumUnavailable language={language} detail={subject?.tutorAvailable ? undefined : TEXT.notIndexed[language]} />
+        {subject?.tutorAvailable && (
+          <TextbookQuestionsAction
+            subject={subject}
+            language={language}
+            onAsk={() => navigate(`/tutor?subject=${encodeURIComponent(subject.subjectCode.toLowerCase())}`)}
+          />
+        )}
       </div>
     );
   }
@@ -220,14 +257,16 @@ export const LiveCompanionPane: React.FC<{ subjectId?: string; language: Languag
       <h3 className="text-sm font-extrabold text-slate-900">{subject?.subjectName ?? (subjectId || '').toUpperCase()}</h3>
       {availability.isLoading ? (
         <p className="text-xs text-slate-500">{TEXT.loading[language]}</p>
+      ) : subject?.topicsAvailable ? (
+        <p className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700">
+          <BookOpen className="w-4 h-4" />
+          {TEXT.indexed[language]} ({subject.languages.map((l) => l.toUpperCase()).join(', ')})
+        </p>
       ) : subject?.tutorAvailable ? (
-        <>
-          <p className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700">
-            <BookOpen className="w-4 h-4" />
-            {TEXT.indexed[language]} ({subject.languages.map((l) => l.toUpperCase()).join(', ')})
-          </p>
-          {!subject.topicsAvailable && <p className="text-xs text-slate-600 leading-relaxed">{TEXT.noTopics[language]}</p>}
-        </>
+        <div data-testid="live-companion-textbook-questions" className="space-y-1">
+          <p className="text-xs font-bold text-slate-700">{CURRICULUM_UNAVAILABLE_TEXT[language]}</p>
+          <p className="text-xs text-slate-600 leading-relaxed">{TEXT.textbookQuestionsNote[language]}</p>
+        </div>
       ) : (
         <p className="text-xs text-slate-600 leading-relaxed" data-testid="live-companion-unavailable">
           {CURRICULUM_UNAVAILABLE_TEXT[language]}. {TEXT.notIndexed[language]}

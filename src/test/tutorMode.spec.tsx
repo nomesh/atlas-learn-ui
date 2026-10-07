@@ -79,7 +79,7 @@ describe('TutorRuntimeBadge (development only)', () => {
   it('shows provider and model once the live backend reports them', async () => {
     act(() => tutorService.setMockMode(false));
     vi.spyOn(apiClient, 'post').mockResolvedValue({
-      data: { answer: 'ok', sources: [], metadata: { llmProvider: 'OLLAMA_CLOUD', llmModel: 'nemotron-3-super:cloud' } },
+      data: { answer: 'ok', sources: [{ source: 'Grade 8 Science', pageNumber: 42 }], metadata: { llmProvider: 'OLLAMA_CLOUD', llmModel: 'nemotron-3-super:cloud' } },
     } as never);
     render(<TutorRuntimeBadge />);
     await act(async () => {
@@ -91,7 +91,7 @@ describe('TutorRuntimeBadge (development only)', () => {
   it('forgets the reported model when switching to mock (fixtures are never labelled as a model)', async () => {
     act(() => tutorService.setMockMode(false));
     vi.spyOn(apiClient, 'post').mockResolvedValue({
-      data: { answer: 'ok', sources: [], metadata: { llmProvider: 'OLLAMA_CLOUD', llmModel: 'm' } },
+      data: { answer: 'ok', sources: [{ source: 'Grade 8 Science', pageNumber: 42 }], metadata: { llmProvider: 'OLLAMA_CLOUD', llmModel: 'm' } },
     } as never);
     await act(async () => {
       await tutorService.askTutor('q', { subjectId: 'science', grade: 'grade-10', language: 'en', conversationId: 'c1' } as never);

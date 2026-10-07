@@ -22,6 +22,8 @@ export function buildInitialGreeting(
   return buildLiveGreeting(subjectId, topicId, language, studentName, grade);
 }
 
+export const MOCK_SIMULATED_VOICE_PROMPT = '';
+
 export function mockDefaultTopicForSubject(_sub?: string): string | undefined {
   return undefined;
 }

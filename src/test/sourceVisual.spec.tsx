@@ -119,7 +119,7 @@ describe('Live Tutor adapter visuals mapping', () => {
   it('passes backend visuals through unchanged', async () => {
     act(() => tutorService.setMockMode(false));
     vi.spyOn(apiClient, 'post').mockResolvedValue({
-      data: { answer: 'ok', sources: [], visuals: [visual] },
+      data: { answer: 'ok', sources: [{ source: 'Grade 8 Science', pageNumber: 42 }], visuals: [visual] },
     } as never);
 
     const response = await tutorService.askTutor('රූපය පෙන්වන්න', { subjectId: 'science', grade: 'grade-8', language: 'si', conversationId: 'c1' } as never);
@@ -132,11 +132,11 @@ describe('Live Tutor adapter visuals mapping', () => {
   it('defaults to no visuals and drops malformed entries', async () => {
     act(() => tutorService.setMockMode(false));
     const post = vi.spyOn(apiClient, 'post');
-    post.mockResolvedValueOnce({ data: { answer: 'ok', sources: [] } } as never);
+    post.mockResolvedValueOnce({ data: { answer: 'ok', sources: [{ source: 'Grade 8 Science', pageNumber: 42 }] } } as never);
     const none = await tutorService.askTutor('q', { subjectId: 'science', grade: 'grade-8', language: 'en', conversationId: 'c1' } as never);
     expect(none.visuals).toEqual([]);
 
-    post.mockResolvedValueOnce({ data: { answer: 'ok', sources: [], visuals: [null, { visualId: 'x' }, visual] } } as never);
+    post.mockResolvedValueOnce({ data: { answer: 'ok', sources: [{ source: 'Grade 8 Science', pageNumber: 42 }], visuals: [null, { visualId: 'x' }, visual] } } as never);
     const filtered = await tutorService.askTutor('q', { subjectId: 'science', grade: 'grade-8', language: 'en', conversationId: 'c1' } as never);
     expect(filtered.visuals).toEqual([visual]);
   });

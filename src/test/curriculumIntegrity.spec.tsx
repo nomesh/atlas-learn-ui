@@ -13,13 +13,16 @@ const studentState = {
 };
 vi.mock('../state/studentContext', () => ({ useStudent: () => studentState }));
 
-// The ATLAS API, as production currently answers: Grade 10 English Science indexed (no topic records yet);
-// every other Grade 10 subject has no indexed textbook.
+// The ATLAS API, as production currently answers: Grade 10 English Science indexed in a verified Tutor scope (no
+// topic records yet); Grade 10 Geography indexed in Sinhala but unreviewed (not a verified scope, no topics); every
+// other Grade 10 subject has no indexed textbook.
 const apiGet = vi.fn();
 const apiPost = vi.fn();
 vi.mock('../api/client', () => ({ apiClient: { get: (...a: unknown[]) => apiGet(...a), post: (...a: unknown[]) => apiPost(...a), delete: vi.fn() } }));
 
-import { tutorService, AtlasLiveTutorAdapter } from '../api/tutorApi';
+import { tutorService, AtlasLiveTutorAdapter, NO_EVIDENCE_REFUSAL } from '../api/tutorApi';
+import { VoiceInputButton, VOICE_INPUT_UNAVAILABLE_TEXT } from '../features/tutor/VoiceInputButton';
+import { fireEvent } from '@testing-library/react';
 import { resolveTutorMode } from '../api/tutorMode';
 import { MOCK_SUBJECTS, MOCK_TOPICS } from '../mocks/curriculumData';
 import { SubjectsPage } from '../features/subjects/SubjectsPage';
@@ -35,14 +38,25 @@ const availability = {
   grade: 'grade-10',
   subjects: [
     { subjectCode: 'MATHEMATICS', subjectName: 'Mathematics', languages: [], indexedResources: 0, topics: 0, tutorAvailable: false, topicsAvailable: false },
-    { subjectCode: 'SCIENCE', subjectName: 'Science', languages: ['en'], indexedResources: 1, topics: 0, tutorAvailable: true, topicsAvailable: false },
+    { subjectCode: 'SCIENCE', subjectName: 'Science', languages: ['en'], indexedResources: 1, topics: 0, tutorScopeVerified: true, tutorAvailable: true, topicsAvailable: false },
+    { subjectCode: 'GEOGRAPHY', subjectName: 'Geography', languages: ['si'], indexedResources: 1, topics: 0, tutorScopeVerified: false, tutorAvailable: false, topicsAvailable: false },
   ],
 };
 
-function answerApi() {
+/** An approved, persisted topic as /api/learn/curriculum returns it (used only where a test opts in). */
+const approvedTopic = {
+  id: 'science-gr10-ch2-motion', subjectId: 'science', grade: 'grade-10', chapterNumber: 'Chapter 2',
+  title: { en: 'Approved persisted topic', si: 'Approved persisted topic', ta: 'Approved persisted topic' },
+  description: { en: '', si: '', ta: '' }, masteryPercentage: 0,
+};
+
+function answerApi(opts: { scienceTopics?: boolean } = {}) {
+  const data = opts.scienceTopics
+    ? { ...availability, subjects: availability.subjects.map((s) => (s.subjectCode === 'SCIENCE' ? { ...s, topics: 1, topicsAvailable: true } : s)) }
+    : availability;
   apiGet.mockImplementation((url: string) => {
-    if (url === '/api/learn/curriculum/availability') return Promise.resolve({ data: availability });
-    if (url === '/api/learn/curriculum') return Promise.resolve({ data: [] });
+    if (url === '/api/learn/curriculum/availability') return Promise.resolve({ data });
+    if (url === '/api/learn/curriculum') return Promise.resolve({ data: opts.scienceTopics ? [approvedTopic] : [] });
     if (url === '/api/learn/resources') return Promise.resolve({ data: [] });
     return Promise.reject(new Error(`unexpected GET ${url}`));
   });
@@ -81,7 +95,7 @@ describe('LIVE production content integrity', () => {
   it('1. LIVE never loads the bundled fallback curriculum', async () => {
     expect(isMockCurriculum()).toBe(false);
     renderAt('/subjects', <SubjectsPage />);
-    await screen.findByTestId('subject-available-SCIENCE');
+    await screen.findByTestId('subject-unavailable-SCIENCE');
     const text = document.body.textContent || '';
     for (const marker of prototypeMarkers()) {
       expect(text.includes(marker), `prototype text leaked: ${marker}`).toBe(false);
@@ -133,7 +147,7 @@ describe('LIVE production content integrity', () => {
     expect(document.body.textContent).not.toMatch(/% Complete|Mastery/);
   });
 
-  it('4. a no-evidence Tutor answer is reported as not grounded (backend safe failure, no sources)', async () => {
+  it('4. a no-evidence Tutor request fails closed: the refusal is shown, never a generated answer', async () => {
     apiPost.mockResolvedValue({
       data: {
         answer: 'I could not find this in your indexed textbook.',
@@ -145,18 +159,33 @@ describe('LIVE production content integrity', () => {
     const response = await new AtlasLiveTutorAdapter().ask('Solve x^2+5x+6=0', {
       grade: 'grade-10', language: 'en', conversationId: 'c-2', subjectId: 'maths',
     });
+    expect(response.answer).toBe('I could not find this in your indexed textbook.');
     expect(response.sources).toEqual([]);
-    expect(response.grounding).toEqual({ evidenceCount: 0, safeFailure: true });
+    expect(response.grounding).toMatchObject({ evidenceCount: 0, safeFailure: true });
     const body = apiPost.mock.calls[0][1] as Record<string, unknown>;
     expect(body.topicId).toBeUndefined();
+
+    // Defence in depth: any answer that arrives without textbook sources is withheld, not labelled and shown.
+    apiPost.mockResolvedValue({
+      data: { answer: 'GENERATED-UNGROUNDED-TEXT', sources: [], metadata: { safeFailure: false, evidenceCount: 0 } },
+    });
+    const withheld = await new AtlasLiveTutorAdapter().ask('Explain trigonometry', {
+      grade: 'grade-10', language: 'si', conversationId: 'c-2b', subjectId: 'science',
+    });
+    expect(withheld.answer).toBe(NO_EVIDENCE_REFUSAL.si);
+    expect(withheld.answer).not.toContain('GENERATED-UNGROUNDED-TEXT');
+    expect(withheld.sources).toEqual([]);
+    expect(withheld.grounding).toMatchObject({ safeFailure: true, withheld: true });
   });
 
   it('5. Grade 10 English Science remains usable when indexed evidence exists', async () => {
     renderAt('/subjects/science', <SubjectDetailPage />, '/subjects/:subjectId');
-    await screen.findByTestId('live-subject-detail');
-    expect(screen.getByText('Ask the Tutor')).toBeTruthy();
-    expect(document.body.textContent).toContain('Textbook indexed (EN)');
-    expect(screen.getByTestId('live-no-topics')).toBeTruthy();
+    // No approved topics yet: curriculum unavailable, textbook questions offered as a distinct, explained action.
+    await screen.findByTestId('subject-textbook-questions-SCIENCE');
+    expect(screen.getByTestId('curriculum-unavailable')).toBeTruthy();
+    expect(document.body.textContent).toContain('Ask textbook questions (EN)');
+    expect(document.body.textContent).toMatch(/refuses when it finds no evidence/);
+    expect(document.body.textContent).not.toMatch(GROUNDED_CLAIMS);
 
     apiPost.mockResolvedValue({
       data: {
@@ -184,6 +213,87 @@ describe('LIVE production content integrity', () => {
     expect(findVerifiedTopic(MOCK_TOPICS.slice(0, 0), "x' OR 1=1")).toBeUndefined();
     renderAt('/subjects?mock=true&demo=1&VITE_USE_MOCK_API=true', <SubjectsPage />);
     expect(isMockCurriculum()).toBe(false);
+  });
+});
+
+describe('LIVE availability depends on approved topic records, not on an indexed document', () => {
+  beforeEach(() => {
+    tutorService.setMockMode(false);
+    apiGet.mockReset();
+    apiPost.mockReset();
+  });
+  afterEach(cleanup);
+
+  it('a. an indexed but unverified resource with zero approved topics stays unavailable (no actions, no prototype content)', async () => {
+    answerApi();
+    renderAt('/subjects', <SubjectsPage />);
+    const geography = await screen.findByTestId('subject-unavailable-GEOGRAPHY');
+    expect(geography.textContent).toContain('Curriculum content is not yet available');
+    expect(geography.querySelector('button')).toBeNull();
+    expect(screen.queryByTestId('subject-available-GEOGRAPHY')).toBeNull();
+    expect(screen.queryByTestId('subject-textbook-questions-GEOGRAPHY')).toBeNull();
+
+    cleanup();
+    renderAt('/subjects/geography', <SubjectDetailPage />, '/subjects/:subjectId');
+    await screen.findByTestId('curriculum-unavailable');
+    expect(screen.queryByTestId('subject-textbook-questions-GEOGRAPHY')).toBeNull();
+    expect(screen.queryByTestId('live-topics')).toBeNull();
+    expect(document.body.textContent).not.toMatch(GROUNDED_CLAIMS);
+    for (const marker of prototypeMarkers()) expect(document.body.textContent?.includes(marker)).toBe(false);
+    expect(apiGet).not.toHaveBeenCalledWith('/api/learn/curriculum', expect.anything());
+
+    cleanup();
+    renderAt('/tutor', (
+      <CurriculumCompanionPane subjectId="geography" topicId="geo-gr10-ch1" topics={MOCK_TOPICS} language="si"
+        onAskQuestion={() => {}} onSelectTopic={() => {}} />
+    ));
+    await screen.findByTestId('live-companion-unavailable');
+    for (const t of MOCK_TOPICS.filter((x) => x.subjectId === 'geography').slice(0, 10)) {
+      expect(hasSimulation(t.id, t.subjectId, undefined, t.grade)).toBe(false);
+    }
+  });
+
+  it('b. approved persisted topics make the subject available, listing only API topics', async () => {
+    answerApi({ scienceTopics: true });
+    renderAt('/subjects', <SubjectsPage />);
+    await screen.findByTestId('subject-available-SCIENCE');
+
+    cleanup();
+    renderAt('/subjects/science', <SubjectDetailPage />, '/subjects/:subjectId');
+    const list = await screen.findByTestId('live-topics');
+    expect(list.textContent).toContain('Approved persisted topic');
+    expect(list.querySelectorAll('button')).toHaveLength(1);
+    expect(apiGet).toHaveBeenCalledWith('/api/learn/curriculum', { params: { subjectId: 'SCIENCE', grade: 'grade-10' } });
+  });
+
+  it('c. an unknown or demo topic id is never selected in LIVE', () => {
+    const apiTopics = [approvedTopic as unknown as (typeof MOCK_TOPICS)[number]];
+    expect(findVerifiedTopic(apiTopics, 'science-gr10-ch2-motion')?.id).toBe('science-gr10-ch2-motion');
+    for (const demo of ['photosynthesis', 'maths-gr10-ch10-pythagoras', 'history-gr10-sources', 'number-systems']) {
+      expect(findVerifiedTopic(apiTopics, demo)).toBeUndefined();
+    }
+  });
+});
+
+describe('LIVE microphone', () => {
+  afterEach(cleanup);
+
+  it('is disabled with an accessible explanation and never inserts a scripted prompt', () => {
+    const capture = vi.fn();
+    render(<VoiceInputButton live listening={false} language="en" demoTitle="Voice" onDemoCapture={capture} />);
+    const mic = screen.getByTestId('voice-input-unavailable') as HTMLButtonElement;
+    expect(mic.disabled).toBe(true);
+    expect(mic.getAttribute('aria-label')).toBe(VOICE_INPUT_UNAVAILABLE_TEXT.en);
+    fireEvent.click(mic);
+    expect(capture).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('voice-input-demo')).toBeNull();
+  });
+
+  it('keeps the demonstration only in the MOCK (Pages demo) mode', () => {
+    const capture = vi.fn();
+    render(<VoiceInputButton live={false} listening={false} language="en" demoTitle="Voice" onDemoCapture={capture} />);
+    fireEvent.click(screen.getByTestId('voice-input-demo'));
+    expect(capture).toHaveBeenCalledTimes(1);
   });
 });
 

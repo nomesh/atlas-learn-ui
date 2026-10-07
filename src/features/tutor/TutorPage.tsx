@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
   Send, 
-  Mic, 
   Camera, 
   Paperclip, 
   RotateCcw, 
@@ -46,9 +45,11 @@ import {
   detectCurriculumContextFromMessage,
   getCurriculumStarterPills as getMockStarterPills,
   isMockNoticeMessage,
+  MOCK_SIMULATED_VOICE_PROMPT,
   mockDefaultTopicForSubject,
 } from './mockTutorContent';
 import { buildLiveGreeting, getLiveStarterPills } from './liveTutorContent';
+import { VoiceInputButton } from './VoiceInputButton';
 import { setTutorLeaseToken } from '../../api/client';
 import { AuthGate, GuestBanner } from '../../components/auth/AuthGate';
 import {
@@ -872,13 +873,16 @@ export const TutorPage: React.FC = () => {
     }
   };
 
+  // Speech recognition is not implemented: the Pages demo simulates a capture with a scripted prompt; LIVE
+  // never inserts text the learner did not type (the microphone is disabled there, see below).
   const handleSimulatedMic = () => {
+    if (liveCurriculum) return;
     setIsListeningMic(!isListeningMic);
     if (!isListeningMic) {
       setTutorState('listening');
       // Prototype demonstration of speech capture
       setTimeout(() => {
-        setInputMessage('Explain photosynthesis in simple terms');
+        setInputMessage(MOCK_SIMULATED_VOICE_PROMPT);
         setIsListeningMic(false);
         setTutorState('idle');
       }, 2200);
@@ -1215,10 +1219,10 @@ export const TutorPage: React.FC = () => {
                     {msg.noTextbookEvidence && (
                       <div data-testid="no-textbook-evidence" className="mt-2 text-[11px] font-bold text-amber-700">
                         {language === 'si'
-                          ? 'සූචිගත පෙළපොතෙන් සාක්ෂි හමු නොවීය — මෙය පෙළපොත මත පදනම් වූ පිළිතුරක් නොවේ.'
+                          ? 'අනුමත පෙළපොත් සාක්ෂි නොමැති බැවින් ගුරුවරයා පිළිතුරක් ලබා දුන්නේ නැත.'
                           : language === 'ta'
-                            ? 'அட்டவணைப்படுத்தப்பட்ட பாடநூலில் ஆதாரம் கிடைக்கவில்லை — இது பாடநூல் அடிப்படையிலான பதில் அல்ல.'
-                            : 'No supporting evidence was found in the indexed textbook, so this is not a textbook-grounded answer.'}
+                            ? 'அங்கீகரிக்கப்பட்ட பாடநூல் ஆதாரம் இல்லாததால் ஆசிரியர் பதிலளிக்கவில்லை.'
+                            : 'The Tutor did not answer: no approved textbook evidence was found.'}
                       </div>
                     )}
 
@@ -1355,19 +1359,14 @@ export const TutorPage: React.FC = () => {
         <div className="flex items-end gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-1.5 focus-within:ring-2 focus-within:ring-atlas-cyan/40 focus-within:border-atlas-cyan focus-within:bg-white transition-all">
           {/* Action Tools: Mic, Camera Scanner, Attachment */}
           <div className="flex items-center gap-1 pb-1 pl-1 text-slate-400">
-            {/* Mic / Voice Input */}
-            <button
-              type="button"
-              onClick={handleSimulatedMic}
-              className={`p-2 rounded-xl transition-all ${
-                isListeningMic
-                  ? 'bg-rose-500 text-white animate-pulse'
-                  : 'hover:text-slate-600 hover:bg-slate-200/60'
-              }`}
-              title={t('tutor.voiceInput')}
-            >
-              <Mic className="w-4 h-4" />
-            </button>
+            {/* Mic / Voice Input: demo simulation only; LIVE has no verified speech recognition, so it is disabled */}
+            <VoiceInputButton
+              live={liveCurriculum}
+              listening={isListeningMic}
+              language={language}
+              demoTitle={t('tutor.voiceInput')}
+              onDemoCapture={handleSimulatedMic}
+            />
 
             {/* Homework Photo Upload / Camera */}
             <button
