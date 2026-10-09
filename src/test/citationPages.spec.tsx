@@ -71,6 +71,13 @@ describe('printed textbook pages vs physical PDF pages', () => {
     expect(document.body.textContent).toContain('PDF page 1');
   });
 
+  it('has no Tamil page labels in this release (Tamil stays disabled; English labels apply)', async () => {
+    await i18n.changeLanguage('ta');
+    expect(citationPageLabel(i18n.t, 198, 184)).toBe('Textbook page 184 · PDF page 198');
+    expect(i18n.getResource('ta', 'translation', 'tutor.textbookPage')).toBeUndefined();
+    expect(i18n.getResource('ta', 'translation', 'tutor.pdfPage')).toBeUndefined();
+  });
+
   it('applies the same distinction in Sinhala', async () => {
     await i18n.changeLanguage('si');
     openDrawer([science(198, 184), science(199, null)]);
