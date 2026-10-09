@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { BookOpen, ChevronDown, ChevronUp, FileText, ExternalLink, ShieldCheck, Eye } from 'lucide-react';
 import type { SourceCitation } from '../../types';
 import { SourcePagePreviewModal } from './SourcePagePreviewModal';
+import { citationPageLabel } from './citationPages';
 
 interface CitationDrawerProps {
   citations: SourceCitation[];
@@ -15,6 +16,7 @@ export const CitationDrawer: React.FC<CitationDrawerProps> = ({ citations }) => 
     documentId: string;
     documentName: string;
     pageNumber: number;
+    printedPageNumber?: number | null;
     excerpt?: string | null;
     chunkNumber?: number | null;
     relevance?: number | null;
@@ -71,9 +73,9 @@ export const CitationDrawer: React.FC<CitationDrawerProps> = ({ citations }) => 
 
                 <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 mt-1">
                   {cite.pageNumber != null && (
-                    <span>
-                      {t('tutor.page')}: <strong className="text-slate-700">{cite.pageNumber}</strong>
-                    </span>
+                    <strong className="text-slate-700" data-testid="citation-pages">
+                      {citationPageLabel(t, cite.pageNumber, cite.printedPageNumber)}
+                    </strong>
                   )}
                   {cite.chunkNumber != null && (
                     <span>
@@ -102,6 +104,7 @@ export const CitationDrawer: React.FC<CitationDrawerProps> = ({ citations }) => 
                       documentId: cite.documentId!,
                       documentName: cite.source,
                       pageNumber: cite.pageNumber!,
+                      printedPageNumber: cite.printedPageNumber,
                       excerpt: cite.excerpt,
                       chunkNumber: cite.chunkNumber,
                       relevance: cite.distance != null ? Math.round((1 - cite.distance) * 100) : undefined,
@@ -110,7 +113,7 @@ export const CitationDrawer: React.FC<CitationDrawerProps> = ({ citations }) => 
                     className="mt-1 self-start inline-flex items-center gap-1.5 px-2.5 py-1 bg-white hover:bg-sky-50 text-atlas-blue text-[11px] font-bold rounded-lg border border-sky-200/80 shadow-xs hover:border-sky-300 transition-all"
                   >
                     <Eye className="w-3.5 h-3.5 text-atlas-cyan" />
-                    <span>View Page {cite.pageNumber} Preview</span>
+                    <span>{t('tutor.viewPagePreview', { label: citationPageLabel(t, cite.pageNumber, cite.printedPageNumber) })}</span>
                   </button>
                 )}
               </div>
@@ -126,6 +129,7 @@ export const CitationDrawer: React.FC<CitationDrawerProps> = ({ citations }) => 
           documentId={selectedPreview.documentId}
           documentName={selectedPreview.documentName}
           pageNumber={selectedPreview.pageNumber}
+          printedPageNumber={selectedPreview.printedPageNumber}
           excerpt={selectedPreview.excerpt}
           chunkNumber={selectedPreview.chunkNumber}
           relevance={selectedPreview.relevance}

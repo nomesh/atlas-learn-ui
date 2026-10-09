@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, ExternalLink, BookOpen, ImageOff } from 'lucide-react';
+import { citationPageLabel } from './citationPages';
 
 interface SourcePagePreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   documentId: string;
   documentName: string;
+  /** Physical 1-based PDF page: the page that is rendered. */
   pageNumber: number;
+  /** Printed textbook page, only when the backend has a verified calibration; display only, never navigated to. */
+  printedPageNumber?: number | null;
   /** Genuine retrieved text from the backend. When absent, no excerpt is shown: nothing is ever substituted. */
   excerpt?: string | null;
   chunkNumber?: number | null;
@@ -24,8 +29,10 @@ export const SourcePagePreviewModal: React.FC<SourcePagePreviewModalProps> = ({
   documentId,
   documentName,
   pageNumber,
+  printedPageNumber,
   excerpt,
 }) => {
+  const { t } = useTranslation();
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
 
@@ -46,7 +53,7 @@ export const SourcePagePreviewModal: React.FC<SourcePagePreviewModalProps> = ({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-md animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
-      aria-label={`${documentName} - PDF page ${pageNumber}`}
+      aria-label={`${documentName} - ${citationPageLabel(t, pageNumber, printedPageNumber)}`}
     >
       <div className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[92vh] flex flex-col overflow-hidden border border-slate-200/80 animate-in zoom-in-95 duration-200">
         {/* Header */}
@@ -58,7 +65,7 @@ export const SourcePagePreviewModal: React.FC<SourcePagePreviewModalProps> = ({
             <div className="flex items-center gap-2 min-w-0">
               <h3 className="text-sm font-bold text-white line-clamp-1">{documentName}</h3>
               <span className="text-[10px] font-mono bg-cyan-400/20 text-cyan-200 border border-cyan-400/30 px-2 py-0.5 rounded-full uppercase tracking-wider whitespace-nowrap">
-                PDF page {pageNumber}
+                {citationPageLabel(t, pageNumber, printedPageNumber)}
               </span>
             </div>
           </div>
@@ -93,7 +100,7 @@ export const SourcePagePreviewModal: React.FC<SourcePagePreviewModalProps> = ({
             <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center">
               <img
                 src={previewUrl}
-                alt={`${documentName} - PDF page ${pageNumber}`}
+                alt={`${documentName} - ${citationPageLabel(t, pageNumber, printedPageNumber)}`}
                 className={`max-w-full max-h-[50vh] object-contain rounded-lg shadow-xs transition-opacity duration-300 ${
                   imgLoaded ? 'opacity-100' : 'opacity-0 h-0'
                 }`}

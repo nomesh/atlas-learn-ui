@@ -39,7 +39,10 @@ export interface SourceCitation {
   documentId?: string | null;
   source: string;
   fileType?: string | null;
+  /** Physical 1-based PDF page: what previews open. Not the number printed in the textbook. */
   pageNumber?: number | null;
+  /** Number printed in the textbook, only when the backend has a verified calibration for this book. */
+  printedPageNumber?: number | null;
   chunkNumber?: number | null;
   distance?: number | null;
   // Excerpt is strictly optional - NEVER fabricated. Only displayed when genuine API supplies it.
