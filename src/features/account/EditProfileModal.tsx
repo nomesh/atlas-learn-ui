@@ -42,6 +42,10 @@ export const SAVE_FAILED_TEXT =
 export const LATE_SAVE_FAILED_TEXT =
   'Your last profile change could not be saved, so your profile was not changed. Open Edit Profile to try again.';
 
+/** Stacking: the save notice is always above the editor and its backdrop (readable, clickable, announced). */
+export const EDITOR_BACKDROP_Z_INDEX = 50;
+export const SAVE_NOTICE_Z_INDEX = 60;
+
 const usable = (el: HTMLElement | null | undefined): el is HTMLElement =>
   !!el && el.isConnected && el !== document.body && !el.closest('[inert]');
 
@@ -135,10 +139,12 @@ export const EditProfileModal: React.FC = () => {
         first.focus();
       }
     };
-    // Focus can never rest outside the dialog while it is open.
+    // Focus can never rest outside the dialog while it is open, except on the save notice (its own live region above
+    // the editor), so the learner can read and dismiss it.
     const onFocusIn = (e: FocusEvent) => {
       const d = dialog();
-      if (d && e.target instanceof Node && !d.contains(e.target)) {
+      const inNotice = e.target instanceof Element && !!e.target.closest('[data-profile-save-notice-portal]');
+      if (d && e.target instanceof Node && !d.contains(e.target) && !inNotice) {
         (focusables()[0] ?? d).focus();
       }
     };
@@ -221,7 +227,8 @@ export const EditProfileModal: React.FC = () => {
     <div data-profile-editor-portal="">
       <div
         data-testid="profile-editor-backdrop"
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto"
+        style={{ zIndex: EDITOR_BACKDROP_Z_INDEX }}
+        className="fixed inset-0 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto"
         onMouseDown={(e) => {
           // Only a press that starts on the backdrop itself closes; presses inside the dialog never do.
           if (e.target === e.currentTarget && !savingRef.current) close();
@@ -375,7 +382,8 @@ export const ProfileSaveNotice: React.FC = () => {
     <div
       role="alert"
       data-testid="profile-save-notice"
-      className="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-md w-[calc(100%-2rem)] flex items-start gap-2 p-3 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-800 shadow-lg"
+      style={{ zIndex: SAVE_NOTICE_Z_INDEX }}
+      className="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 max-w-md w-[calc(100%-2rem)] flex items-start gap-2 p-3 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-800 shadow-lg"
     >
       <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
       <span className="flex-1">{profileSaveNotice}</span>

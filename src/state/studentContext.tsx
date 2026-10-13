@@ -370,11 +370,50 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     closeProfileEditor();
   }, [i18n, closeProfileEditor]);
 
+  /**
+   * A different learner/account takes over this browser session. Everything that belonged to the previous one goes:
+   * its in-memory and persisted sign-in (including atlas_student_session and its Student ID), name, grade, language,
+   * entitlements, metrics, notice and editor. Responses still in flight for it are dropped (new identity epoch).
+   * Guest preferences are neither read from nor written by either learner.
+   */
+  const beginNewLearnerIdentity = useCallback(() => {
+    identityEpochRef.current += 1;
+    confirmedUserIdRef.current = null;
+    if (isLive()) {
+      clearLearnerData();
+    } else {
+      try {
+        localStorage.removeItem('atlas_student_session');
+      } catch {
+        // ignore
+      }
+    }
+    setLocalStudentSession(null);
+    setSession(null);
+    setStudentNameState(isLive() ? '' : 'Amila');
+    // Neutral until the new learner's own values arrive (never the previous learner's).
+    setGradeState((isLive() ? readGuestGrade() : null) ?? DEFAULT_GRADE);
+    if (isLive()) {
+      const deviceLanguage = readGuestLanguage() ?? 'en';
+      setLanguageState(deviceLanguage);
+      i18n.changeLanguage(deviceLanguage);
+    }
+    setAllowedGrades(null);
+    setStreakDays(0);
+    setTopicsMastered(0);
+    setQuestionsAnswered(0);
+    setAccuracyPercent(0);
+    setProfileSaveNotice(null);
+    closeProfileEditor();
+  }, [i18n, closeProfileEditor]);
+
   // Load session from BFF on initial mount (and after sign-in)
   const refreshSession = useCallback(async () => {
     const seq = ++refreshSeqRef.current;
     const epoch = identityEpochRef.current;
-    const writeAtStart = profileWriteRef.current;
+    // Baseline for "a newer local profile write happened"; re-based when the learner changes, so that ordering
+    // protection only ever protects the current learner's own writes (never the previous learner's).
+    let writeAtStart = profileWriteRef.current;
     const isCurrent = () => seq === refreshSeqRef.current && epoch === identityEpochRef.current;
     const noNewerWrite = () => profileWriteRef.current === writeAtStart;
 
@@ -393,12 +432,11 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return;
       }
 
-      // A different learner than the last confirmed one: nothing of the previous learner's editor or notices remains.
+      // A different learner than the last confirmed one: nothing of the previous learner remains, and the new
+      // learner's session values are applied even if a write of the previous learner happened meanwhile.
       if (confirmedUserIdRef.current !== null && confirmedUserIdRef.current !== data.userId) {
-        identityEpochRef.current += 1;
-        setProfileSaveNotice(null);
-        setAllowedGrades(null);
-        closeProfileEditor();
+        beginNewLearnerIdentity();
+        writeAtStart = profileWriteRef.current;
       }
       confirmedUserIdRef.current = data.userId ?? null;
       const confirmedEpoch = identityEpochRef.current;
@@ -467,7 +505,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setSession(null);
       }
     }
-  }, [i18n, clearLearnerIdentity, closeProfileEditor]);
+  }, [i18n, clearLearnerIdentity, beginNewLearnerIdentity]);
 
   useEffect(() => {
     refreshSession();
@@ -570,6 +608,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const signInStudent = useCallback((data: StudentSignInData) => {
+    if (isLive()) beginNewLearnerIdentity();
     setLocalStudentSession(data);
     localStorage.setItem('atlas_student_session', JSON.stringify(data));
     localStorage.setItem('atlas_student_name', data.displayName);
@@ -580,7 +619,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setLanguageState(data.language);
     setIsAuthenticated(true);
     i18n.changeLanguage(data.language);
-  }, [i18n]);
+  }, [i18n, beginNewLearnerIdentity]);
 
   const login = (tabOrEvent?: 'pilot' | 'manual' | unknown) => {
     const tab = tabOrEvent === 'manual' ? 'manual' : 'pilot';
@@ -668,7 +707,9 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       : getOrCreateConversationId('default', 'default', currentUserId, grade),
   };
 
-  const activeLearner: LearnerProfile | null = session?.activeLearner || (localStudentSession ? {
+  // Once the server confirmed a session, identity comes only from it: never from a cached sign-in.
+  const sessionConfirmed = !!session?.authenticated;
+  const activeLearner: LearnerProfile | null = sessionConfirmed ? (session?.activeLearner ?? null) : (localStudentSession ? {
     id: localStudentSession.id,
     displayName: localStudentSession.displayName,
     grade: localStudentSession.grade,
@@ -720,7 +761,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTutorState,
 
         session,
-        studentId: session?.studentId || localStudentSession?.studentId || null,
+        studentId: sessionConfirmed ? (session?.studentId ?? null) : (localStudentSession?.studentId ?? null),
         accountStatus: session?.accountStatus || (isAuthenticated ? 'ACTIVE' : null),
         registeredGrade: session?.registeredGrade || (isAuthenticated ? grade : null),
         isAuthenticated,
@@ -728,8 +769,8 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         enableGuestPreview,
         disableGuestPreview,
         currentUser,
-        accountType: session?.accountType || (localStudentSession ? 'INDEPENDENT_STUDENT' : null),
-        learners: session?.learners || (activeLearner ? [activeLearner] : []),
+        accountType: sessionConfirmed ? (session?.accountType ?? null) : (localStudentSession ? 'INDEPENDENT_STUDENT' : null),
+        learners: sessionConfirmed ? (session?.learners ?? []) : (activeLearner ? [activeLearner] : []),
         activeLearner,
         signInModalTab,
         setSignInModalTab,
