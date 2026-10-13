@@ -17,9 +17,11 @@ import {
   PanelRightOpen,
   MessageSquare,
   Globe,
-  X
+  X,
+  User,
 } from 'lucide-react';
 import { CurriculumCompanionPane } from './CurriculumCompanionPane';
+import { learnerInitial } from '../../state/learnerDisplay';
 import { TutorTeachingHighlighter } from './TutorTeachingHighlighter';
 import { MemoryTrickCard } from './MemoryTrickCard';
 import { TutorMessageVisuals } from './SourceVisualCard';
@@ -1069,7 +1071,7 @@ export const TutorPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-atlas-blue flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm mt-1 ring-2 ring-blue-500/20">
-                  {studentName.charAt(0).toUpperCase()}
+                  {learnerInitial(studentName) ?? <User className="w-4 h-4" aria-hidden="true" />}
                 </div>
               )}
 

@@ -48,7 +48,8 @@ const usable = (el: HTMLElement | null | undefined): el is HTMLElement =>
 export const EditProfileModal: React.FC = () => {
   const {
     isProfileEditorOpen,
-    setIsProfileEditorOpen,
+    closeProfileEditor,
+    profileEditorSessionRef,
     profileEditorReturnFocusRef,
     setProfileSaveNotice,
     studentName,
@@ -68,17 +69,15 @@ export const EditProfileModal: React.FC = () => {
   const nameInputRef = useRef<HTMLInputElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
   const savingRef = useRef(false);
-  /** Identifies one opening of the editor; a save only touches the editor session that started it. */
-  const editorSessionRef = useRef(0);
   const openedAtPath = useRef<string | null>(null);
   const titleId = useId();
   const location = useLocation();
 
+  /** The editor's own close: the shared session-advancing close, plus focus restoration. */
   const close = useCallback(() => {
-    editorSessionRef.current += 1;
     savingRef.current = false;
     setSaving(false);
-    setIsProfileEditorOpen(false);
+    closeProfileEditor();
     const candidates = [openerRef.current, profileEditorReturnFocusRef.current];
     openerRef.current = null;
     // After the background is restored (effect cleanup), focus the first target that still exists.
@@ -86,12 +85,11 @@ export const EditProfileModal: React.FC = () => {
       const target = candidates.find(usable);
       target?.focus();
     }, 0);
-  }, [setIsProfileEditorOpen, profileEditorReturnFocusRef]);
+  }, [closeProfileEditor, profileEditorReturnFocusRef]);
 
-  // Each opening: a fresh draft from the current profile (no API call) and a new editor session.
+  // Each opening (a new editor session, advanced by openProfileEditor): a fresh draft, no API call.
   useEffect(() => {
     if (!isProfileEditorOpen) return;
-    editorSessionRef.current += 1;
     const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     openerRef.current = usable(active) ? active : null;
     openedAtPath.current = location.pathname + location.search;
@@ -147,11 +145,12 @@ export const EditProfileModal: React.FC = () => {
     document.addEventListener('keydown', onKeyDown, true);
     document.addEventListener('focusin', onFocusIn, true);
 
-    // Background: inert + aria-hidden for every top-level element except this dialog's portal.
+    // Background: inert + aria-hidden for every top-level element except this dialog's portal and the save-notice
+    // live region (which must stay announceable).
     const portal = dialog()?.closest('[data-profile-editor-portal]');
     const changed: { el: Element; inert: string | null; hidden: string | null }[] = [];
     Array.from(document.body.children).forEach((el) => {
-      if (el === portal) return;
+      if (el === portal || el.hasAttribute('data-profile-save-notice-portal')) return;
       changed.push({ el, inert: el.getAttribute('inert'), hidden: el.getAttribute('aria-hidden') });
       el.setAttribute('inert', '');
       el.setAttribute('aria-hidden', 'true');
@@ -199,16 +198,16 @@ export const EditProfileModal: React.FC = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSave) return;
-    const session = editorSessionRef.current;
+    const session = profileEditorSessionRef.current;
     savingRef.current = true;
     setSaving(true);
     setError(null);
     try {
       await saveProfileChanges(changes);
-      if (session !== editorSessionRef.current) return; // closed or reopened meanwhile: leave the newer editor alone
+      if (session !== profileEditorSessionRef.current) return; // closed or reopened meanwhile: leave any editor alone
       close();
     } catch {
-      if (session !== editorSessionRef.current) {
+      if (session !== profileEditorSessionRef.current) {
         setProfileSaveNotice(LATE_SAVE_FAILED_TEXT);
         return;
       }
@@ -363,11 +362,16 @@ export const EditProfileModal: React.FC = () => {
   );
 };
 
-/** Notice for a profile save that failed after its editor had been closed (nothing was changed). */
+/**
+ * Notice for a profile save that failed after its editor had been closed (nothing was changed). Rendered in its own
+ * top-level portal, which the editor never makes inert or aria-hidden, so the alert is announced even while a reopened
+ * editor is open.
+ */
 export const ProfileSaveNotice: React.FC = () => {
   const { profileSaveNotice, setProfileSaveNotice } = useStudent();
   if (!profileSaveNotice) return null;
-  return (
+  return createPortal(
+    <div data-profile-save-notice-portal="">
     <div
       role="alert"
       data-testid="profile-save-notice"
@@ -384,5 +388,7 @@ export const ProfileSaveNotice: React.FC = () => {
         <X className="w-3.5 h-3.5" />
       </button>
     </div>
+    </div>,
+    document.body,
   );
 };

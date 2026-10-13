@@ -1,5 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { initialLanguage } from '../state/devicePreferences';
 
 export const resources = {
   en: {
@@ -466,7 +467,8 @@ export const resources = {
   }
 };
 
-const savedLang = (typeof localStorage !== 'undefined' && localStorage.getItem('atlas_learn_lang')) || 'en';
+// First-paint language: a cached learner's language, else the device's guest preference (see devicePreferences.ts).
+const savedLang = initialLanguage();
 
 i18n
   .use(initReactI18next)

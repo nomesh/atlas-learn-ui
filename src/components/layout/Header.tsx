@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Globe, GraduationCap, Flame, Menu, X, Sparkles, LogIn, LogOut, Shield, User, ChevronDown } from 'lucide-react';
 import { useStudent } from '../../state/studentContext';
 import { isMockCurriculum } from '../../curriculum/liveCurriculum';
+import { learnerDisplayName, learnerInitial } from '../../state/learnerDisplay';
 import { ATLAS_MARK, NEURAL_WORKS_LOGO } from '../../brand/assets';
 import { DeviceManagementModal } from '../../features/account/DeviceManagementModal';
 import type { Grade, Language } from '../../types';
@@ -272,11 +273,14 @@ export const Header: React.FC = () => {
                     className="flex items-center gap-2 p-1 pl-2 pr-2.5 bg-slate-100 hover:bg-slate-200/80 rounded-full border border-slate-200/60 transition-all"
                     title="Account & Devices"
                   >
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-atlas-navy to-atlas-cyan text-white text-[11px] font-bold flex items-center justify-center">
-                      {(currentUser?.displayName || studentName).charAt(0).toUpperCase()}
+                    <div
+                      data-testid="account-avatar"
+                      className="w-6 h-6 rounded-full bg-gradient-to-tr from-atlas-navy to-atlas-cyan text-white text-[11px] font-bold flex items-center justify-center"
+                    >
+                      {learnerInitial(currentUser?.displayName || studentName) ?? <User className="w-3.5 h-3.5" aria-hidden="true" />}
                     </div>
-                    <span className="hidden sm:inline text-xs font-semibold text-slate-800 truncate max-w-[130px]">
-                      {currentUser?.displayName || studentName}
+                    <span data-testid="account-name" className="hidden sm:inline text-xs font-semibold text-slate-800 truncate max-w-[130px]">
+                      {learnerDisplayName(currentUser?.displayName || studentName, language)}
                     </span>
                     <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
                   </button>
@@ -286,7 +290,7 @@ export const Header: React.FC = () => {
                       <div className="px-4 py-2.5 border-b border-slate-100 space-y-1.5">
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-xs font-bold text-slate-900 truncate">
-                            {currentUser?.displayName || studentName}
+                            {learnerDisplayName(currentUser?.displayName || studentName, language)}
                           </p>
                           {accountStatus && (
                             <span
