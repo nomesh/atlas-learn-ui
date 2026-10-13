@@ -76,10 +76,14 @@ function answerApi(opts: Api = {}) {
   });
 }
 
+/** Router navigation from outside the (inert) page, like a link click, programmatic navigation or browser Back. */
+let routerNavigate: ReturnType<typeof useNavigate> = () => {};
+
 /** Shows the learner state the rest of the app sees, and offers the opener / navigation the tests need. */
 const Probe: React.FC = () => {
   const { studentName, grade, language, setIsProfileEditorOpen } = useStudent();
   const navigate = useNavigate();
+  routerNavigate = navigate;
   const location = useLocation();
   return (
     <div>
@@ -200,14 +204,14 @@ describe('signed-in profile editor', () => {
     await renderLoaded();
     await openEditor();
     act(() => {
-      fireEvent.click(screen.getByRole('button', { name: 'Go to subjects' }));
+      routerNavigate('/subjects');
     });
     await waitFor(() => expect(screen.getByTestId('probe-path').textContent).toBe('/subjects'));
     expect(screen.queryByRole('dialog')).toBeNull();
 
     await openEditor();
     act(() => {
-      fireEvent.click(screen.getByRole('button', { name: 'Browser back' }));
+      routerNavigate(-1);
     });
     await waitFor(() => expect(screen.getByTestId('probe-path').textContent).toBe('/'));
     expect(screen.queryByRole('dialog')).toBeNull();
@@ -234,7 +238,8 @@ describe('signed-in profile editor', () => {
     await openEditor();
     fireEvent.change(screen.getByLabelText('Display name'), { target: { value: '  Kasun P.  ' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
-    expect(apiPut).toHaveBeenCalledWith('/api/learn/profile', { name: 'Kasun P.', grade: 'grade-10', language: 'en' });
+    // Only the changed field is sent.
+    expect(apiPut).toHaveBeenCalledWith('/api/learn/profile', { name: 'Kasun P.' });
     // While the server has not answered, nothing changed locally.
     expect(screen.getByTestId('probe-name').textContent).toBe('Kasun Perera');
     expect(localStorage.getItem('atlas_student_name')).not.toBe('Kasun P.');
@@ -317,7 +322,7 @@ describe('signed-in profile editor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Grade 8' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(apiPut).toHaveBeenCalledWith('/api/learn/profile', { name: 'Kasun Perera', grade: 'grade-8', language: 'en' });
+    expect(apiPut).toHaveBeenCalledWith('/api/learn/profile', { grade: 'grade-8' });
     expect(screen.getByTestId('probe-grade').textContent).toBe('grade-8');
   });
 });

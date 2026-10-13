@@ -21,6 +21,27 @@ export function getLiveStarterPills(language: Language = 'en'): TutorAction[] {
   ];
 }
 
+/**
+ * Restart message for the Tutor conversation. Grammatical with or without a learner name (LIVE shows no name until a
+ * confirmed session provides one).
+ */
+export function buildRestartMessage(language: Language, studentName: string): string {
+  const name = (studentName || '').trim();
+  if (language === 'si') {
+    return name
+      ? `සංවාදය නැවත ආරම්භ කරන ලදී. ${name}, ඔබට ඊළඟට ඉගෙන ගැනීමට අවශ්‍ය කුමක්ද?`
+      : 'සංවාදය නැවත ආරම්භ කරන ලදී. ඔබට ඊළඟට ඉගෙන ගැනීමට අවශ්‍ය කුමක්ද?';
+  }
+  if (language === 'ta') {
+    return name
+      ? `உரையாடல் மீண்டும் தொடங்கப்பட்டது. ${name}, அடுத்து என்ன படிக்க விரும்புகிறீர்கள்?`
+      : 'உரையாடல் மீண்டும் தொடங்கப்பட்டது. அடுத்து என்ன படிக்க விரும்புகிறீர்கள்?';
+  }
+  return name
+    ? `Conversation restarted. What would you like to learn next, ${name}?`
+    : 'Conversation restarted. What would you like to learn next?';
+}
+
 export function buildLiveGreeting(
   subjectId: string,
   topicId: string,
@@ -31,9 +52,12 @@ export function buildLiveGreeting(
   const sub = (subjectId || '').toLowerCase();
   const top = (topicId || '').toLowerCase();
   const studentGradeLabel = grade ? grade.replace('grade-', 'Grade ') : 'Grade 10';
-  const en = `Ayubowan ${studentName}! I am your **ATLAS Tutor for ${studentGradeLabel}**. What topic would you like to explore together today?`;
-  const si = `ආයුබෝවන් ${studentName}! මම ඔබගේ **${studentGradeLabel}** ගුරුතුමා. අද අපි කුමන පාඩමෙන් පටන් ගනිමුද?`;
-  const ta = `வணக்கம் ${studentName}! நான் உங்கள் **${studentGradeLabel}** ஆசிரியர். நாம் இன்று எந்த பாடத்திலிருந்து தொடங்கலாம்?`;
+  // No name yet (LIVE before a confirmed session): greet without one rather than "Ayubowan !".
+  const name = (studentName || '').trim();
+  const withName = (word: string) => (name ? `${word} ${name}!` : `${word}!`);
+  const en = `${withName('Ayubowan')} I am your **ATLAS Tutor for ${studentGradeLabel}**. What topic would you like to explore together today?`;
+  const si = `${withName('ආයුබෝවන්')} මම ඔබගේ **${studentGradeLabel}** ගුරුතුමා. අද අපි කුමන පාඩමෙන් පටන් ගනිමුද?`;
+  const ta = `${withName('வணக்கம்')} நான் உங்கள் **${studentGradeLabel}** ஆசிரியர். நாம் இன்று எந்த பாடத்திலிருந்து தொடங்கலாம்?`;
   return {
     id: `msg-init-${sub}-${top}`,
     role: 'tutor',

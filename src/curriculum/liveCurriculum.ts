@@ -59,11 +59,32 @@ export function findSubjectAvailability(
   return availability.subjects.find((s) => s.subjectCode.toUpperCase() === code);
 }
 
+/** One subject entry as the API reports it; anything else is not shown (booleans default to "not available"). */
+function toSubjectAvailability(raw: unknown): SubjectAvailability | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const s = raw as Record<string, unknown>;
+  if (typeof s.subjectCode !== 'string' || !s.subjectCode.trim() || typeof s.subjectName !== 'string') return null;
+  return {
+    subjectCode: s.subjectCode,
+    subjectName: s.subjectName,
+    languages: Array.isArray(s.languages) ? s.languages.filter((l): l is string => typeof l === 'string') : [],
+    indexedResources: typeof s.indexedResources === 'number' ? s.indexedResources : 0,
+    topics: typeof s.topics === 'number' ? s.topics : 0,
+    tutorScopeVerified: s.tutorScopeVerified === true,
+    tutorAvailable: s.tutorAvailable === true,
+    topicsAvailable: s.topicsAvailable === true,
+  };
+}
+
 export async function fetchCurriculumAvailability(grade: string): Promise<CurriculumAvailability> {
   const { data } = await apiClient.get<CurriculumAvailability>('/api/learn/curriculum/availability', { params: { grade } });
+  // A malformed answer is an error the views show as such, never an empty (or partially fabricated) catalogue.
+  if (!data || typeof data !== 'object' || !Array.isArray(data.subjects)) {
+    throw new Error('Malformed curriculum availability response');
+  }
   return {
-    grade: typeof data?.grade === 'string' ? data.grade : grade,
-    subjects: Array.isArray(data?.subjects) ? data.subjects : [],
+    grade: typeof data.grade === 'string' ? data.grade : grade,
+    subjects: data.subjects.map(toSubjectAvailability).filter((s): s is SubjectAvailability => s !== null),
   };
 }
 

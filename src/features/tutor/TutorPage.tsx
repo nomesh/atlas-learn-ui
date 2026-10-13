@@ -48,7 +48,7 @@ import {
   MOCK_SIMULATED_VOICE_PROMPT,
   mockDefaultTopicForSubject,
 } from './mockTutorContent';
-import { buildLiveGreeting, getLiveStarterPills } from './liveTutorContent';
+import { buildLiveGreeting, buildRestartMessage, getLiveStarterPills } from './liveTutorContent';
 import { VoiceInputButton } from './VoiceInputButton';
 import { setTutorLeaseToken } from '../../api/client';
 import { AuthGate, GuestBanner } from '../../components/auth/AuthGate';
@@ -850,11 +850,7 @@ export const TutorPage: React.FC = () => {
     const resetMsg: ChatMessage = {
       id: generateMsgId('reset'),
       role: 'tutor',
-      content: language === 'si'
-        ? `සංවාදය නැවත ආරම්භ කරන ලදී. ${studentName}, ඔබට ඊළඟට ඉගෙන ගැනීමට අවශ්‍ය කුමක්ද?`
-        : language === 'ta'
-        ? `உரையாடல் மீண்டும் தொடங்கப்பட்டது. ${studentName}, அடுத்து என்ன படிக்க விரும்புகிறீர்கள்?`
-        : `Conversation restarted. What would you like to learn next, ${studentName}?`,
+      content: buildRestartMessage(language, studentName),
       timestamp: new Date().toISOString(),
       suggestedActions: getCurriculumStarterPills(activeSubjectId, effectiveTopicId, language),
     };

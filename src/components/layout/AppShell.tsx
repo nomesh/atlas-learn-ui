@@ -4,7 +4,7 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 import { MobileBottomNav } from './MobileBottomNav';
 import { OnboardingModal } from '../../features/onboarding/OnboardingModal';
-import { EditProfileModal } from '../../features/account/EditProfileModal';
+import { EditProfileModal, ProfileSaveNotice } from '../../features/account/EditProfileModal';
 import { StudentSignInModal } from '../auth/StudentSignInModal';
 import { TutorRuntimeBadge } from '../dev/TutorRuntimeBadge';
 
@@ -41,8 +41,9 @@ export const AppShell: React.FC = () => {
       {/* First-run onboarding (guests only) */}
       <OnboardingModal />
 
-      {/* Signed-in learner profile editor */}
+      {/* Signed-in learner profile editor and its late-failure notice */}
       <EditProfileModal />
+      <ProfileSaveNotice />
 
       {/* Portal-level Student Authentication & Registration Modal */}
       <StudentSignInModal />

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Globe, GraduationCap, Flame, Menu, X, Sparkles, LogIn, LogOut, Shield, User, ChevronDown } from 'lucide-react';
 import { useStudent } from '../../state/studentContext';
+import { isMockCurriculum } from '../../curriculum/liveCurriculum';
 import { ATLAS_MARK, NEURAL_WORKS_LOGO } from '../../brand/assets';
 import { DeviceManagementModal } from '../../features/account/DeviceManagementModal';
 import type { Grade, Language } from '../../types';
@@ -17,7 +18,7 @@ export const Header: React.FC = () => {
     language,
     setLanguage,
     streakDays,
-    setIsProfileEditorOpen,
+    openProfileEditor,
     isAuthenticated,
     studentId,
     accountStatus,
@@ -33,6 +34,8 @@ export const Header: React.FC = () => {
   const [isGradeMenuOpen, setIsGradeMenuOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  // Stays mounted while the menu closes: the profile editor returns focus here.
+  const accountMenuToggleRef = useRef<HTMLButtonElement>(null);
 
   const grades: { id: Grade; label: string }[] = [
     { id: 'grade-6', label: 'Grade 6' },
@@ -241,8 +244,8 @@ export const Header: React.FC = () => {
                 )}
               </div>
 
-              {/* Streak Counter: only visible for authenticated students with an active streak */}
-              {isAuthenticated && streakDays > 0 && (
+              {/* Streak Counter: Pages demo only. LIVE has no genuine streak data (the profile API returns fixed values). */}
+              {isMockCurriculum() && isAuthenticated && streakDays > 0 && (
                 <div
                   className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 bg-amber-50 border border-amber-200/80 rounded-xl text-xs font-bold text-amber-800"
                   title="Consecutive Learning Days"
@@ -256,7 +259,11 @@ export const Header: React.FC = () => {
               {isAuthenticated ? (
                 <div className="relative">
                   <button
+                    ref={accountMenuToggleRef}
                     type="button"
+                    aria-haspopup="menu"
+                    aria-expanded={isUserMenuOpen}
+                    data-testid="account-menu-toggle"
                     onClick={() => {
                       setIsUserMenuOpen(!isUserMenuOpen);
                       setIsGradeMenuOpen(false);
@@ -313,7 +320,7 @@ export const Header: React.FC = () => {
                           type="button"
                           onClick={() => {
                             setIsUserMenuOpen(false);
-                            setIsProfileEditorOpen(true);
+                            openProfileEditor(accountMenuToggleRef.current);
                           }}
                           className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                         >

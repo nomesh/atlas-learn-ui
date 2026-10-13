@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Grade, Language, LearningContext, TutorState } from '../types';
 import { isMockCurriculum } from '../curriculum/liveCurriculum';
@@ -9,9 +9,35 @@ import {
   updateProfile,
   logout as apiLogout,
   redirectToLogin,
+  type AllowedGradesData,
   type LearnSessionData,
   type LearnerProfile,
+  type StudentProfileUpdateRequest,
 } from '../api/authApi';
+
+/** LIVE = the real application. MOCK = the Pages demo / explicit mock development (sample learner allowed). */
+const isLive = () => !isMockCurriculum();
+
+const DEFAULT_GRADE: Grade = 'grade-10';
+const ENTITLED_GRADE = /^grade-(?:[6-9]|1[0-3])$/;
+
+/** Learner-specific values cached in browser storage; cleared whenever no authenticated learner is confirmed. */
+export const LEARNER_IDENTITY_KEYS = ['atlas_student_session', 'atlas_student_name', 'atlas_student_grade'] as const;
+const LEARNER_LANGUAGE_KEY = 'atlas_learn_lang';
+
+/**
+ * Entitled grades from GET /api/learn/entitlements/allowed-grades, failing closed: anything but an array of
+ * "grade-6".."grade-13" strings is dropped, duplicates are removed, and no usable grade means null (no grade choice).
+ */
+export function parseAllowedGrades(data: AllowedGradesData | null | undefined): Grade[] | null {
+  const raw = (data as { allowedGrades?: unknown } | null | undefined)?.allowedGrades;
+  if (!Array.isArray(raw)) return null;
+  const grades = [...new Set(raw.filter((g): g is Grade => typeof g === 'string' && ENTITLED_GRADE.test(g)))];
+  return grades.length > 0 ? grades : null;
+}
+
+/** Outcome of a profile save: applied, or superseded by a newer save / another learner (nothing applied). */
+export type ProfileSaveResult = 'applied' | 'superseded';
 
 export interface StudentSignInData {
   id: string;
@@ -42,6 +68,15 @@ interface StudentContextValue {
   /** Signed-in learner profile editor (distinct from first-run onboarding). */
   isProfileEditorOpen: boolean;
   setIsProfileEditorOpen: (open: boolean) => void;
+  /**
+   * Opens the profile editor. `returnFocusTo` is a persistent element (e.g. the account-menu toggle) that receives
+   * focus on close when the element that opened the editor no longer exists.
+   */
+  openProfileEditor: (returnFocusTo?: HTMLElement | null) => void;
+  profileEditorReturnFocusRef: React.MutableRefObject<HTMLElement | null>;
+  /** Shown outside the editor when a save fails after its editor was closed. */
+  profileSaveNotice: string | null;
+  setProfileSaveNotice: (notice: string | null) => void;
   /**
    * Grades the signed-in learner is entitled to, loaded with the session (never when the editor opens).
    * null = unknown (not signed in, or the entitlement lookup failed): grade changes are then not offered.
@@ -77,10 +112,11 @@ interface StudentContextValue {
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
   /**
-   * Signed-in: saves to the server first and applies the saved values to React state and local storage only after
-   * the server accepted them; throws (leaving all state unchanged) when the save fails. Guest: local only.
+   * Signed-in: sends only the changed fields to the server and applies the server's saved values to React state and
+   * local storage only after it accepted them. Throws (state unchanged) on failure. A response that arrives after a
+   * newer save, or after the learner changed, is not applied ('superseded'). Guest: local only.
    */
-  saveProfileToServer: (name: string, grade: Grade, language: Language) => Promise<void>;
+  saveProfileChanges: (changes: StudentProfileUpdateRequest) => Promise<ProfileSaveResult>;
 }
 
 const StudentContext = createContext<StudentContextValue | undefined>(undefined);
@@ -88,8 +124,8 @@ const StudentContext = createContext<StudentContextValue | undefined>(undefined)
 export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { i18n } = useTranslation();
 
-  // One-time migration for legacy test profiles in localStorage
-  if (typeof localStorage !== 'undefined') {
+  // One-time migration for legacy demo profiles: MOCK (Pages demo) only. LIVE never rewrites or invents identity.
+  if (typeof localStorage !== 'undefined' && !isLive()) {
     try {
       const rawSession = localStorage.getItem('atlas_student_session');
       if (rawSession && (rawSession.includes('Nimali') || rawSession.includes('nimali'))) {
@@ -110,6 +146,8 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [session, setSession] = useState<LearnSessionData | null>(null);
 
   const [localStudentSession, setLocalStudentSession] = useState<StudentSignInData | null>(() => {
+    // LIVE: a cached sign-in is not proof of a session; identity comes only from a confirmed server session.
+    if (isLive()) return null;
     try {
       const saved = localStorage.getItem('atlas_student_session');
       if (saved) {
@@ -126,6 +164,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (isLive()) return false;
     try {
       const saved = localStorage.getItem('atlas_student_session');
       if (saved) {
@@ -157,19 +196,21 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   const [studentName, setStudentNameState] = useState<string>(() => {
+    // LIVE shows no name until a confirmed session provides the real one (never a cached or sample name).
+    if (isLive()) return '';
     const raw = localStudentSession?.displayName || localStorage.getItem('atlas_student_name');
     if (!raw || raw.includes('Nimali')) {
-      // Only the MOCK demo has a sample learner; LIVE shows no name until the server provides the real one.
-      return isMockCurriculum() ? 'Amila' : '';
+      return 'Amila';
     }
     return raw;
   });
 
   const [grade, setGradeState] = useState<Grade>(() => {
+    if (isLive()) return DEFAULT_GRADE;
     return (
       (localStudentSession?.grade as Grade) ||
       (localStorage.getItem('atlas_student_grade') as Grade) ||
-      'grade-10'
+      DEFAULT_GRADE
     );
   });
 
@@ -185,7 +226,23 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return !localStorage.getItem('atlas_onboarding_completed');
   });
   const [isProfileEditorOpen, setIsProfileEditorOpen] = useState<boolean>(false);
+  const profileEditorReturnFocusRef = useRef<HTMLElement | null>(null);
+  const openProfileEditor = useCallback((returnFocusTo?: HTMLElement | null) => {
+    profileEditorReturnFocusRef.current = returnFocusTo ?? null;
+    setIsProfileEditorOpen(true);
+  }, []);
+  const [profileSaveNotice, setProfileSaveNotice] = useState<string | null>(null);
   const [allowedGrades, setAllowedGrades] = useState<Grade[] | null>(null);
+
+  /** Bumped whenever the learner identity is cleared: responses started for another identity are dropped. */
+  const identityEpochRef = useRef(0);
+  /** Only the latest session refresh may apply its results. */
+  const refreshSeqRef = useRef(0);
+  /** Bumped on every local profile write: an older profile read never overwrites a newer write. */
+  const profileWriteRef = useRef(0);
+  /** Save ordering: a save response is applied only if no later-started save was applied already. */
+  const saveSeqRef = useRef(0);
+  const appliedSaveSeqRef = useRef(0);
 
   /**
    * Per-lesson conversation ID map: key = "subjectId:topicId" → UUID.
@@ -237,14 +294,64 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [questionsAnswered, setQuestionsAnswered] = useState<number>(0);
   const [accuracyPercent, setAccuracyPercent] = useState<number>(0);
 
-  // Load session from BFF on initial mount
+  /**
+   * Clears every learner-specific value (state and browser storage). `includeLanguage` also forgets the learner's
+   * language preference (logout, or a cached learner that the server no longer confirms).
+   */
+  const clearLearnerIdentity = useCallback((includeLanguage: boolean) => {
+    identityEpochRef.current += 1;
+    try {
+      LEARNER_IDENTITY_KEYS.forEach((k) => localStorage.removeItem(k));
+      if (includeLanguage) localStorage.removeItem(LEARNER_LANGUAGE_KEY);
+    } catch {
+      // storage unavailable: the state below is still cleared
+    }
+    setSession(null);
+    setLocalStudentSession(null);
+    setIsAuthenticated(false);
+    setStudentNameState(isLive() ? '' : 'Amila');
+    setGradeState(DEFAULT_GRADE);
+    setAllowedGrades(null);
+    setStreakDays(0);
+    setTopicsMastered(0);
+    setQuestionsAnswered(0);
+    setAccuracyPercent(0);
+    setIsProfileEditorOpen(false);
+  }, []);
+
+  // Load session from BFF on initial mount (and after sign-in)
   const refreshSession = useCallback(async () => {
+    const seq = ++refreshSeqRef.current;
+    const epoch = identityEpochRef.current;
+    const writeAtStart = profileWriteRef.current;
+    const isCurrent = () => seq === refreshSeqRef.current && epoch === identityEpochRef.current;
+    const noNewerWrite = () => profileWriteRef.current === writeAtStart;
+    const hadCachedLearner = () => {
+      try {
+        return LEARNER_IDENTITY_KEYS.some((k) => localStorage.getItem(k) !== null);
+      } catch {
+        return false;
+      }
+    };
+
     try {
       const data = await getSession();
-      setSession(data);
-      setIsAuthenticated(data.authenticated);
+      if (!isCurrent()) return;
 
-      if (data.authenticated) {
+      if (!data?.authenticated) {
+        if (isLive()) {
+          // Signed out, expired or reset session: no learner identity may remain.
+          clearLearnerIdentity(hadCachedLearner());
+        } else {
+          setSession(null);
+          setIsAuthenticated(false);
+        }
+        return;
+      }
+
+      setSession(data);
+      setIsAuthenticated(true);
+      if (noNewerWrite()) {
         if (data.registeredGrade) {
           setGradeState(data.registeredGrade as Grade);
           localStorage.setItem('atlas_student_grade', data.registeredGrade);
@@ -253,83 +360,109 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
           localStorage.setItem('atlas_student_grade', data.activeLearner.grade);
         }
         if (data.activeLearner) {
-          setStudentNameState(data.activeLearner.displayName);
-          localStorage.setItem('atlas_student_name', data.activeLearner.displayName);
+          setStudentNameState(data.activeLearner.displayName || '');
+          localStorage.setItem('atlas_student_name', data.activeLearner.displayName || '');
           if (data.activeLearner.preferredLanguage) {
             setLanguageState(data.activeLearner.preferredLanguage as Language);
-            localStorage.setItem('atlas_learn_lang', data.activeLearner.preferredLanguage);
+            localStorage.setItem(LEARNER_LANGUAGE_KEY, data.activeLearner.preferredLanguage);
             i18n.changeLanguage(data.activeLearner.preferredLanguage);
           }
         }
+      }
 
-        // Grade entitlements, loaded with the session so opening the profile editor makes no API call.
-        try {
-          const entitlements = await getAllowedGrades();
-          const grades = (entitlements.allowedGrades || []).filter((g): g is Grade => /^grade-(?:[6-9]|1[0-3])$/.test(g));
-          setAllowedGrades(grades.length > 0 ? grades : null);
-        } catch (eErr) {
-          console.warn('[studentContext] Could not load grade entitlements; grade changes stay locked:', eErr);
-          setAllowedGrades(null);
-        }
+      // Entitlements (so opening the editor makes no API call) and the durable profile, concurrently.
+      const [entitlements, profileResult] = await Promise.allSettled([getAllowedGrades(), getProfile()]);
+      if (!isCurrent()) return;
 
-        // Also fetch metrics from durable profile
-        try {
-          const profile = await getProfile();
-          if (profile.name) {
-            setStudentNameState(profile.name);
-          }
-          if (profile.grade) {
-            setGradeState(profile.grade as Grade);
-          }
-          if (profile.language) {
+      if (entitlements.status === 'fulfilled') {
+        setAllowedGrades(parseAllowedGrades(entitlements.value));
+      } else {
+        console.warn('[studentContext] Could not load grade entitlements; grade changes stay locked:', entitlements.reason);
+        setAllowedGrades(null);
+      }
+
+      if (profileResult.status === 'fulfilled') {
+        const profile = profileResult.value;
+        // A save that finished while this read was in flight is newer than this read: keep it.
+        if (noNewerWrite()) {
+          if (profile?.name) setStudentNameState(profile.name);
+          if (profile?.grade) setGradeState(profile.grade as Grade);
+          if (profile?.language) {
             setLanguageState(profile.language as Language);
             i18n.changeLanguage(profile.language);
           }
+        }
+        // LIVE never shows backend streak/mastery/accuracy figures (the profile API currently returns fixed values).
+        if (!isLive() && profile) {
           setStreakDays(profile.streakDays);
           setTopicsMastered(profile.topicsMastered);
           setQuestionsAnswered(profile.questionsAnswered);
           setAccuracyPercent(profile.accuracyPercent);
-        } catch (pErr) {
-          console.warn('[studentContext] Could not load extended profile:', pErr);
         }
+      } else {
+        console.warn('[studentContext] Could not load extended profile:', profileResult.reason);
       }
     } catch (err) {
+      if (!isCurrent()) return;
       console.warn('[studentContext] Could not fetch session:', err);
-      setIsAuthenticated(false);
-      setSession(null);
-      setAllowedGrades(null);
+      if (isLive()) {
+        clearLearnerIdentity(false);
+      } else {
+        setIsAuthenticated(false);
+        setSession(null);
+      }
     }
-  }, [i18n]);
+  }, [i18n, clearLearnerIdentity]);
 
   useEffect(() => {
     refreshSession();
   }, [refreshSession]);
 
-  const applyProfile = (name: string, newGrade: Grade, newLang: Language) => {
-    setStudentNameState(name);
-    setGradeState(newGrade);
-    setLanguageState(newLang);
-    localStorage.setItem('atlas_student_name', name);
-    localStorage.setItem('atlas_student_grade', newGrade);
-    localStorage.setItem('atlas_learn_lang', newLang);
-    i18n.changeLanguage(newLang);
+  /** Applies only the given profile fields to state and storage, and marks a newer local profile write. */
+  const applyProfileFields = (fields: { name?: string; grade?: Grade; language?: Language }) => {
+    profileWriteRef.current += 1;
+    if (fields.name !== undefined) {
+      setStudentNameState(fields.name);
+      localStorage.setItem('atlas_student_name', fields.name);
+    }
+    if (fields.grade !== undefined) {
+      setGradeState(fields.grade);
+      localStorage.setItem('atlas_student_grade', fields.grade);
+    }
+    if (fields.language !== undefined) {
+      setLanguageState(fields.language);
+      localStorage.setItem(LEARNER_LANGUAGE_KEY, fields.language);
+      i18n.changeLanguage(fields.language);
+    }
   };
 
-  const saveProfileToServer = async (name: string, newGrade: Grade, newLang: Language) => {
+  const saveProfileChanges = async (changes: StudentProfileUpdateRequest): Promise<ProfileSaveResult> => {
     if (!isAuthenticated) {
-      applyProfile(name, newGrade, newLang);
-      return;
+      applyProfileFields({
+        name: changes.name,
+        grade: changes.grade as Grade | undefined,
+        language: changes.language as Language | undefined,
+      });
+      return 'applied';
     }
-    // Server first: nothing changes locally unless the server accepted the profile (errors propagate to the caller).
-    const saved = await updateProfile({ name, grade: newGrade, language: newLang });
-    applyProfile(
-      saved?.name || name,
-      ((saved?.grade as Grade) || newGrade),
-      ((saved?.language as Language) || newLang),
-    );
+    const seq = ++saveSeqRef.current;
+    const epoch = identityEpochRef.current;
+    // Server first: nothing changes locally unless the server accepted it (errors propagate to the caller).
+    const saved = await updateProfile(changes);
+    if (epoch !== identityEpochRef.current || seq <= appliedSaveSeqRef.current) {
+      return 'superseded';
+    }
+    appliedSaveSeqRef.current = seq;
+    applyProfileFields({
+      name: changes.name !== undefined ? saved?.name || changes.name : undefined,
+      grade: changes.grade !== undefined ? ((saved?.grade || changes.grade) as Grade) : undefined,
+      language: changes.language !== undefined ? ((saved?.language || changes.language) as Language) : undefined,
+    });
+    return 'applied';
   };
 
   const setStudentName = (name: string) => {
+    profileWriteRef.current += 1;
     setStudentNameState(name);
     localStorage.setItem('atlas_student_name', name);
     if (isAuthenticated) {
@@ -342,6 +475,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       console.warn(`[studentContext] Enrolled for ${session.registeredGrade}. Grade changes are locked.`);
       return;
     }
+    profileWriteRef.current += 1;
     setGradeState(newGrade);
     localStorage.setItem('atlas_student_grade', newGrade);
     if (isAuthenticated) {
@@ -350,6 +484,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const setLanguage = (newLang: Language) => {
+    profileWriteRef.current += 1;
     setLanguageState(newLang);
     localStorage.setItem('atlas_learn_lang', newLang);
     i18n.changeLanguage(newLang);
@@ -403,6 +538,8 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const logout = async () => {
+    // No learner identity may survive a logout, whatever the server answers.
+    clearLearnerIdentity(true);
     try {
       localStorage.removeItem('atlas_student_session');
       localStorage.removeItem('atlas_guest_preview');
@@ -487,6 +624,10 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         accuracyPercent,
         isProfileEditorOpen,
         setIsProfileEditorOpen,
+        openProfileEditor,
+        profileEditorReturnFocusRef,
+        profileSaveNotice,
+        setProfileSaveNotice,
         allowedGrades,
         isOnboardingOpen,
         setIsOnboardingOpen: (open: boolean) => {
@@ -523,7 +664,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         login,
         logout,
         refreshSession,
-        saveProfileToServer,
+        saveProfileChanges,
       }}
     >
       {children}
