@@ -9,30 +9,23 @@ export const OnboardingModal: React.FC = () => {
   const { t } = useTranslation();
   const {
     studentName,
-    setStudentName,
     grade,
     setGrade,
     language,
     setLanguage,
     isOnboardingOpen,
     setIsOnboardingOpen,
-    saveProfileToServer,
     isAuthenticated,
-    signInStudent,
     login,
-    enableGuestPreview,
   } = useStudent();
 
-  const [localName, setLocalName] = useState(() => {
-    if (!studentName || studentName === 'Nimali' || studentName.includes('Nimali')) {
-      return 'Amila';
-    }
-    return studentName;
-  });
+  const [localName, setLocalName] = useState(() => (studentName.includes('Nimali') ? '' : studentName));
   const [selectedLang, setSelectedLang] = useState<Language>(language);
   const [selectedGrade, setSelectedGrade] = useState<Grade>(grade);
 
-  if (!isOnboardingOpen) return null;
+  // First-run onboarding is for guests only. A signed-in learner already has a profile and edits it in
+  // EditProfileModal, which can always be closed.
+  if (!isOnboardingOpen || isAuthenticated) return null;
 
   const languages: { id: Language; label: string; nativeName: string }[] = [
     { id: 'en', label: 'English', nativeName: 'English' },
@@ -51,18 +44,11 @@ export const OnboardingModal: React.FC = () => {
     { id: 'grade-13', label: 'Grade 13', sub: 'G.C.E. A/L' },
   ];
 
-  const handleComplete = async () => {
-    const finalName = localName.trim() || 'Amila';
-    if (!isAuthenticated) {
-      localStorage.setItem('atlas_onboarding_completed', 'true');
-      setIsOnboardingOpen(false);
-      login('manual');
-      return;
-    } else {
-      await saveProfileToServer(finalName, selectedGrade, selectedLang);
-    }
+  const handleComplete = () => {
+    // Guests continue to sign-in; the signed-in profile comes from the server (unchanged behaviour).
     localStorage.setItem('atlas_onboarding_completed', 'true');
     setIsOnboardingOpen(false);
+    login('manual');
   };
 
   return (

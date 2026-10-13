@@ -5,6 +5,7 @@ import { isMockCurriculum } from '../curriculum/liveCurriculum';
 import {
   getSession,
   getProfile,
+  getAllowedGrades,
   updateProfile,
   logout as apiLogout,
   redirectToLogin,
@@ -38,6 +39,14 @@ interface StudentContextValue {
   accuracyPercent: number;
   isOnboardingOpen: boolean;
   setIsOnboardingOpen: (open: boolean) => void;
+  /** Signed-in learner profile editor (distinct from first-run onboarding). */
+  isProfileEditorOpen: boolean;
+  setIsProfileEditorOpen: (open: boolean) => void;
+  /**
+   * Grades the signed-in learner is entitled to, loaded with the session (never when the editor opens).
+   * null = unknown (not signed in, or the entitlement lookup failed): grade changes are then not offered.
+   */
+  allowedGrades: Grade[] | null;
   isSignInModalOpen: boolean;
   setIsSignInModalOpen: (open: boolean) => void;
   signInStudent: (data: StudentSignInData) => void;
@@ -67,6 +76,10 @@ interface StudentContextValue {
   login: (tabOrEvent?: 'pilot' | 'manual' | unknown) => void;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
+  /**
+   * Signed-in: saves to the server first and applies the saved values to React state and local storage only after
+   * the server accepted them; throws (leaving all state unchanged) when the save fails. Guest: local only.
+   */
   saveProfileToServer: (name: string, grade: Grade, language: Language) => Promise<void>;
 }
 
@@ -146,7 +159,8 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [studentName, setStudentNameState] = useState<string>(() => {
     const raw = localStudentSession?.displayName || localStorage.getItem('atlas_student_name');
     if (!raw || raw.includes('Nimali')) {
-      return 'Amila';
+      // Only the MOCK demo has a sample learner; LIVE shows no name until the server provides the real one.
+      return isMockCurriculum() ? 'Amila' : '';
     }
     return raw;
   });
@@ -170,6 +184,8 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(() => {
     return !localStorage.getItem('atlas_onboarding_completed');
   });
+  const [isProfileEditorOpen, setIsProfileEditorOpen] = useState<boolean>(false);
+  const [allowedGrades, setAllowedGrades] = useState<Grade[] | null>(null);
 
   /**
    * Per-lesson conversation ID map: key = "subjectId:topicId" → UUID.
@@ -246,6 +262,16 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
           }
         }
 
+        // Grade entitlements, loaded with the session so opening the profile editor makes no API call.
+        try {
+          const entitlements = await getAllowedGrades();
+          const grades = (entitlements.allowedGrades || []).filter((g): g is Grade => /^grade-(?:[6-9]|1[0-3])$/.test(g));
+          setAllowedGrades(grades.length > 0 ? grades : null);
+        } catch (eErr) {
+          console.warn('[studentContext] Could not load grade entitlements; grade changes stay locked:', eErr);
+          setAllowedGrades(null);
+        }
+
         // Also fetch metrics from durable profile
         try {
           const profile = await getProfile();
@@ -271,6 +297,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       console.warn('[studentContext] Could not fetch session:', err);
       setIsAuthenticated(false);
       setSession(null);
+      setAllowedGrades(null);
     }
   }, [i18n]);
 
@@ -278,7 +305,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     refreshSession();
   }, [refreshSession]);
 
-  const saveProfileToServer = async (name: string, newGrade: Grade, newLang: Language) => {
+  const applyProfile = (name: string, newGrade: Grade, newLang: Language) => {
     setStudentNameState(name);
     setGradeState(newGrade);
     setLanguageState(newLang);
@@ -286,14 +313,20 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem('atlas_student_grade', newGrade);
     localStorage.setItem('atlas_learn_lang', newLang);
     i18n.changeLanguage(newLang);
+  };
 
-    if (isAuthenticated) {
-      try {
-        await updateProfile({ name, grade: newGrade, language: newLang });
-      } catch (err) {
-        console.error('[studentContext] Failed to persist profile to PostgreSQL:', err);
-      }
+  const saveProfileToServer = async (name: string, newGrade: Grade, newLang: Language) => {
+    if (!isAuthenticated) {
+      applyProfile(name, newGrade, newLang);
+      return;
     }
+    // Server first: nothing changes locally unless the server accepted the profile (errors propagate to the caller).
+    const saved = await updateProfile({ name, grade: newGrade, language: newLang });
+    applyProfile(
+      saved?.name || name,
+      ((saved?.grade as Grade) || newGrade),
+      ((saved?.language as Language) || newLang),
+    );
   };
 
   const setStudentName = (name: string) => {
@@ -452,6 +485,9 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         topicsMastered,
         questionsAnswered,
         accuracyPercent,
+        isProfileEditorOpen,
+        setIsProfileEditorOpen,
+        allowedGrades,
         isOnboardingOpen,
         setIsOnboardingOpen: (open: boolean) => {
           setIsOnboardingOpen(open);

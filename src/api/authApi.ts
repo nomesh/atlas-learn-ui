@@ -181,6 +181,20 @@ export async function getProfile(): Promise<StudentProfileData> {
   return res.data;
 }
 
+export interface AllowedGradesData {
+  studentId: string;
+  accountType: string;
+  defaultGrade: string | null;
+  /** Grades the learner is entitled to, as "grade-N" (a STUDENT has exactly their registered grade). */
+  allowedGrades: string[];
+}
+
+/** Grades the signed-in learner is entitled to (GET /api/learn/entitlements/allowed-grades). */
+export async function getAllowedGrades(): Promise<AllowedGradesData> {
+  const res = await apiClient.get<AllowedGradesData>('/api/learn/entitlements/allowed-grades');
+  return res.data;
+}
+
 /**
  * Updates the student profile in durable PostgreSQL storage.
  */

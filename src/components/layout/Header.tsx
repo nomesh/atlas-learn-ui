@@ -17,7 +17,7 @@ export const Header: React.FC = () => {
     language,
     setLanguage,
     streakDays,
-    setIsOnboardingOpen,
+    setIsProfileEditorOpen,
     isAuthenticated,
     studentId,
     accountStatus,
@@ -313,12 +313,12 @@ export const Header: React.FC = () => {
                           type="button"
                           onClick={() => {
                             setIsUserMenuOpen(false);
-                            setIsOnboardingOpen(true);
+                            setIsProfileEditorOpen(true);
                           }}
                           className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                         >
                           <User className="w-4 h-4 text-slate-400" />
-                          <span>Edit Profile & Grade</span>
+                          <span>Edit Profile</span>
                         </button>
 
                         <button

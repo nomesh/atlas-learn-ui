@@ -4,6 +4,7 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 import { MobileBottomNav } from './MobileBottomNav';
 import { OnboardingModal } from '../../features/onboarding/OnboardingModal';
+import { EditProfileModal } from '../../features/account/EditProfileModal';
 import { StudentSignInModal } from '../auth/StudentSignInModal';
 import { TutorRuntimeBadge } from '../dev/TutorRuntimeBadge';
 
@@ -37,8 +38,11 @@ export const AppShell: React.FC = () => {
       {/* Mobile Bottom Navigation (< 768px, shown on non-tutor pages) */}
       {!isTutorPage && <MobileBottomNav />}
 
-      {/* Global First-Time or Edit Onboarding Modal */}
+      {/* First-run onboarding (guests only) */}
       <OnboardingModal />
+
+      {/* Signed-in learner profile editor */}
+      <EditProfileModal />
 
       {/* Portal-level Student Authentication & Registration Modal */}
       <StudentSignInModal />

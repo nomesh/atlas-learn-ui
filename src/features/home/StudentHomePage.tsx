@@ -22,7 +22,7 @@ import { useStudent } from '../../state/studentContext';
 import { TutorAvatar } from '../avatar/TutorAvatar';
 import { MOCK_SUBJECTS, MOCK_TOPICS } from '../../mocks/curriculumData';
 import { isMockCurriculum } from '../../curriculum/liveCurriculum';
-import { LiveSubjectsView } from '../../curriculum/LiveCurriculumViews';
+import { LiveStudentHome } from './LiveStudentHome';
 
 const MockStudentHomePage: React.FC = () => {
   const { t } = useTranslation();
@@ -379,5 +379,8 @@ const MockStudentHomePage: React.FC = () => {
   );
 };
 
-/** LIVE home: no sample "continue learning" topic or mastery values; only API-reported subject availability. */
-export const StudentHomePage: React.FC = () => (isMockCurriculum() ? <MockStudentHomePage /> : <LiveSubjectsView />);
+/**
+ * LIVE home: the learner dashboard built only from the learner's own server data and API-reported availability (no
+ * sample "continue learning" topic, mastery or progress). The full subject catalogue stays on /subjects.
+ */
+export const StudentHomePage: React.FC = () => (isMockCurriculum() ? <MockStudentHomePage /> : <LiveStudentHome />);
