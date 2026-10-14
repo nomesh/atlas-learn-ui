@@ -18,12 +18,6 @@ export const MEDIUM_UNAVAILABLE_TEXT: Record<Language, string> = {
   ta: 'நீங்கள் தேர்ந்தெடுத்த மொழியில் கிடைக்கவில்லை',
 };
 
-export function getMediumUnavailableText(language?: Language | string | null): string {
-  if (language === 'si') return MEDIUM_UNAVAILABLE_TEXT.si;
-  if (language === 'ta') return MEDIUM_UNAVAILABLE_TEXT.ta;
-  return MEDIUM_UNAVAILABLE_TEXT.en;
-}
-
 /** True only where bundled MOCK curriculum is intentional (Pages demo build or explicit dev mock mode). */
 export function isMockCurriculum(): boolean {
   return tutorService.isMockMode();

@@ -52,6 +52,11 @@ const TEXT: Record<string, Record<Language, string>> = {
     si: 'ලබා ගත හැකි මාධ්‍ය',
     ta: 'கிடைக்கும் மொழி',
   },
+  availabilitySummary: {
+    en: 'Available in your medium: {available} of {total} subjects',
+    si: 'ඔබේ මාධ්‍යයෙන් ලබා ගත හැකි විෂයයන්: {available} / {total}',
+    ta: 'உங்கள் மொழியில் கிடைக்கும் பாடங்கள்: {available} / {total}',
+  },
 };
 
 const gradeLabel = (grade: string) => grade.replace('-', ' ').toUpperCase();
@@ -79,9 +84,16 @@ export const LiveSubjectsView: React.FC<{ compact?: boolean }> = ({ compact }) =
     return 0;
   };
   const ordered = [...subjects].sort((a, b) => rank(b) - rank(a));
+  const availableCount = subjects.filter((s) => rank(s) >= 2).length;
 
   return (
     <div className="space-y-4" data-testid="live-subjects">
+      {/* One polite live region for the whole list (cards keep their visible text but announce nothing each). */}
+      <p className="sr-only" role="status" aria-live="polite" data-testid="live-subjects-summary">
+        {TEXT.availabilitySummary[language]
+          .replace('{available}', String(availableCount))
+          .replace('{total}', String(subjects.length))}
+      </p>
       {!compact && (
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">{TEXT.subjectsTitle[language]}</h1>
@@ -154,7 +166,7 @@ const LiveSubjectCard: React.FC<{
       >
         <div>
           <h3 className="font-bold text-slate-700">{subject.subjectName}</h3>
-          <p role="status" className="text-xs mt-1">{CURRICULUM_UNAVAILABLE_TEXT[language]}</p>
+          <p className="text-xs mt-1">{CURRICULUM_UNAVAILABLE_TEXT[language]}</p>
         </div>
         <TextbookQuestionsAction subject={subject} language={language} onAsk={onAsk} />
       </div>
@@ -170,8 +182,6 @@ const LiveSubjectCard: React.FC<{
       <div>
         <h3 className="font-bold text-slate-700">{subject.subjectName}</h3>
         <p
-          role="status"
-          aria-live="polite"
           className={`text-xs mt-1 font-medium ${otherMediumOnly ? 'text-amber-700' : ''}`}
           data-testid={otherMediumOnly ? `subject-medium-notice-${subject.subjectCode}` : undefined}
         >

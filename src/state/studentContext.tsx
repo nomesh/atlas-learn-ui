@@ -121,6 +121,8 @@ interface StudentContextValue {
   enableGuestPreview: () => void;
   disableGuestPreview: () => void;
   currentUser: { id: string; email: string; displayName: string } | null;
+  /** Current learner identity epoch: it changes whenever the identity is cleared or a different learner begins. */
+  getIdentityEpoch: () => number;
   accountType: 'GUARDIAN' | 'INDEPENDENT_STUDENT' | null;
   learners: LearnerProfile[];
   activeLearner: LearnerProfile | null;
@@ -274,6 +276,8 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   /** Bumped whenever the learner identity is cleared: responses started for another identity are dropped. */
   const identityEpochRef = useRef(0);
+  /** Read at the moment of use (not at render) so an in-flight response can tell that the identity changed. */
+  const getIdentityEpoch = useCallback(() => identityEpochRef.current, []);
   /** Only the latest session refresh may apply its results. */
   const refreshSeqRef = useRef(0);
   /** Bumped on every local profile write: an older profile read never overwrites a newer write. */
@@ -752,6 +756,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isSignInModalOpen,
         setIsSignInModalOpen,
         signInStudent,
+        getIdentityEpoch,
         isDeviceModalOpen,
         setIsDeviceModalOpen,
         getOrCreateConversationId,

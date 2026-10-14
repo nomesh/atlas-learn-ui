@@ -1,7 +1,7 @@
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Polyfill scrollTo in JSDOM so chat container scrolling doesn't throw
@@ -35,6 +35,7 @@ vi.mock('../api/authApi', async (importOriginal) => {
 });
 
 import '../i18n';
+import { ensureTutorLease } from '../api/authApi';
 import { tutorService } from '../api/tutorApi';
 import { StudentProvider, useStudent } from '../state/studentContext';
 import { LiveStudentHome, resolveSubjectOpenAction } from '../features/home/LiveStudentHome';
@@ -44,7 +45,6 @@ import {
   canAskTutor,
   canOpenLessons,
   hasLearnerMedium,
-  getMediumUnavailableText,
   isSubjectOtherMediumOnly,
   MEDIUM_UNAVAILABLE_TEXT,
   type CurriculumAvailability,
@@ -208,12 +208,11 @@ function setupMockApi(availability: CurriculumAvailability = TEST_AVAILABILITY, 
   });
 }
 
-function renderWithProviders(element: React.ReactElement, initialPath = '/') {
-  const client = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false, gcTime: 0 },
-    },
-  });
+function renderWithProviders(
+  element: React.ReactElement,
+  initialPath = '/',
+  client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } }),
+) {
   return render(
     <QueryClientProvider client={client}>
       <StudentProvider>
@@ -229,6 +228,101 @@ function renderWithProviders(element: React.ReactElement, initialPath = '/') {
     </QueryClientProvider>,
   );
 }
+
+/** Calls to the real Tutor endpoint (POST /api/learn/tutor). */
+const tutorPosts = () => apiPost.mock.calls.filter((c) => c[0] === '/api/learn/tutor').length;
+
+/** Topic-list GETs (GET /api/learn/curriculum?subjectId=...) for one subject code. */
+const topicGets = (subjectCode: string) =>
+  apiGet.mock.calls.filter(
+    (c) =>
+      c[0] === '/api/learn/curriculum' &&
+      String((c[1] as { params?: { subjectId?: string } } | undefined)?.params?.subjectId ?? '').toUpperCase() === subjectCode,
+  ).length;
+
+/** Every browser-storage value that contains the given text. */
+function storageKeysContaining(text: string): string[] {
+  const hits: string[] = [];
+  for (const store of [sessionStorage, localStorage]) {
+    for (let i = 0; i < store.length; i++) {
+      const k = store.key(i);
+      if (k && (store.getItem(k) ?? '').includes(text)) hits.push(k);
+    }
+  }
+  return hits;
+}
+
+/** Holds the next Tutor POST until the test settles it. */
+function holdTutorPost() {
+  const held: { resolve: (v: unknown) => void; reject: (e: unknown) => void } = { resolve: () => {}, reject: () => {} };
+  apiPost.mockImplementation((url: string) => {
+    if (url === '/api/learn/tutor') {
+      return new Promise((resolve, reject) => {
+        held.resolve = resolve;
+        held.reject = reject;
+      });
+    }
+    return Promise.reject(new Error(`unexpected POST ${url}`));
+  });
+  return held;
+}
+
+/** Holds the availability GET until released (other GETs keep the setupMockApi behaviour). */
+function holdAvailability(outcome: 'resolve' | 'reject' = 'resolve') {
+  const base = apiGet.getMockImplementation()!;
+  let release: () => void = () => {};
+  const gate = new Promise<void>((r) => {
+    release = r;
+  });
+  apiGet.mockImplementation((url: string, cfg?: unknown) =>
+    url === '/api/learn/curriculum/availability'
+      ? gate.then(() => (outcome === 'resolve' ? base(url, cfg) : Promise.reject(new Error('availability unavailable'))))
+      : base(url, cfg),
+  );
+  return { release: () => act(async () => { release(); await gate; }) };
+}
+
+/** Tutor plus test controls: subject navigation, medium switch and a real learner sign-in (identity switch). */
+const TutorHarness: React.FC = () => {
+  const navigate = useNavigate();
+  const { setLanguage, signInStudent } = useStudent();
+  return (
+    <div>
+      <button type="button" data-testid="go-science" onClick={() => navigate('/tutor?subject=science')}>science</button>
+      <button type="button" data-testid="go-history" onClick={() => navigate('/tutor?subject=history')}>history</button>
+      <button type="button" data-testid="medium-en" onClick={() => setLanguage('en')}>en</button>
+      <button
+        type="button"
+        data-testid="sign-in-b"
+        onClick={() => signInStudent({ id: 'u-other', displayName: 'Other Learner', grade: 'grade-10', language: 'si', studentId: 'ATL-26-009999' })}
+      >
+        other learner
+      </button>
+      <button
+        type="button"
+        data-testid="sign-in-same"
+        onClick={() => signInStudent({ id: 'u-test', displayName: 'Test Learner', grade: 'grade-10', language: 'si', studentId: 'ATL-26-001001' })}
+      >
+        same learner again
+      </button>
+      <TutorPage />
+    </div>
+  );
+};
+
+async function typeAndSend(text: string, expectedPosts = 1) {
+  const textarea = (await screen.findByRole('textbox')) as HTMLTextAreaElement;
+  await waitFor(() => expect(textarea.disabled).toBe(false));
+  await act(async () => {
+    fireEvent.change(textarea, { target: { value: text } });
+  });
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: /send|යවන්න/i }));
+  });
+  await waitFor(() => expect(tutorPosts()).toBe(expectedPosts));
+}
+
+const settle = () => act(async () => { await new Promise((r) => setTimeout(r, 50)); });
 
 describe('Medium-aware curriculum availability guard', () => {
   beforeEach(() => {
@@ -325,12 +419,10 @@ describe('Medium-aware curriculum availability guard', () => {
       expect(isSubjectOtherMediumOnly(unverifiedSub, 'si')).toBe(false);
     });
 
-    it('provides localized labels and fallbacks for Sinhala, English, and Tamil', () => {
-      expect(getMediumUnavailableText('en')).toBe('Not available in your selected medium');
-      expect(getMediumUnavailableText('si')).toBe('ඔබ තෝරාගත් මාධ්‍යයෙන් ලබා ගත නොහැක');
-      expect(getMediumUnavailableText('ta')).toBe('நீங்கள் தேர்ந்தெடுத்த மொழியில் கிடைக்கவில்லை');
-      expect(getMediumUnavailableText('invalid-code')).toBe('Not available in your selected medium');
-      expect(getMediumUnavailableText(null)).toBe('Not available in your selected medium');
+    it('provides localized labels for Sinhala, English, and Tamil', () => {
+      expect(MEDIUM_UNAVAILABLE_TEXT.en).toBe('Not available in your selected medium');
+      expect(MEDIUM_UNAVAILABLE_TEXT.si).toBe('ඔබ තෝරාගත් මාධ්‍යයෙන් ලබා ගත නොහැක');
+      expect(MEDIUM_UNAVAILABLE_TEXT.ta).toBe('நீங்கள் தேர்ந்தெடுத்த மொழியில் கிடைக்கவில்லை');
     });
   });
 
@@ -382,7 +474,7 @@ describe('Medium-aware curriculum availability guard', () => {
       expect(screen.queryByTestId('live-home-subject-HISTORY')).toBeNull();
     });
 
-    it('History card on Subjects page stays visible but disabled with localized notice and role status', async () => {
+    it('History card on Subjects page stays visible but disabled with a localized notice; one summary live region', async () => {
       renderWithProviders(<LiveSubjectsView />, '/subjects');
       await screen.findByTestId('live-subjects');
 
@@ -390,9 +482,15 @@ describe('Medium-aware curriculum availability guard', () => {
       expect(historyCard.getAttribute('aria-disabled')).toBe('true');
       expect(historyCard.textContent).toContain('Not available in your selected medium');
       expect(historyCard.textContent).toContain('Available in: SI');
-      const notice = historyCard.querySelector('[role="status"]');
-      expect(notice).not.toBeNull();
+      expect(historyCard.querySelectorAll('button, a, [tabindex]')).toHaveLength(0);
       expect(screen.queryByTestId('subject-textbook-questions-HISTORY')).toBeNull();
+
+      // Cards announce nothing individually; the list has exactly one polite status region.
+      const list = screen.getByTestId('live-subjects');
+      const regions = list.querySelectorAll('[role="status"], [aria-live]');
+      expect(regions).toHaveLength(1);
+      // English learner: Science (EN) and English Literature (EN) are usable; 7 subjects in total.
+      expect(screen.getByTestId('live-subjects-summary').textContent).toBe('Available in your medium: 2 of 7 subjects');
     });
 
     it('Subject detail view shows CurriculumUnavailable with medium message and no Tutor action', async () => {
@@ -552,8 +650,8 @@ describe('Medium-aware curriculum availability guard', () => {
         }
       }
 
-      // Assert 0 calls were dispatched to tutor endpoint
-      expect(apiPost).not.toHaveBeenCalledWith('/api/learn/tutor/chat', expect.anything(), expect.anything());
+      // Assert 0 calls were dispatched to the real Tutor endpoint (POST /api/learn/tutor)
+      expect(tutorPosts()).toBe(0);
     });
 
     it('another-medium subject does NOT issue a topics request on detail view', async () => {
@@ -819,6 +917,320 @@ describe('Medium-aware curriculum availability guard', () => {
       expect(screen.queryByTestId('live-home-subject-SCIENCE')).toBeNull();
       expect(screen.queryByTestId('live-home-subject-HISTORY')).toBeNull();
       expect(screen.queryByTestId('live-home-subject-ENGLISH_LIT')).toBeNull();
+    });
+  });
+  describe('Tutor request isolation and held ?q= prompts', () => {
+    const seededClient = () => {
+      const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity, staleTime: Infinity } } });
+      client.setQueryData(['learn', 'curriculum-availability', 'grade-10'], TEST_AVAILABILITY);
+      return client;
+    };
+
+    it('wrong-medium ?q= with availability already loaded: 0 Tutor POSTs', async () => {
+      setupMockApi(TEST_AVAILABILITY, 'en');
+      renderWithProviders(<TutorPage />, '/tutor?subject=history&q=Explain%20the%20war', seededClient());
+      await screen.findByTestId('tutor-subject-unavailable');
+      await settle();
+      expect(tutorPosts()).toBe(0);
+    });
+
+    it('wrong-medium ?q= while availability is loading, then loads: 0 Tutor POSTs', async () => {
+      setupMockApi(TEST_AVAILABILITY, 'en');
+      const availability = holdAvailability('resolve');
+      renderWithProviders(<TutorPage />, '/tutor?subject=history&q=Explain%20the%20war');
+      await screen.findByRole('textbox');
+      await settle();
+      expect(tutorPosts()).toBe(0);
+      await availability.release();
+      await screen.findByTestId('tutor-subject-unavailable');
+      await settle();
+      expect(tutorPosts()).toBe(0);
+    });
+
+    it('wrong-medium ?q= while availability errors: 0 Tutor POSTs', async () => {
+      setupMockApi(TEST_AVAILABILITY, 'en');
+      const availability = holdAvailability('reject');
+      renderWithProviders(<TutorPage />, '/tutor?subject=history&q=Explain%20the%20war');
+      await screen.findByRole('textbox');
+      await availability.release();
+      await waitFor(() => expect(screen.getByTestId('tutor-subject-unavailable').getAttribute('role')).toBe('alert'), { timeout: 4000 });
+      await settle();
+      expect(tutorPosts()).toBe(0);
+    });
+
+    it('supported ?q= is held while availability loads, then submitted exactly once', async () => {
+      setupMockApi(TEST_AVAILABILITY, 'si');
+      const availability = holdAvailability('resolve');
+      renderWithProviders(<TutorPage />, '/tutor?subject=history&q=HELD-PROMPT');
+      await screen.findByRole('textbox');
+      await settle();
+      expect(tutorPosts()).toBe(0);
+      await availability.release();
+      await waitFor(() => expect(tutorPosts()).toBe(1));
+      await settle();
+      expect(tutorPosts()).toBe(1);
+      const body = apiPost.mock.calls.find((c) => c[0] === '/api/learn/tutor')?.[1] as { message?: string; subject?: string };
+      expect(body.message).toBe('HELD-PROMPT');
+      expect(String(body.subject).toLowerCase()).toBe('history');
+    });
+
+    it('supported ?q= held during an availability error is discarded, even if a later refetch succeeds', async () => {
+      setupMockApi(TEST_AVAILABILITY, 'si');
+      const base = apiGet.getMockImplementation()!;
+      const availability = holdAvailability('reject');
+      const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } });
+      renderWithProviders(<TutorPage />, '/tutor?subject=history&q=HELD-PROMPT', client);
+      await screen.findByRole('textbox');
+      await availability.release();
+      await waitFor(() => expect(screen.getByTestId('tutor-subject-unavailable').getAttribute('role')).toBe('alert'), { timeout: 4000 });
+      apiGet.mockImplementation(base);
+      await act(async () => {
+        await client.refetchQueries({ queryKey: ['learn', 'curriculum-availability'] });
+      });
+      await waitFor(() => expect(screen.queryByTestId('tutor-subject-unavailable')).toBeNull());
+      await settle();
+      expect(tutorPosts()).toBe(0);
+    });
+
+    it.each([
+      ['medium switch', 'medium-en'],
+      ['account switch', 'sign-in-b'],
+      ['subject switch', 'go-science'],
+    ])('supported ?q= held during loading is discarded on %s', async (_label, control) => {
+      setupMockApi(TEST_AVAILABILITY, 'si');
+      const availability = holdAvailability('resolve');
+      renderWithProviders(<TutorHarness />, '/tutor?subject=history&q=HELD-PROMPT');
+      await screen.findByRole('textbox');
+      await settle();
+      await act(async () => {
+        fireEvent.click(screen.getByTestId(control));
+      });
+      await availability.release();
+      await settle();
+      await settle();
+      expect(tutorPosts()).toBe(0);
+    });
+
+    it('account switch during a request: the reply is neither shown nor stored, and the new learner can send', async () => {
+      setupMockApi(TEST_AVAILABILITY, 'si');
+      const held = holdTutorPost();
+      renderWithProviders(<TutorHarness />, '/tutor?subject=history');
+      await typeAndSend('LEARNER-A-QUESTION');
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('sign-in-b'));
+      });
+      await act(async () => {
+        held.resolve({ data: { answer: 'LEARNER-A-ANSWER', sources: [{ pageNumber: 3 }], metadata: { safeFailure: false, evidenceCount: 1 } } });
+      });
+      await settle();
+      expect(document.body.textContent).not.toContain('LEARNER-A-ANSWER');
+      expect(document.body.textContent).not.toContain('LEARNER-A-QUESTION');
+      expect(storageKeysContaining('LEARNER-A-ANSWER')).toEqual([]);
+      expect(storageKeysContaining('LEARNER-A-QUESTION').filter((k) => k.includes('u-other'))).toEqual([]);
+
+      // The new learner's context is idle and free to send.
+      await typeAndSend('LEARNER-B-QUESTION', 2);
+    });
+
+    it('account switch during a request: an error reply is neither shown nor stored', async () => {
+      setupMockApi(TEST_AVAILABILITY, 'si');
+      const held = holdTutorPost();
+      renderWithProviders(<TutorHarness />, '/tutor?subject=history');
+      await typeAndSend('LEARNER-A-QUESTION');
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('sign-in-b'));
+      });
+      await act(async () => {
+        held.reject(new Error('network down'));
+      });
+      await settle();
+      expect(document.body.textContent).not.toContain('සන්නිවේදන දෝෂයක්');
+      expect(storageKeysContaining('සන්නිවේදන දෝෂයක්')).toEqual([]);
+      expect(tutorPosts()).toBe(1);
+    });
+
+    it('subject switch during a request: no cross-subject reply, threads stay separate, switching back reveals nothing', async () => {
+      setupMockApi(TEST_AVAILABILITY, 'si');
+      const held = holdTutorPost();
+      renderWithProviders(<TutorHarness />, '/tutor?subject=history');
+      await typeAndSend('HISTORY-QUESTION');
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('go-science'));
+      });
+      await act(async () => {
+        held.resolve({ data: { answer: 'HISTORY-ANSWER', sources: [{ pageNumber: 7 }], metadata: { safeFailure: false, evidenceCount: 1 } } });
+      });
+      await settle();
+      expect(document.body.textContent).not.toContain('HISTORY-ANSWER');
+      expect(document.body.textContent).not.toContain('HISTORY-QUESTION');
+      expect(storageKeysContaining('HISTORY-ANSWER')).toEqual([]);
+      expect(storageKeysContaining('HISTORY-QUESTION')).toEqual(['atlas_messages_u-test_grade-10_history_default']);
+
+      // Switching back restores the History thread (with its question) and still no discarded reply.
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('go-history'));
+      });
+      await settle();
+      expect(document.body.textContent).toContain('HISTORY-QUESTION');
+      expect(document.body.textContent).not.toContain('HISTORY-ANSWER');
+      expect(storageKeysContaining('HISTORY-ANSWER')).toEqual([]);
+    });
+
+    it('subject switch during a request: an error reply is neither shown nor stored', async () => {
+      setupMockApi(TEST_AVAILABILITY, 'si');
+      const held = holdTutorPost();
+      renderWithProviders(<TutorHarness />, '/tutor?subject=history');
+      await typeAndSend('HISTORY-QUESTION');
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('go-science'));
+      });
+      await act(async () => {
+        held.reject(new Error('network down'));
+      });
+      await settle();
+      expect(document.body.textContent).not.toContain('සන්නිවේදන දෝෂයක්');
+      expect(storageKeysContaining('සන්නිවේදන දෝෂයක්')).toEqual([]);
+      expect(tutorPosts()).toBe(1);
+    });
+
+    it('supported ?q= held during loading is discarded on a medium switch that keeps the subject supported', async () => {
+      // Science exists in EN and SI: only the bound-medium check (not the send guard) can refuse it.
+      setupMockApi(TEST_AVAILABILITY, 'si');
+      const availability = holdAvailability('resolve');
+      renderWithProviders(<TutorHarness />, '/tutor?subject=science&q=HELD-PROMPT');
+      await screen.findByRole('textbox');
+      await settle();
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('medium-en'));
+      });
+      await availability.release();
+      await settle();
+      await settle();
+      expect(tutorPosts()).toBe(0);
+    });
+
+    it('a submitted held prompt is never resubmitted when availability later changes', async () => {
+      setupMockApi(TEST_AVAILABILITY, 'si');
+      const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } });
+      renderWithProviders(<TutorPage />, '/tutor?subject=history&q=HELD-PROMPT', client);
+      await waitFor(() => expect(tutorPosts()).toBe(1));
+      await settle();
+      // History later gains published lessons: topic loading starts and settles (the effect's inputs change).
+      await act(async () => {
+        client.setQueryData(['learn', 'curriculum-availability', 'grade-10'], {
+          ...TEST_AVAILABILITY,
+          subjects: TEST_AVAILABILITY.subjects.map((s) => (s.subjectCode === 'HISTORY' ? { ...s, topics: 2, topicsAvailable: true } : s)),
+        });
+      });
+      await waitFor(() => expect(topicGets('HISTORY')).toBe(1));
+      await settle();
+      expect(tutorPosts()).toBe(1);
+    });
+
+    it('same learner signing in again (new identity epoch) during a request: the reply is discarded', async () => {
+      setupMockApi(TEST_AVAILABILITY, 'si');
+      const held = holdTutorPost();
+      renderWithProviders(<TutorHarness />, '/tutor?subject=history');
+      await typeAndSend('EPOCH-QUESTION');
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('sign-in-same'));
+      });
+      await act(async () => {
+        held.resolve({ data: { answer: 'EPOCH-ANSWER', sources: [{ pageNumber: 2 }], metadata: { safeFailure: false, evidenceCount: 1 } } });
+      });
+      await settle();
+      expect(document.body.textContent).not.toContain('EPOCH-ANSWER');
+      expect(storageKeysContaining('EPOCH-ANSWER')).toEqual([]);
+    });
+
+    it('the new learner can send while the abandoned request is still pending, and keeps its own reply', async () => {
+      setupMockApi(TEST_AVAILABILITY, 'si');
+      const held = holdTutorPost();
+      renderWithProviders(<TutorHarness />, '/tutor?subject=history');
+      await typeAndSend('LEARNER-A-QUESTION');
+      const resolveA = held.resolve;
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('sign-in-b'));
+      });
+      // Learner B sends before A's request settles.
+      await typeAndSend('LEARNER-B-QUESTION', 2);
+      const resolveB = held.resolve;
+      await act(async () => {
+        resolveA({ data: { answer: 'LEARNER-A-ANSWER', sources: [{ pageNumber: 3 }], metadata: { safeFailure: false, evidenceCount: 1 } } });
+      });
+      await settle();
+      // A settling must not release B's slot: a further send while B is in flight is refused.
+      const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;
+      await act(async () => {
+        fireEvent.change(textarea, { target: { value: 'LEARNER-B-SECOND' } });
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /send|යවන්න/i }));
+      });
+      await settle();
+      expect(tutorPosts()).toBe(2);
+      await act(async () => {
+        resolveB({ data: { answer: 'LEARNER-B-ANSWER', sources: [{ pageNumber: 4 }], metadata: { safeFailure: false, evidenceCount: 1 } } });
+      });
+      await settle();
+      expect(document.body.textContent).toContain('LEARNER-B-ANSWER');
+      expect(document.body.textContent).not.toContain('LEARNER-A-ANSWER');
+      expect(storageKeysContaining('LEARNER-A-ANSWER')).toEqual([]);
+    });
+
+    it('subject switch while the Tutor lease is being acquired: nothing is sent or stored', async () => {
+      setupMockApi(TEST_AVAILABILITY, 'si');
+      holdTutorPost();
+      renderWithProviders(<TutorHarness />, '/tutor?subject=history');
+      const textarea = (await screen.findByRole('textbox')) as HTMLTextAreaElement;
+      await waitFor(() => expect(textarea.disabled).toBe(false));
+      await settle();
+      let grantLease: (v: unknown) => void = () => {};
+      vi.mocked(ensureTutorLease).mockImplementationOnce(
+        () => new Promise((resolve) => { grantLease = resolve as (v: unknown) => void; }) as ReturnType<typeof ensureTutorLease>,
+      );
+      await act(async () => {
+        fireEvent.change(textarea, { target: { value: 'LEASE-QUESTION' } });
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /send|යවන්න/i }));
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('go-science'));
+      });
+      await act(async () => {
+        grantLease({ status: 'GRANTED', leaseToken: 'mock-token' });
+      });
+      await settle();
+      expect(tutorPosts()).toBe(0);
+      expect(storageKeysContaining('LEASE-QUESTION')).toEqual([]);
+      // No message bubble anywhere (the unsent draft simply stays in the input).
+      const withoutInputs = document.body.cloneNode(true) as HTMLElement;
+      withoutInputs.querySelectorAll('textarea').forEach((t) => t.remove());
+      expect(withoutInputs.textContent).not.toContain('LEASE-QUESTION');
+      expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('LEASE-QUESTION');
+    });
+
+    it('Tutor page requests topics only for subjects whose lessons are open in the learner medium', async () => {
+      setupMockApi(TEST_AVAILABILITY, 'en');
+      renderWithProviders(<TutorPage />, '/tutor?subject=buddhism');
+      await screen.findByTestId('tutor-subject-unavailable');
+      await settle();
+      expect(topicGets('BUDDHISM')).toBe(0);
+      cleanup();
+
+      apiGet.mockReset();
+      setupMockApi(TEST_AVAILABILITY, 'si');
+      renderWithProviders(<TutorPage />, '/tutor?subject=history');
+      await screen.findByRole('textbox');
+      await settle();
+      expect(topicGets('HISTORY')).toBe(0);
+      cleanup();
+
+      apiGet.mockReset();
+      setupMockApi(TEST_AVAILABILITY, 'si');
+      renderWithProviders(<TutorPage />, '/tutor?subject=buddhism');
+      await waitFor(() => expect(topicGets('BUDDHISM')).toBe(1));
     });
   });
 });

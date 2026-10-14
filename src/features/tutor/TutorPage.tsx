@@ -36,6 +36,7 @@ import { MOCK_TOPICS, findTopicResilient } from '../../mocks/curriculumData';
 import { fetchCurriculumTopics } from '../../api/curriculumApi';
 import {
   canAskTutor,
+  canOpenLessons,
   findSubjectAvailability,
   findVerifiedTopic,
   isMockCurriculum,
@@ -108,6 +109,27 @@ export const getTutorSessionStorageKey = (
   return `atlas_messages_${userId || 'guest'}_${grade || 'grade-10'}_${subjectId || 'default'}_${topicId || 'default'}`;
 };
 
+/**
+ * Everything a Tutor request belongs to. A reply (or error) is applied only while the whole context is unchanged:
+ * identity epoch and confirmed user, conversation storage key, grade, subject and medium.
+ */
+interface TutorRequestContext {
+  epoch: number;
+  userScope: string;
+  sessionKey: string;
+  grade: string;
+  subject: string;
+  medium: string;
+}
+
+const sameTutorRequestContext = (a: TutorRequestContext, b: TutorRequestContext): boolean =>
+  a.epoch === b.epoch &&
+  a.userScope === b.userScope &&
+  a.sessionKey === b.sessionKey &&
+  a.grade === b.grade &&
+  a.subject === b.subject &&
+  a.medium === b.medium;
+
 export const loadTutorSessionMessages = (key: string): ChatMessage[] | null => {
   try {
     const raw = sessionStorage.getItem(key);
@@ -151,13 +173,21 @@ export const TutorPage: React.FC = () => {
     isGuestPreview,
     login,
     currentUser,
+    getIdentityEpoch,
   } = useStudent();
 
   // LIVE: only API-verified topics (never the bundled prototype catalogue); MOCK: demo catalogue.
   const liveCurriculum = !isMockCurriculum();
   const liveSubjectHint = searchParams.get('subject') || learningContext.subjectId || undefined;
-  const liveTopicsQuery = useLiveTopics(liveCurriculum ? liveSubjectHint : undefined, grade);
   const liveAvailability = useCurriculumAvailability(grade);
+  // Topics are requested only for a subject whose structured lessons this learner may open in their medium.
+  const liveTopicsSubject =
+    liveCurriculum &&
+    liveAvailability.isSuccess &&
+    canOpenLessons(findSubjectAvailability(liveAvailability.data, liveSubjectHint), language)
+      ? liveSubjectHint
+      : undefined;
+  const liveTopicsQuery = useLiveTopics(liveTopicsSubject, grade);
   const [curriculumTopics, setCurriculumTopics] = useState<Topic[]>(() => (liveCurriculum ? [] : MOCK_TOPICS));
 
   useEffect(() => {
@@ -194,7 +224,6 @@ export const TutorPage: React.FC = () => {
       ? foundTopic.id
       : (paramTopic || learningContext.topicId);
   const liveSubjectAvailability = findSubjectAvailability(liveAvailability.data, activeSubjectId);
-  const subjectCanAskTutor = !liveCurriculum || (liveAvailability.isSuccess && canAskTutor(liveSubjectAvailability, language));
   const otherMediumOnly = liveCurriculum && liveAvailability.isSuccess && isSubjectOtherMediumOnly(liveSubjectAvailability, language);
   const liveSubjectUnsupported = liveCurriculum && (!liveAvailability.isSuccess || !canAskTutor(liveSubjectAvailability, language));
   const companionTopicId = activeTopicId || defaultTopicForSubject(activeSubjectId);
@@ -298,8 +327,38 @@ export const TutorPage: React.FC = () => {
   const processedQueryRef = useRef<string | null>(null);
   const isSendingRef = useRef<boolean>(false);
   const messageCounterRef = useRef<number>(0);
-  const languageRef = useRef<Language>(language);
-  languageRef.current = language;
+
+  // The context this render belongs to (the identity epoch is read live, at the moment of comparison).
+  const renderRequestContextRef = useRef<Omit<TutorRequestContext, 'epoch'>>({
+    userScope, sessionKey: activeSessionKey, grade, subject: activeSubjectId.toLowerCase(), medium: language,
+  });
+  renderRequestContextRef.current = {
+    userScope, sessionKey: activeSessionKey, grade, subject: activeSubjectId.toLowerCase(), medium: language,
+  };
+  const currentRequestContext = (): TutorRequestContext => ({ epoch: getIdentityEpoch(), ...renderRequestContextRef.current });
+  const isRequestContextCurrent = (ctx: TutorRequestContext) => sameTutorRequestContext(ctx, currentRequestContext());
+  /** The request in flight and the context it belongs to; cleared when it settles or its context is left. */
+  const requestSeqRef = useRef(0);
+  const inFlightRequestRef = useRef<{ seq: number; ctx: TutorRequestContext; retargeted: boolean } | null>(null);
+  const inFlightMatchesCurrent = (request: { ctx: TutorRequestContext; retargeted: boolean }) => {
+    if (!request.retargeted) return isRequestContextCurrent(request.ctx);
+    const now = currentRequestContext();
+    return request.ctx.epoch === now.epoch && request.ctx.userScope === now.userScope
+      && request.ctx.grade === now.grade && request.ctx.medium === now.medium;
+  };
+  /** True only while this request is the one in flight and its context has not been left. */
+  const isRequestStillCurrent = (seq: number) => {
+    const request = inFlightRequestRef.current;
+    return request !== null && request.seq === seq && inFlightMatchesCurrent(request);
+  };
+  /** A ?q= prompt held until its subject's availability is known, bound to the context it arrived in. */
+  const pendingQueryRef = useRef<{
+    text: string;
+    epoch: number;
+    subject: string;
+    bound: { userScope: string; medium: string; grade: string } | null;
+  } | null>(null);
+  const [pendingQueryTick, setPendingQueryTick] = useState(0);
 
   const generateMsgId = (role: string) => {
     messageCounterRef.current += 1;
@@ -370,9 +429,50 @@ export const TutorPage: React.FC = () => {
       nextParams.delete('q');
       setSearchParams(nextParams, { replace: true });
 
-      handleSendMessage(trimmedQ);
+      if (!liveCurriculum) {
+        handleSendMessage(trimmedQ);
+        return;
+      }
+      // LIVE: hold the prompt until availability is known, bound to the identity, subject and medium it arrived in.
+      pendingQueryRef.current = { text: trimmedQ, epoch: getIdentityEpoch(), subject: activeSubjectId.toLowerCase(), bound: null };
+      setPendingQueryTick((n) => n + 1);
     }
   }, [searchParams, setSearchParams]);
+
+  // A held ?q= prompt is submitted at most once, and only in the context it arrived in; any change discards it.
+  useEffect(() => {
+    const pending = pendingQueryRef.current;
+    if (!pending) return;
+    if (pending.epoch !== getIdentityEpoch() || pending.subject !== activeSubjectId.toLowerCase() || liveAvailability.isError) {
+      pendingQueryRef.current = null;
+      return;
+    }
+    // The learner's own medium and grade are known only once their identity is confirmed.
+    if (!currentUser?.id) return;
+    if (!pending.bound) {
+      pending.bound = { userScope, medium: language, grade };
+    } else if (pending.bound.userScope !== userScope || pending.bound.medium !== language || pending.bound.grade !== grade) {
+      pendingQueryRef.current = null;
+      return;
+    }
+    if (!liveAvailability.isSuccess || (liveTopicsSubject && liveTopicsQuery.isLoading)) return;
+    pendingQueryRef.current = null;
+    // The send guard authorizes it (verified scope in the learner's medium) or refuses it.
+    handleSendMessage(pending.text);
+  }, [pendingQueryTick, liveAvailability.isSuccess, liveAvailability.isError, currentUser?.id, userScope, language, grade,
+      activeSubjectId, liveTopicsSubject, liveTopicsQuery.isLoading]);
+
+  // Leaving a request's context (identity, conversation, grade, subject or medium) abandons that request: its reply
+  // is discarded, and the new context starts idle and free to send.
+  const requestContextSignature = `${userScope}|${activeSessionKey}|${grade}|${activeSubjectId.toLowerCase()}|${language}`;
+  useEffect(() => {
+    const inFlight = inFlightRequestRef.current;
+    if (inFlight && !inFlightMatchesCurrent(inFlight)) {
+      inFlightRequestRef.current = null;
+      isSendingRef.current = false;
+      setTutorState('idle');
+    }
+  }, [requestContextSignature]);
 
   // Ensure window stays at top on mount
   useEffect(() => {
@@ -504,14 +604,12 @@ export const TutorPage: React.FC = () => {
       return;
     }
 
+    // LIVE: only a verified scope in the learner's medium, with availability loaded, may reach the Tutor.
     if (isSuperseded || liveSubjectUnsupported) {
       return;
     }
-    if (liveCurriculum && (!liveAvailability.isSuccess || !canAskTutor(liveSubjectAvailability, language))) {
-      return;
-    }
 
-    const requestMedium = language;
+    const requestContext = currentRequestContext();
 
     const currentImg = attachedImage;
     if (currentImg) {
@@ -532,6 +630,7 @@ export const TutorPage: React.FC = () => {
         // If conflict occurs when learner sends a message, attempt an immediate session takeover
         token = await syncLeaseState(true);
       }
+      if (!isRequestContextCurrent(requestContext)) return;
       if (!token) {
         console.warn('[TutorPage] Aborting live message send: No active lease token.');
         if (deviceLimitNotice) {
@@ -561,6 +660,8 @@ export const TutorPage: React.FC = () => {
     }
 
     isSendingRef.current = true;
+    const requestSeq = ++requestSeqRef.current;
+    inFlightRequestRef.current = { seq: requestSeq, ctx: requestContext, retargeted: false };
 
     const studentMessageText = text || (language === 'si' ? 'කරුණාකර මෙම පෙළපොත් ප්‍රශ්නය හෝ රූප සටහන පියවරෙන් පියවර විසඳා පෙන්වන්න' : language === 'ta' ? 'தயவுசெய்து இந்த பாடநூல் வினா அல்லது வரைபடத்தை படிப்படியாக விளக்குக' : 'Please analyze and solve this textbook question/diagram step by step');
 
@@ -583,6 +684,8 @@ export const TutorPage: React.FC = () => {
       if (detected) {
         targetSubjectId = detected.subjectId;
         targetTopicId = detected.topicId;
+        // This request moves its own subject (MOCK keyword routing): only identity, grade and medium stay bound.
+        inFlightRequestRef.current = { seq: requestSeq, ctx: requestContext, retargeted: true };
         setCurriculumSubject(detected.subjectId, detected.topicId);
         const nextParams = new URLSearchParams(searchParams);
         nextParams.set('subject', detected.subjectId);
@@ -617,10 +720,8 @@ export const TutorPage: React.FC = () => {
         imageUrl: currentImg?.previewUrl,
       });
 
-      if (languageRef.current !== requestMedium) {
-        setTutorState('idle');
-        return;
-      }
+      // A reply for a context that was left is dropped untouched: no render, no storage, no state, no follow-ups.
+      if (!isRequestStillCurrent(requestSeq)) return;
 
       // Determine emotional reaction based on student question
       let nextState: 'speaking' | 'celebrating' | 'encouraging' = 'speaking';
@@ -670,15 +771,14 @@ export const TutorPage: React.FC = () => {
         return next;
       });
 
-      // Return to idle after speech finishes
+      // Return to idle after speech finishes (unless another request or context has taken over meanwhile)
+      const settled = inFlightRequestRef.current;
       setTimeout(() => {
-        setTutorState('idle');
+        if (inFlightRequestRef.current === null && settled !== null && inFlightMatchesCurrent(settled)) setTutorState('idle');
       }, 4000);
     } catch (err: unknown) {
-      if (languageRef.current !== requestMedium) {
-        setTutorState('idle');
-        return;
-      }
+      // An error for a context that was left is dropped like a reply.
+      if (!isRequestStillCurrent(requestSeq)) return;
       console.error('[Tutor Error]:', err);
       setTutorState('encouraging');
 
@@ -727,7 +827,9 @@ export const TutorPage: React.FC = () => {
         if (!isRetry) {
           console.info('[TutorPage] Lease required (428). Attempting automatic lease acquisition and retry...');
           const reacquiredToken = await syncLeaseState(false);
+          if (!isRequestStillCurrent(requestSeq)) return;
           if (reacquiredToken) {
+            inFlightRequestRef.current = null;
             isSendingRef.current = false;
             return handleSendMessage(studentMessageText, true);
           }
@@ -867,9 +969,16 @@ export const TutorPage: React.FC = () => {
         return next;
       });
 
-      setTimeout(() => setTutorState('idle'), 3000);
+      const settled = inFlightRequestRef.current;
+      setTimeout(() => {
+        if (inFlightRequestRef.current === null && settled !== null && inFlightMatchesCurrent(settled)) setTutorState('idle');
+      }, 3000);
     } finally {
-      isSendingRef.current = false;
+      // Only the request that still owns the send slot releases it (an abandoned one was released already).
+      if (inFlightRequestRef.current?.seq === requestSeq) {
+        inFlightRequestRef.current = null;
+        isSendingRef.current = false;
+      }
     }
   };
 
