@@ -6,6 +6,9 @@ import type { Language } from '../types';
 import { CurriculumUnavailable, CURRICULUM_UNAVAILABLE_TEXT } from './CurriculumUnavailable';
 import {
   findSubjectAvailability,
+  isSubjectMediumAvailable,
+  isSubjectOtherMediumOnly,
+  MEDIUM_UNAVAILABLE_TEXT,
   useCurriculumAvailability,
   useLiveTopics,
   type SubjectAvailability,
@@ -43,6 +46,11 @@ const TEXT: Record<string, Record<Language, string>> = {
   },
   topics: { en: 'Topics', si: 'මාතෘකා', ta: 'தலைப்புகள்' },
   allSubjects: { en: 'All Subjects', si: 'සියලු විෂයයන්', ta: 'அனைத்து பாடங்கள்' },
+  availableIn: {
+    en: 'Available in',
+    si: 'ලබා ගත හැකි මාධ්‍ය',
+    ta: 'கிடைக்கும் மொழி',
+  },
 };
 
 const gradeLabel = (grade: string) => grade.replace('-', ' ').toUpperCase();
@@ -63,7 +71,13 @@ export const LiveSubjectsView: React.FC<{ compact?: boolean }> = ({ compact }) =
   if (subjects.length === 0) {
     return <CurriculumUnavailable language={language} />;
   }
-  const rank = (s: SubjectAvailability) => (s.topicsAvailable ? 2 : s.tutorAvailable ? 1 : 0);
+  const rank = (s: SubjectAvailability) => {
+    const med = isSubjectMediumAvailable(s, language);
+    if (s.topicsAvailable && med) return 3;
+    if (s.tutorAvailable && med) return 2;
+    if (isSubjectOtherMediumOnly(s, language)) return 1;
+    return 0;
+  };
   const ordered = [...subjects].sort((a, b) => rank(b) - rank(a));
 
   return (
@@ -101,6 +115,31 @@ const LiveSubjectCard: React.FC<{
   onOpen: () => void;
   onAsk: () => void;
 }> = ({ subject, language, onOpen, onAsk }) => {
+  const isMediumAvail = isSubjectMediumAvailable(subject, language);
+  const otherMediumOnly = isSubjectOtherMediumOnly(subject, language);
+
+  if (!isMediumAvail) {
+    return (
+      <div
+        data-testid={`subject-unavailable-${subject.subjectCode}`}
+        aria-disabled="true"
+        className="p-5 rounded-3xl bg-slate-50 border border-slate-200 text-slate-500 space-y-2 opacity-80"
+      >
+        <div>
+          <h3 className="font-bold text-slate-700">{subject.subjectName}</h3>
+          <p className="text-xs mt-1 text-amber-700 font-medium" data-testid={`subject-medium-notice-${subject.subjectCode}`}>
+            {otherMediumOnly ? MEDIUM_UNAVAILABLE_TEXT[language] : CURRICULUM_UNAVAILABLE_TEXT[language]}
+          </p>
+        </div>
+        {otherMediumOnly && subject.languages.length > 0 && (
+          <p className="text-[11px] text-slate-400">
+            {TEXT.availableIn[language]}: {subject.languages.map((l) => l.toUpperCase()).join(', ')}
+          </p>
+        )}
+      </div>
+    );
+  }
+
   // Curriculum (lessons, topics, practice, progress) is available only with approved persisted topic records.
   if (!subject.topicsAvailable) {
     return (
@@ -163,7 +202,9 @@ export const LiveSubjectDetailView: React.FC = () => {
   const { grade, language } = useStudent();
   const availability = useCurriculumAvailability(grade);
   const subject = findSubjectAvailability(availability.data, subjectId);
-  const topics = useLiveTopics(subject?.topicsAvailable ? subjectId : undefined, grade);
+  const isMediumAvail = isSubjectMediumAvailable(subject, language);
+  const otherMediumOnly = isSubjectOtherMediumOnly(subject, language);
+  const topics = useLiveTopics(isMediumAvail && subject?.topicsAvailable ? subjectId : undefined, grade);
 
   const back = (
     <button
@@ -182,12 +223,16 @@ export const LiveSubjectDetailView: React.FC = () => {
   if (availability.isError) {
     return <div className="max-w-4xl mx-auto space-y-4">{back}<CurriculumUnavailable language={language} detail={TEXT.loadError[language]} /></div>;
   }
-  if (!subject || !subject.topicsAvailable) {
+  if (!subject || !isMediumAvail || !subject.topicsAvailable) {
+    const detailMessage = otherMediumOnly
+      ? MEDIUM_UNAVAILABLE_TEXT[language]
+      : (subject?.tutorAvailable ? undefined : TEXT.notIndexed[language]);
+
     return (
       <div className="max-w-4xl mx-auto space-y-4">
         {back}
-        <CurriculumUnavailable language={language} detail={subject?.tutorAvailable ? undefined : TEXT.notIndexed[language]} />
-        {subject?.tutorAvailable && (
+        <CurriculumUnavailable language={language} detail={detailMessage} />
+        {isMediumAvail && subject?.tutorAvailable && (
           <TextbookQuestionsAction
             subject={subject}
             language={language}
@@ -252,20 +297,32 @@ export const LiveCompanionPane: React.FC<{ subjectId?: string; language: Languag
   const { grade } = useStudent();
   const availability = useCurriculumAvailability(grade);
   const subject = findSubjectAvailability(availability.data, subjectId);
+  const isMediumAvail = isSubjectMediumAvailable(subject, language);
+  const otherMediumOnly = isSubjectOtherMediumOnly(subject, language);
+
   return (
     <div className="h-full p-5 space-y-3 bg-white border-l border-slate-200" data-testid="live-companion">
       <h3 className="text-sm font-extrabold text-slate-900">{subject?.subjectName ?? (subjectId || '').toUpperCase()}</h3>
       {availability.isLoading ? (
         <p className="text-xs text-slate-500">{TEXT.loading[language]}</p>
-      ) : subject?.topicsAvailable ? (
+      ) : isMediumAvail && subject?.topicsAvailable ? (
         <p className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700">
           <BookOpen className="w-4 h-4" />
           {TEXT.indexed[language]} ({subject.languages.map((l) => l.toUpperCase()).join(', ')})
         </p>
-      ) : subject?.tutorAvailable ? (
+      ) : isMediumAvail && subject?.tutorAvailable ? (
         <div data-testid="live-companion-textbook-questions" className="space-y-1">
           <p className="text-xs font-bold text-slate-700">{CURRICULUM_UNAVAILABLE_TEXT[language]}</p>
           <p className="text-xs text-slate-600 leading-relaxed">{TEXT.textbookQuestionsNote[language]}</p>
+        </div>
+      ) : otherMediumOnly ? (
+        <div data-testid="live-companion-medium-unavailable" className="space-y-1">
+          <p className="text-xs font-bold text-amber-700" data-testid="companion-medium-notice">
+            {MEDIUM_UNAVAILABLE_TEXT[language]}
+          </p>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            {TEXT.availableIn[language]}: {(subject?.languages || []).map((l) => l.toUpperCase()).join(', ')}
+          </p>
         </div>
       ) : (
         <p className="text-xs text-slate-600 leading-relaxed" data-testid="live-companion-unavailable">

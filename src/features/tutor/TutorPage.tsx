@@ -38,6 +38,9 @@ import {
   findSubjectAvailability,
   findVerifiedTopic,
   isMockCurriculum,
+  isSubjectMediumAvailable,
+  isSubjectOtherMediumOnly,
+  MEDIUM_UNAVAILABLE_TEXT,
   useCurriculumAvailability,
   useLiveTopics,
 } from '../../curriculum/liveCurriculum';
@@ -187,7 +190,9 @@ export const TutorPage: React.FC = () => {
       ? foundTopic.id
       : (paramTopic || learningContext.topicId);
   const liveSubjectAvailability = findSubjectAvailability(liveAvailability.data, activeSubjectId);
-  const liveSubjectUnsupported = liveCurriculum && liveAvailability.isSuccess && !liveSubjectAvailability?.tutorAvailable;
+  const isMediumAvail = isSubjectMediumAvailable(liveSubjectAvailability, language);
+  const otherMediumOnly = isSubjectOtherMediumOnly(liveSubjectAvailability, language);
+  const liveSubjectUnsupported = liveCurriculum && liveAvailability.isSuccess && !isMediumAvail;
   const companionTopicId = activeTopicId || defaultTopicForSubject(activeSubjectId);
   const effectiveTopicId = activeTopicId || companionTopicId || 'default';
   const userScope = currentUser?.id || 'guest';
@@ -370,7 +375,7 @@ export const TutorPage: React.FC = () => {
 
   // Auto-scroll strictly inside conversation thread container (prevents window jumping)
   useEffect(() => {
-    if (chatContainerRef.current) {
+    if (chatContainerRef.current && typeof chatContainerRef.current.scrollTo === 'function') {
       chatContainerRef.current.scrollTo({
         top: chatContainerRef.current.scrollHeight,
         behavior: 'smooth',
@@ -493,7 +498,7 @@ export const TutorPage: React.FC = () => {
       return;
     }
 
-    if (isSuperseded) {
+    if (isSuperseded || liveSubjectUnsupported) {
       return;
     }
 
@@ -1359,7 +1364,7 @@ export const TutorPage: React.FC = () => {
           <div className="flex items-center gap-1 pb-1 pl-1 text-slate-400">
             {/* Mic / Voice Input: demo simulation only; LIVE has no verified speech recognition, so it is disabled */}
             <VoiceInputButton
-              live={liveCurriculum}
+              live={liveCurriculum || liveSubjectUnsupported}
               listening={isListeningMic}
               language={language}
               demoTitle={t('tutor.voiceInput')}
@@ -1369,8 +1374,13 @@ export const TutorPage: React.FC = () => {
             {/* Homework Photo Upload / Camera */}
             <button
               type="button"
+              disabled={isSuperseded || liveSubjectUnsupported}
               onClick={() => fileInputRef.current?.click()}
-              className="p-2 rounded-xl hover:text-cyan-600 hover:bg-cyan-50 text-slate-400 transition-all flex items-center justify-center"
+              className={`p-2 rounded-xl transition-all flex items-center justify-center ${
+                isSuperseded || liveSubjectUnsupported
+                  ? 'cursor-not-allowed text-slate-300'
+                  : 'hover:text-cyan-600 hover:bg-cyan-50 text-slate-400'
+              }`}
               title={language === 'si' ? 'පෙළපොත් ඡායාරූපයක් / Screenshot එකක් එක් කරන්න' : language === 'ta' ? 'பாடநூல் படம் / ஸ்கிரீன்ஷாட் சேர்க்க' : 'Upload textbook screenshot / photo'}
             >
               <Camera className="w-4 h-4" />
@@ -1379,8 +1389,13 @@ export const TutorPage: React.FC = () => {
             {/* Document Note Attachment / File Picker */}
             <button
               type="button"
+              disabled={isSuperseded || liveSubjectUnsupported}
               onClick={() => fileInputRef.current?.click()}
-              className="p-2 rounded-xl hover:text-cyan-600 hover:bg-cyan-50 text-slate-400 transition-all hidden sm:flex items-center justify-center"
+              className={`p-2 rounded-xl transition-all hidden sm:flex items-center justify-center ${
+                isSuperseded || liveSubjectUnsupported
+                  ? 'cursor-not-allowed text-slate-300'
+                  : 'hover:text-cyan-600 hover:bg-cyan-50 text-slate-400'
+              }`}
               title={language === 'si' ? 'ගොනුවක් හෝ රූපයක් අමුණන්න' : language === 'ta' ? 'கோப்பு அல்லது படம் இணைக்கவும்' : 'Attach problem image'}
             >
               <Paperclip className="w-4 h-4" />
@@ -1392,7 +1407,7 @@ export const TutorPage: React.FC = () => {
             ref={inputRef}
             rows={1}
             value={inputMessage}
-            disabled={isSuperseded}
+            disabled={isSuperseded || liveSubjectUnsupported}
             onChange={(e) => {
               setInputMessage(e.target.value);
               if (e.target.value.trim() && tutorState === 'idle') {
@@ -1414,24 +1429,32 @@ export const TutorPage: React.FC = () => {
                     : language === 'ta'
                     ? 'அமர்வு வேறொரு சாதனத்திற்கு மாற்றப்பட்டுள்ளது. மீண்டும் இணைய Reconnect என்பதை கிளிக் செய்யவும்.'
                     : 'Session active on another device. Click Reconnect to resume.')
+                : liveSubjectUnsupported
+                ? (otherMediumOnly ? MEDIUM_UNAVAILABLE_TEXT[language] : CURRICULUM_UNAVAILABLE_TEXT[language])
                 : t('tutor.inputPlaceholder')
             }
             className={`flex-1 bg-transparent py-2.5 px-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none resize-none max-h-32 ${
-              isSuperseded ? 'cursor-not-allowed opacity-60' : ''
+              isSuperseded || liveSubjectUnsupported ? 'cursor-not-allowed opacity-60' : ''
             }`}
           />
 
           {/* Submit Button */}
           <button
             type="button"
-            disabled={isSuperseded || !inputMessage.trim()}
+            disabled={isSuperseded || liveSubjectUnsupported || !inputMessage.trim()}
             onClick={() => handleSendMessage()}
             className={`p-3 rounded-xl flex items-center justify-center transition-all ${
-              !isSuperseded && inputMessage.trim()
+              !isSuperseded && !liveSubjectUnsupported && inputMessage.trim()
                 ? 'bg-gradient-to-r from-atlas-deep to-atlas-blue text-white shadow-md hover:from-slate-900 hover:to-atlas-deep'
                 : 'bg-slate-200 text-slate-400 cursor-not-allowed'
             }`}
-            title={isSuperseded ? 'Session transferred to another device' : t('tutor.send')}
+            title={
+              isSuperseded
+                ? 'Session transferred to another device'
+                : liveSubjectUnsupported
+                ? (otherMediumOnly ? MEDIUM_UNAVAILABLE_TEXT[language] : CURRICULUM_UNAVAILABLE_TEXT[language])
+                : t('tutor.send')
+            }
           >
             <Send className="w-4 h-4" />
           </button>
@@ -1439,7 +1462,7 @@ export const TutorPage: React.FC = () => {
 
         {liveSubjectUnsupported && (
           <div data-testid="tutor-subject-unavailable" className="mt-2 text-center text-[11px] font-bold text-amber-700">
-            {CURRICULUM_UNAVAILABLE_TEXT[language]} — {liveSubjectAvailability?.subjectName ?? activeSubjectId.toUpperCase()}
+            {otherMediumOnly ? MEDIUM_UNAVAILABLE_TEXT[language] : CURRICULUM_UNAVAILABLE_TEXT[language]} — {liveSubjectAvailability?.subjectName ?? activeSubjectId.toUpperCase()}
           </div>
         )}
         <div className="mt-2 text-center">

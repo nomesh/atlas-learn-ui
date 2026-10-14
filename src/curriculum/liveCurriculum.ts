@@ -10,7 +10,19 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import { tutorService } from '../api/tutorApi';
-import type { Topic } from '../types';
+import type { Language, Topic } from '../types';
+
+export const MEDIUM_UNAVAILABLE_TEXT: Record<Language, string> = {
+  en: 'Not available in your selected medium',
+  si: 'ඔබ තෝරාගත් මාධ්‍යයෙන් ලබා ගත නොහැක',
+  ta: 'நீங்கள் தேர்ந்தெடுத்த மொழியில் கிடைக்கவில்லை',
+};
+
+export function getMediumUnavailableText(language?: Language | string | null): string {
+  if (language === 'si') return MEDIUM_UNAVAILABLE_TEXT.si;
+  if (language === 'ta') return MEDIUM_UNAVAILABLE_TEXT.ta;
+  return MEDIUM_UNAVAILABLE_TEXT.en;
+}
 
 /** True only where bundled MOCK curriculum is intentional (Pages demo build or explicit dev mock mode). */
 export function isMockCurriculum(): boolean {
@@ -59,6 +71,35 @@ export function findSubjectAvailability(
   return availability.subjects.find((s) => s.subjectCode.toUpperCase() === code);
 }
 
+/**
+ * Medium-aware curriculum availability guard:
+ * A subject is effectively Tutor-available ONLY when the API returns tutorAvailable=true
+ * and the learner's selected medium exists in subject.languages (case-insensitive).
+ */
+export function isSubjectMediumAvailable(
+  subject: SubjectAvailability | undefined | null,
+  medium: Language | string | undefined | null,
+): boolean {
+  if (!subject || !subject.tutorAvailable) return false;
+  if (!medium) return false;
+  const target = medium.trim().toLowerCase();
+  return (subject.languages || []).some((l) => l.trim().toLowerCase() === target);
+}
+
+/**
+ * Returns true if content exists only in another medium (i.e. tutorAvailable is true
+ * or topicsAvailable is true, but the learner's medium is not among subject.languages).
+ */
+export function isSubjectOtherMediumOnly(
+  subject: SubjectAvailability | undefined | null,
+  medium: Language | string | undefined | null,
+): boolean {
+  if (!subject) return false;
+  if (isSubjectMediumAvailable(subject, medium)) return false;
+  if (!subject.tutorAvailable && !subject.topicsAvailable) return false;
+  return (subject.languages || []).length > 0;
+}
+
 /** One subject entry as the API reports it; anything else is not shown (booleans default to "not available"). */
 function toSubjectAvailability(raw: unknown): SubjectAvailability | null {
   if (!raw || typeof raw !== 'object') return null;
@@ -67,7 +108,9 @@ function toSubjectAvailability(raw: unknown): SubjectAvailability | null {
   return {
     subjectCode: s.subjectCode,
     subjectName: s.subjectName,
-    languages: Array.isArray(s.languages) ? s.languages.filter((l): l is string => typeof l === 'string') : [],
+    languages: Array.isArray(s.languages)
+      ? s.languages.filter((l): l is string => typeof l === 'string' && l.trim().length > 0).map((l) => l.trim().toLowerCase())
+      : [],
     indexedResources: typeof s.indexedResources === 'number' ? s.indexedResources : 0,
     topics: typeof s.topics === 'number' ? s.topics : 0,
     tutorScopeVerified: s.tutorScopeVerified === true,

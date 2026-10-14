@@ -4,7 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { ArrowRight, BookOpen, Compass, GraduationCap, LibraryBig, MessageCircleQuestion, Sparkles } from 'lucide-react';
 import { useStudent } from '../../state/studentContext';
 import { TutorAvatar } from '../avatar/TutorAvatar';
-import { useCurriculumAvailability, type SubjectAvailability } from '../../curriculum/liveCurriculum';
+import {
+  isSubjectMediumAvailable,
+  useCurriculumAvailability,
+  type SubjectAvailability,
+} from '../../curriculum/liveCurriculum';
 import type { Language } from '../../types';
 
 /**
@@ -61,9 +65,9 @@ export const LiveStudentHome: React.FC = () => {
   const [question, setQuestion] = useState('');
 
   const subjects = availability.data?.subjects ?? [];
-  const withTopics = subjects.filter((s) => s.topicsAvailable);
-  const textbookOnly = subjects.filter((s) => !s.topicsAvailable && s.tutorAvailable);
-  const notYet = subjects.filter((s) => !s.topicsAvailable && !s.tutorAvailable);
+  const withTopics = subjects.filter((s) => s.topicsAvailable && isSubjectMediumAvailable(s, language));
+  const textbookOnly = subjects.filter((s) => !s.topicsAvailable && isSubjectMediumAvailable(s, language));
+  const notYet = subjects.filter((s) => !withTopics.includes(s) && !textbookOnly.includes(s));
   const firstTopicSubject = withTopics[0];
 
   const askTutor = () => {
@@ -72,6 +76,7 @@ export const LiveStudentHome: React.FC = () => {
   };
 
   const openSubject = (s: SubjectAvailability) => {
+    if (!isSubjectMediumAvailable(s, language)) return;
     const code = s.subjectCode.toLowerCase();
     if (s.topicsAvailable) {
       setCurriculumSubject(code);
