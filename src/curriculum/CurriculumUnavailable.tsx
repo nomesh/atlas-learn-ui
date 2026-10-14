@@ -8,6 +8,18 @@ export const CURRICULUM_UNAVAILABLE_TEXT: Record<Language, string> = {
   ta: 'பாடத்திட்ட உள்ளடக்கம் இன்னும் கிடைக்கவில்லை',
 };
 
+export const CURRICULUM_LOADING_TEXT: Record<Language, string> = {
+  en: 'Loading curriculum…',
+  si: 'විෂය නිර්දේශය පූරණය වෙමින්…',
+  ta: 'பாடத்திட்டம் ஏற்றப்படுகிறது…',
+};
+
+export const CURRICULUM_LOAD_ERROR_TEXT: Record<Language, string> = {
+  en: 'The curriculum could not be loaded. Please try again.',
+  si: 'විෂය නිර්දේශය පූරණය කළ නොහැකි විය. නැවත උත්සාහ කරන්න.',
+  ta: 'பாடத்திட்டத்தை ஏற்ற முடியவில்லை. மீண்டும் முயற்சிக்கவும்.',
+};
+
 interface CurriculumUnavailableProps {
   language: Language;
   /** Optional, more specific explanation (e.g. what is missing and what still works). */

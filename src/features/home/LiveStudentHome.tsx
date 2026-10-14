@@ -5,7 +5,8 @@ import { ArrowRight, BookOpen, Compass, GraduationCap, LibraryBig, MessageCircle
 import { useStudent } from '../../state/studentContext';
 import { TutorAvatar } from '../avatar/TutorAvatar';
 import {
-  isSubjectMediumAvailable,
+  canAskTutor,
+  canOpenLessons,
   useCurriculumAvailability,
   type SubjectAvailability,
 } from '../../curriculum/liveCurriculum';
@@ -57,6 +58,20 @@ const TEXT: Record<string, Record<Language, string>> = {
 
 const gradeLabel = (grade: string) => grade.replace('-', ' ').toUpperCase();
 
+export function resolveSubjectOpenAction(
+  s: SubjectAvailability | null | undefined,
+  language: Language
+): { path: string; subjectCode: string } | null {
+  const hasLessons = canOpenLessons(s, language);
+  const hasTutor = canAskTutor(s, language);
+  if (!hasLessons && !hasTutor) return null;
+  const code = (s?.subjectCode || '').toLowerCase();
+  if (hasLessons) {
+    return { path: `/subjects/${code}`, subjectCode: code };
+  }
+  return { path: `/tutor?subject=${encodeURIComponent(code)}`, subjectCode: code };
+}
+
 export const LiveStudentHome: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -65,8 +80,8 @@ export const LiveStudentHome: React.FC = () => {
   const [question, setQuestion] = useState('');
 
   const subjects = availability.data?.subjects ?? [];
-  const withTopics = subjects.filter((s) => s.topicsAvailable && isSubjectMediumAvailable(s, language));
-  const textbookOnly = subjects.filter((s) => !s.topicsAvailable && isSubjectMediumAvailable(s, language));
+  const withTopics = subjects.filter((s) => canOpenLessons(s, language));
+  const textbookOnly = subjects.filter((s) => !canOpenLessons(s, language) && canAskTutor(s, language));
   const notYet = subjects.filter((s) => !withTopics.includes(s) && !textbookOnly.includes(s));
   const firstTopicSubject = withTopics[0];
 
@@ -76,14 +91,10 @@ export const LiveStudentHome: React.FC = () => {
   };
 
   const openSubject = (s: SubjectAvailability) => {
-    if (!isSubjectMediumAvailable(s, language)) return;
-    const code = s.subjectCode.toLowerCase();
-    if (s.topicsAvailable) {
-      setCurriculumSubject(code);
-      navigate(`/subjects/${code}`);
-    } else {
-      navigate(`/tutor?subject=${encodeURIComponent(code)}`);
-    }
+    const action = resolveSubjectOpenAction(s, language);
+    if (!action) return;
+    setCurriculumSubject(action.subjectCode);
+    navigate(action.path);
   };
 
   const actions: { id: string; title: string; desc: string; icon: React.ElementType; onClick: () => void }[] = [
@@ -237,7 +248,7 @@ export const LiveStudentHome: React.FC = () => {
                       onClick={() => openSubject(s)}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-sky-300 text-xs font-bold text-slate-700"
                     >
-                      {s.topicsAvailable ? <BookOpen className="w-3.5 h-3.5 text-emerald-600" /> : <MessageCircleQuestion className="w-3.5 h-3.5 text-sky-600" />}
+                      {canOpenLessons(s, language) ? <BookOpen className="w-3.5 h-3.5 text-emerald-600" /> : <MessageCircleQuestion className="w-3.5 h-3.5 text-sky-600" />}
                       {s.subjectName}
                     </button>
                   </li>

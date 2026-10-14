@@ -71,33 +71,46 @@ export function findSubjectAvailability(
   return availability.subjects.find((s) => s.subjectCode.toUpperCase() === code);
 }
 
-/**
- * Medium-aware curriculum availability guard:
- * A subject is effectively Tutor-available ONLY when the API returns tutorAvailable=true
- * and the learner's selected medium exists in subject.languages (case-insensitive).
- */
-export function isSubjectMediumAvailable(
+/** Returns true if the learner's selected medium exists in subject.languages (case-insensitive). */
+export function hasLearnerMedium(
   subject: SubjectAvailability | undefined | null,
   medium: Language | string | undefined | null,
 ): boolean {
-  if (!subject || !subject.tutorAvailable) return false;
-  if (!medium) return false;
+  if (!subject || !medium) return false;
   const target = medium.trim().toLowerCase();
   return (subject.languages || []).some((l) => l.trim().toLowerCase() === target);
 }
 
+/** Subject is available for textbook questions with the AI Tutor in the learner's medium. */
+export function canAskTutor(
+  subject: SubjectAvailability | undefined | null,
+  medium: Language | string | undefined | null,
+): boolean {
+  if (!subject || !subject.tutorAvailable) return false;
+  return hasLearnerMedium(subject, medium);
+}
+
+/** Subject has approved structured lessons and topics in the learner's medium. */
+export function canOpenLessons(
+  subject: SubjectAvailability | undefined | null,
+  medium: Language | string | undefined | null,
+): boolean {
+  if (!subject || !subject.topicsAvailable) return false;
+  return hasLearnerMedium(subject, medium);
+}
+
 /**
  * Returns true if content exists only in another medium (i.e. tutorAvailable is true
- * or topicsAvailable is true, but the learner's medium is not among subject.languages).
+ * or topicsAvailable is true, has languages, but the learner's medium is not among them).
  */
 export function isSubjectOtherMediumOnly(
   subject: SubjectAvailability | undefined | null,
   medium: Language | string | undefined | null,
 ): boolean {
-  if (!subject) return false;
-  if (isSubjectMediumAvailable(subject, medium)) return false;
-  if (!subject.tutorAvailable && !subject.topicsAvailable) return false;
-  return (subject.languages || []).length > 0;
+  if (!subject || !medium) return false;
+  if (hasLearnerMedium(subject, medium)) return false;
+  const hasContent = Boolean(subject.tutorAvailable || subject.topicsAvailable);
+  return hasContent && (subject.languages || []).length > 0;
 }
 
 /** One subject entry as the API reports it; anything else is not shown (booleans default to "not available"). */

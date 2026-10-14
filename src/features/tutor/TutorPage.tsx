@@ -35,16 +35,20 @@ import { tutorService } from '../../api/tutorApi';
 import { MOCK_TOPICS, findTopicResilient } from '../../mocks/curriculumData';
 import { fetchCurriculumTopics } from '../../api/curriculumApi';
 import {
+  canAskTutor,
   findSubjectAvailability,
   findVerifiedTopic,
   isMockCurriculum,
-  isSubjectMediumAvailable,
   isSubjectOtherMediumOnly,
   MEDIUM_UNAVAILABLE_TEXT,
   useCurriculumAvailability,
   useLiveTopics,
 } from '../../curriculum/liveCurriculum';
-import { CURRICULUM_UNAVAILABLE_TEXT } from '../../curriculum/CurriculumUnavailable';
+import {
+  CURRICULUM_UNAVAILABLE_TEXT,
+  CURRICULUM_LOADING_TEXT,
+  CURRICULUM_LOAD_ERROR_TEXT,
+} from '../../curriculum/CurriculumUnavailable';
 import {
   buildInitialGreeting as buildMockGreeting,
   detectCurriculumContextFromMessage,
@@ -190,9 +194,9 @@ export const TutorPage: React.FC = () => {
       ? foundTopic.id
       : (paramTopic || learningContext.topicId);
   const liveSubjectAvailability = findSubjectAvailability(liveAvailability.data, activeSubjectId);
-  const isMediumAvail = isSubjectMediumAvailable(liveSubjectAvailability, language);
-  const otherMediumOnly = isSubjectOtherMediumOnly(liveSubjectAvailability, language);
-  const liveSubjectUnsupported = liveCurriculum && liveAvailability.isSuccess && !isMediumAvail;
+  const subjectCanAskTutor = !liveCurriculum || (liveAvailability.isSuccess && canAskTutor(liveSubjectAvailability, language));
+  const otherMediumOnly = liveCurriculum && liveAvailability.isSuccess && isSubjectOtherMediumOnly(liveSubjectAvailability, language);
+  const liveSubjectUnsupported = liveCurriculum && (!liveAvailability.isSuccess || !canAskTutor(liveSubjectAvailability, language));
   const companionTopicId = activeTopicId || defaultTopicForSubject(activeSubjectId);
   const effectiveTopicId = activeTopicId || companionTopicId || 'default';
   const userScope = currentUser?.id || 'guest';
@@ -294,6 +298,8 @@ export const TutorPage: React.FC = () => {
   const processedQueryRef = useRef<string | null>(null);
   const isSendingRef = useRef<boolean>(false);
   const messageCounterRef = useRef<number>(0);
+  const languageRef = useRef<Language>(language);
+  languageRef.current = language;
 
   const generateMsgId = (role: string) => {
     messageCounterRef.current += 1;
@@ -375,7 +381,7 @@ export const TutorPage: React.FC = () => {
 
   // Auto-scroll strictly inside conversation thread container (prevents window jumping)
   useEffect(() => {
-    if (chatContainerRef.current && typeof chatContainerRef.current.scrollTo === 'function') {
+    if (chatContainerRef.current) {
       chatContainerRef.current.scrollTo({
         top: chatContainerRef.current.scrollHeight,
         behavior: 'smooth',
@@ -501,6 +507,11 @@ export const TutorPage: React.FC = () => {
     if (isSuperseded || liveSubjectUnsupported) {
       return;
     }
+    if (liveCurriculum && (!liveAvailability.isSuccess || !canAskTutor(liveSubjectAvailability, language))) {
+      return;
+    }
+
+    const requestMedium = language;
 
     const currentImg = attachedImage;
     if (currentImg) {
@@ -606,6 +617,11 @@ export const TutorPage: React.FC = () => {
         imageUrl: currentImg?.previewUrl,
       });
 
+      if (languageRef.current !== requestMedium) {
+        setTutorState('idle');
+        return;
+      }
+
       // Determine emotional reaction based on student question
       let nextState: 'speaking' | 'celebrating' | 'encouraging' = 'speaking';
       const lower = text.toLowerCase();
@@ -659,6 +675,10 @@ export const TutorPage: React.FC = () => {
         setTutorState('idle');
       }, 4000);
     } catch (err: unknown) {
+      if (languageRef.current !== requestMedium) {
+        setTutorState('idle');
+        return;
+      }
       console.error('[Tutor Error]:', err);
       setTutorState('encouraging');
 
@@ -1248,24 +1268,39 @@ export const TutorPage: React.FC = () => {
                       <div className="flex flex-wrap gap-1.5">
                         <button
                           type="button"
+                          disabled={isSuperseded || liveSubjectUnsupported}
                           onClick={() => handleSendMessage('Can you clarify this step-by-step with more details?')}
-                          className="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-200 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs"
+                          className={`px-3 py-1.5 border rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs ${
+                            isSuperseded || liveSubjectUnsupported
+                              ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
+                              : 'bg-sky-50 hover:bg-sky-100 text-sky-900 border-sky-200'
+                          }`}
                         >
                           <span>🔍 Clarify more</span>
                         </button>
 
                         <button
                           type="button"
+                          disabled={isSuperseded || liveSubjectUnsupported}
                           onClick={() => handleSendMessage('Can you explain this in simpler terms for a beginner?')}
-                          className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs"
+                          className={`px-3 py-1.5 border rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs ${
+                            isSuperseded || liveSubjectUnsupported
+                              ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
+                              : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-emerald-200'
+                          }`}
                         >
                           <span>🐣 Explain simpler</span>
                         </button>
 
                         <button
                           type="button"
+                          disabled={isSuperseded || liveSubjectUnsupported}
                           onClick={() => handleSendMessage('Can you give a real-world Sri Lankan everyday example of this?')}
-                          className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs"
+                          className={`px-3 py-1.5 border rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs ${
+                            isSuperseded || liveSubjectUnsupported
+                              ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
+                              : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-200'
+                          }`}
                         >
                           <span>🇱🇰 Sri Lankan Example</span>
                         </button>
@@ -1278,8 +1313,13 @@ export const TutorPage: React.FC = () => {
                             <button
                               key={action.id}
                               type="button"
+                              disabled={isSuperseded || liveSubjectUnsupported}
                               onClick={() => handleSendMessage(action.prompt)}
-                              className="px-3 py-1.5 bg-slate-50 hover:bg-cyan-50 hover:text-atlas-navy hover:border-cyan-300 border border-slate-200 rounded-full text-xs font-semibold text-slate-700 transition-all text-left"
+                              className={`px-3 py-1.5 border rounded-full text-xs font-semibold transition-all text-left ${
+                                isSuperseded || liveSubjectUnsupported
+                                  ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
+                                  : 'bg-slate-50 hover:bg-cyan-50 hover:text-atlas-navy hover:border-cyan-300 border-slate-200 text-slate-700'
+                              }`}
                             >
                               {typeof action.label === 'string'
                                 ? action.label
@@ -1430,7 +1470,13 @@ export const TutorPage: React.FC = () => {
                     ? 'அமர்வு வேறொரு சாதனத்திற்கு மாற்றப்பட்டுள்ளது. மீண்டும் இணைய Reconnect என்பதை கிளிக் செய்யவும்.'
                     : 'Session active on another device. Click Reconnect to resume.')
                 : liveSubjectUnsupported
-                ? (otherMediumOnly ? MEDIUM_UNAVAILABLE_TEXT[language] : CURRICULUM_UNAVAILABLE_TEXT[language])
+                ? (liveAvailability.isLoading
+                    ? CURRICULUM_LOADING_TEXT[language]
+                    : liveAvailability.isError
+                    ? CURRICULUM_LOAD_ERROR_TEXT[language]
+                    : otherMediumOnly
+                    ? MEDIUM_UNAVAILABLE_TEXT[language]
+                    : CURRICULUM_UNAVAILABLE_TEXT[language])
                 : t('tutor.inputPlaceholder')
             }
             className={`flex-1 bg-transparent py-2.5 px-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none resize-none max-h-32 ${
@@ -1452,7 +1498,13 @@ export const TutorPage: React.FC = () => {
               isSuperseded
                 ? 'Session transferred to another device'
                 : liveSubjectUnsupported
-                ? (otherMediumOnly ? MEDIUM_UNAVAILABLE_TEXT[language] : CURRICULUM_UNAVAILABLE_TEXT[language])
+                ? (liveAvailability.isLoading
+                    ? CURRICULUM_LOADING_TEXT[language]
+                    : liveAvailability.isError
+                    ? CURRICULUM_LOAD_ERROR_TEXT[language]
+                    : otherMediumOnly
+                    ? MEDIUM_UNAVAILABLE_TEXT[language]
+                    : CURRICULUM_UNAVAILABLE_TEXT[language])
                 : t('tutor.send')
             }
           >
@@ -1461,8 +1513,19 @@ export const TutorPage: React.FC = () => {
         </div>
 
         {liveSubjectUnsupported && (
-          <div data-testid="tutor-subject-unavailable" className="mt-2 text-center text-[11px] font-bold text-amber-700">
-            {otherMediumOnly ? MEDIUM_UNAVAILABLE_TEXT[language] : CURRICULUM_UNAVAILABLE_TEXT[language]} — {liveSubjectAvailability?.subjectName ?? activeSubjectId.toUpperCase()}
+          <div
+            role={liveAvailability.isError ? 'alert' : 'status'}
+            aria-live="polite"
+            data-testid="tutor-subject-unavailable"
+            className={`mt-2 text-center text-[11px] font-bold ${
+              liveAvailability.isError ? 'text-rose-700' : liveAvailability.isLoading ? 'text-slate-500' : 'text-amber-700'
+            }`}
+          >
+            {liveAvailability.isLoading
+              ? CURRICULUM_LOADING_TEXT[language]
+              : liveAvailability.isError
+              ? CURRICULUM_LOAD_ERROR_TEXT[language]
+              : `${otherMediumOnly ? MEDIUM_UNAVAILABLE_TEXT[language] : CURRICULUM_UNAVAILABLE_TEXT[language]} — ${liveSubjectAvailability?.subjectName ?? activeSubjectId.toUpperCase()}`}
           </div>
         )}
         <div className="mt-2 text-center">
